@@ -1,0 +1,19 @@
+36:  questions: Question[];
+52:const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayers, onFinish }) => {
+89:  // Initialize cache with manual questions or start background pre-fetching for AI
+125:  // Initialize grid when questions or config change
+127:    if (!players || players.length === 0 || questions.length === 0) return;
+134:      questions.forEach(q => {
+179:          if (questions[currentIdx]) {
+180:            cols[colIdx].push(questions[currentIdx]);
+187:  }, [questions, config.mode, config.difficulty, players.length]);
+416:      if (Object.keys(answeredMap).length === questions.length && questions.length > 0) {
+422:  }, [answeredMap, checkPath, players, config.mode, questions.length, winner]);
+480:    if (!questions || questions.length === 0) return {};
+482:    questions.forEach(q => {
+530:  }, [questions, config.mode, config.categories]);
+897:      // Exclude questions already in history, answered, or currently visible on board
+1232:    return <BuzzerScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
+1236:    return <TimedChallengeScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
+1240:    return <SilentGuessScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
+1244:    return <TrueFalseScreen config={config} questions={questions} players={players} onFinish={onFinish} />;

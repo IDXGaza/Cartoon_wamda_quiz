@@ -1,0 +1,164 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // 0. Global Safety Net
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // helper Primitives
+    // ===============================================================
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        (request.auth.token.email == "abbas20jat@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ===============================================================
+    // Validation Helpers
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'role', 'createdAt']) &&
+             data.keys().size() == 4 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.role in ['user', 'admin'] &&
+             data.createdAt is string; // ISO 8601
+    }
+
+    function isValidRoom(data) {
+      return data.keys().hasAll(['hostId', 'gameState', 'createdAt']) &&
+             data.keys().size() <= 5 &&
+             data.hostId is string && data.hostId.size() <= 128 &&
+             data.gameState in ['waiting', 'playing', 'question', 'revealed'] &&
+             data.createdAt is string &&
+             (!('buzzedPlayerId' in data) || data.buzzedPlayerId == null || (data.buzzedPlayerId is string && data.buzzedPlayerId.size() <= 128)) &&
+             (!('buzzedAt' in data) || data.buzzedAt == null || data.buzzedAt is string);
+    }
+
+    function isValidPlayer(data) {
+      return data.keys().hasAll(['name', 'color', 'score', 'joinedAt']) &&
+             data.keys().size() == 4 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 50 &&
+             data.color is string && data.color.size() <= 30 &&
+             data.score is number &&
+             data.joinedAt is string;
+    }
+
+    function isValidVaultQuestion(data) {
+      return data.keys().hasAll(['id', 'userId', 'text', 'answer', 'topic_match']) &&
+             data.id is string && data.id.size() <= 256 &&
+             data.userId == request.auth.uid &&
+             data.text is string && data.text.size() <= 2000 &&
+             data.answer is string && data.answer.size() <= 500 &&
+             data.topic_match is string && data.topic_match.size() <= 100 &&
+             (!('points' in data) || data.points is number) &&
+             (!('difficulty' in data) || (data.difficulty is string && data.difficulty in ['EASY', 'MEDIUM', 'HARD'])) &&
+             (!('type' in data) || (data.type is string && data.type in ['MCQ', 'TRUE_FALSE', 'OPEN'])) &&
+             (!('mastered' in data) || data.mastered is bool);
+    }
+
+    function isValidSavedSet(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'topic', 'questions']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.topic is string && data.topic.size() <= 200 &&
+             data.questions is list && data.questions.size() <= 100;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().role == 'user';
+      allow update: if (isOwner(userId) && isValidUser(incoming()) && incoming().role == existing().role && incoming().createdAt == existing().createdAt) || isAdmin();
+    }
+
+    match /rooms/{roomId} {
+      allow get: if isSignedIn() && isValidId(roomId);
+      allow list: if isAdmin();
+      
+      allow create: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) && incoming().hostId == request.auth.uid;
+      
+      allow update: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) && (
+        // Action 1: Host clears/updates state
+        (existing().hostId == request.auth.uid && incoming().hostId == existing().hostId) ||
+        // Action 2: Player buzzes
+        (
+          existing().gameState == 'question' && 
+          existing().buzzedPlayerId == null && 
+          incoming().buzzedPlayerId == request.auth.uid &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['buzzedPlayerId', 'buzzedAt'])
+        ) ||
+        isAdmin()
+      );
+      
+      allow delete: if isAdmin() || (isSignedIn() && existing().hostId == request.auth.uid);
+
+      match /players/{playerId} {
+        allow read: if isSignedIn();
+        allow create: if isOwner(playerId) && isValidPlayer(incoming()) && exists(/databases/$(database)/documents/rooms/$(roomId));
+        allow update: if (isOwner(playerId) && isValidPlayer(incoming()) && incoming().joinedAt == existing().joinedAt) || 
+                      (isSignedIn() && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId == request.auth.uid) ||
+                      isAdmin();
+        allow delete: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId == request.auth.uid);
+      }
+    }
+
+    match /questions_vault/{questionId} {
+      allow get: if isSignedIn() && isValidId(questionId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(questionId) && isValidVaultQuestion(incoming());
+      allow update: if isSignedIn() && isValidId(questionId) && existing().userId == request.auth.uid && isValidVaultQuestion(incoming());
+      allow delete: if isSignedIn() && isValidId(questionId) && existing().userId == request.auth.uid;
+    }
+
+    match /saved_sets/{setId} {
+      allow get: if isSignedIn() && isValidId(setId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(setId) && isValidSavedSet(incoming());
+      allow update: if isSignedIn() && isValidId(setId) && existing().userId == request.auth.uid && isValidSavedSet(incoming());
+      allow delete: if isSignedIn() && isValidId(setId) && existing().userId == request.auth.uid;
+    }
+
+    match /_connectivity_test_/{testId} {
+      allow get: if true;
+    }
+  }
+}
+
