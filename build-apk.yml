@@ -1,0 +1,74 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Capacitor
+        run: |
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap add android
+
+      - name: Copy Plugin
+        run: |
+          mkdir -p android/app/src/main/java/com/idxgaza/traneem/
+          cp android-plugins/BackupPlugin.kt android/app/src/main/java/com/idxgaza/traneem/
+
+      - name: Register Plugin
+        run: |
+          mkdir -p android/app/src/main/java/com/idxgaza/traneem
+          printf '%s\n' \
+            'package com.idxgaza.traneem' \
+            '' \
+            'import android.os.Bundle' \
+            'import com.getcapacitor.BridgeActivity' \
+            'import com.idxgaza.traneem.BackupPlugin' \
+            '' \
+            'class MainActivity : BridgeActivity() {' \
+            '    override fun onCreate(savedInstanceState: Bundle?) {' \
+            '        super.onCreate(savedInstanceState)' \
+            '        registerPlugin(BackupPlugin::class.java)' \
+            '    }' \
+            '}' > android/app/src/main/java/com/idxgaza/traneem/MainActivity.kt
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: traneem-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
