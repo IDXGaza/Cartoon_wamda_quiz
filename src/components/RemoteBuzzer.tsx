@@ -202,6 +202,27 @@ const RemoteBuzzer: React.FC = () => {
   const canBuzz = roomState?.gameState === 'question' && !roomState?.buzzedPlayerId && !isBuzzed;
   const someoneElseBuzzed = roomState?.buzzedPlayerId && roomState?.buzzedPlayerId !== auth.currentUser?.uid;
   const iBuzzed = roomState?.buzzedPlayerId === auth.currentUser?.uid;
+  const isOnline = navigator.onLine;
+
+  if (!isOnline) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-cream)] p-6 flex items-center justify-center font-sans" dir="rtl">
+        <div className="vintage-panel p-8 rounded-[2.5rem] w-full max-w-md border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] bg-white text-center">
+          <div className="w-20 h-20 bg-[var(--color-primary-red)] rounded-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] flex items-center justify-center mx-auto mb-6">
+            <CartoonLightning size={48} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-display text-[var(--color-ink-black)] mb-4">لا يوجد اتصال بالإنترنت</h1>
+          <p className="font-bold opacity-70 mb-8">عذراً، ميزة التحدي عن بُعد تتطلب اتصالاً بالإنترنت للعمل بشكل صحيح.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="vintage-button w-full py-4 rounded-xl text-lg font-bold bg-[var(--color-primary-gold)]"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-cream)] flex flex-col font-sans overflow-hidden" dir="rtl">

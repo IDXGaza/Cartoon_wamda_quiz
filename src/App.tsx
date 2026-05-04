@@ -38,15 +38,28 @@ const App: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loadingTime, setLoadingTime] = useState(0);
+  const [loadingStatus, setLoadingStatus] = useState("جاري التحضير...");
+  const loadingTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const [sessionId] = useState(() => Math.random().toString(36).substr(2, 9));
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isFirestoreOffline, setIsFirestoreOffline] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showDebug, setShowDebug] = useState(false);
   const { settings, setIsSettingsOpen } = useSettings();
   const { showToast } = useToast();
 
   useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => {
+      setIsOnline(false);
+      showToast("أنت الآن تعمل بدون إنترنت. سيتم استخدام بنك الأسئلة المحلي.", "warning");
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
     const initializeFirebase = async () => {
       setAuthError(null);
       
@@ -79,6 +92,8 @@ const App: React.FC = () => {
 
     const cleanupPromise = initializeFirebase();
     return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
       cleanupPromise.then(unsubscribe => {
         if (typeof unsubscribe === 'function') unsubscribe();
       });
@@ -167,7 +182,23 @@ const App: React.FC = () => {
     setConfig({ ...newConfig, sessionId });
     setPlayers(newConfig.players);
     setGameState('loading');
+    setLoadingTime(0);
+    setLoadingStatus("جاري بدء محرك توليد الأسئلة...");
     setErrorMessage('');
+
+    if (loadingTimerRef.current) clearInterval(loadingTimerRef.current);
+    loadingTimerRef.current = setInterval(() => {
+      setLoadingTime(prev => {
+        const next = prev + 0.1;
+        if (next < 3) setLoadingStatus("جاري الاتصال بخوادم Gemini...");
+        else if (next < 7) setLoadingStatus("توليد الفئات وتحليل الموضوع...");
+        else if (next < 12) setLoadingStatus("صياغة الأسئلة بالتوازي (دقة عالية)...");
+        else if (next < 16) setLoadingStatus("ضبط مستويات الصعوبة والمراجعة...");
+        else if (next < 19) setLoadingStatus("المسات النهائية وتجهيز الشبكة...");
+        else setLoadingStatus("يتم إنهاء التوليد الآن...");
+        return next;
+      });
+    }, 100);
     
     try {
       if (!auth.currentUser) {
@@ -207,7 +238,10 @@ const App: React.FC = () => {
       let generated: Question[] = [];
       let lastError: any = null;
 
-      if (newConfig.questionSource === 'bank') {
+      // Force bank source if offline
+      const finalQuestionSource = !isOnline ? 'bank' : newConfig.questionSource;
+
+      if (finalQuestionSource === 'bank') {
         const requiredCount = newConfig.mode === GameMode.HEX_GRID ? 28 : (newConfig.mode === GameMode.GRID ? 25 : newConfig.numQuestions);
         // Use the new getQuestionsFromBank helper
         const { getQuestionsFromBank } = await import('./services/geminiService');
@@ -342,7 +376,15 @@ const App: React.FC = () => {
       }
 
       setGameState('playing');
+      if (loadingTimerRef.current) {
+        clearInterval(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
     } catch (error: any) {
+      if (loadingTimerRef.current) {
+        clearInterval(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
       console.error("Game Start Error:", error);
       showToast(error.message || "حدث خطأ غير متوقع أثناء توليد الأسئلة.", 'error');
       setGameState('config');
@@ -408,7 +450,18 @@ const App: React.FC = () => {
       <SettingsModal />
       
       <AnimatePresence>
-        {isFirestoreOffline && (
+        {!isOnline && (
+          <motion.div 
+            initial={{ y: -100 }}
+            animate={{ y: 0 }}
+            exit={{ y: -100 }}
+            className="bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] text-center py-2 px-4 shadow-lg border-b-2 border-black flex items-center justify-center gap-2 sticky top-0 z-[110]"
+          >
+            <CartoonAlert size={18} />
+            <span className="font-bold text-sm">وضع عدم الاتصال بالإنترنت مفعل - اللعبة تعمل من بنك الأسئلة المحلي</span>
+          </motion.div>
+        )}
+        {isFirestoreOffline && isOnline && (
           <motion.div 
             initial={{ y: -100 }}
             animate={{ y: 0 }}
@@ -563,7 +616,7 @@ const App: React.FC = () => {
               
               {!authError && isAuthReady && gameState === 'bank' && <BankManager onClose={() => setGameState('config')} />}
               
-              {gameState === 'loading' && (
+              {gameState === 'loading' && config && (
                 <div className="flex flex-col items-center justify-center py-32 space-y-12">
                   <div className="relative">
                     <motion.div 
@@ -571,13 +624,54 @@ const App: React.FC = () => {
                       transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                       className="w-40 h-40 border-4 border-dashed border-[var(--color-primary-blue)] rounded-full absolute -inset-4"
                     />
-                    <div className="w-32 h-32 bg-[var(--color-off-white)] rounded-full flex items-center justify-center border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_rgba(0,0,0,0.1)]">
+                    <div className="w-32 h-32 bg-[var(--color-off-white)] rounded-full flex items-center justify-center border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_rgba(0,0,0,0.1)] relative">
                       <CartoonRocket size={64} className="animate-bounce" />
+                      <div className="absolute -bottom-6 bg-[var(--color-primary-gold)] px-4 py-1 rounded-full border-2 border-black font-black shadow-[2px_2px_0px_black] text-sm animate-pulse whitespace-nowrap">
+                        00:{loadingTime.toString().padStart(2, '0')} ث
+                      </div>
                     </div>
                   </div>
                   <div className="text-center">
                     <h2 className="text-4xl font-bold text-[var(--color-ink-black)] mb-4 vintage-text">جاري تحضير التحدي...</h2>
                     <p className="text-[var(--color-bg-dark)] text-xl font-bold">الذكاء الاصطناعي يقوم بتأليف الأسئلة وتجهيز اللعبة</p>
+                    <div className="mt-8 bg-black/5 p-6 rounded-2xl border-2 border-dashed border-black/20 max-w-sm mx-auto">
+                      {(() => {
+                        // Dynamic estimation based on mode and expected parallel speed
+                        const estimated = config.mode === GameMode.GRID 
+                          ? 60 
+                          : (config.mode === GameMode.HEX_GRID ? 90 : 40);
+                        
+                        let progress = 0;
+                        if (loadingTime < estimated * 0.7) {
+                          progress = Math.floor((loadingTime / estimated) * 100);
+                        } else {
+                          // Slow down progress after 70% to avoid stalling at 99%
+                          const overflow = loadingTime - (estimated * 0.7);
+                          progress = Math.min(99, 70 + Math.floor(overflow * 0.5));
+                        }
+
+                        return (
+                          <>
+                            <div className="w-full h-3 bg-black/10 rounded-full mb-4 overflow-hidden border border-black/10">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                className="h-full bg-[var(--color-primary-gold)]"
+                                transition={{ duration: 0.5 }}
+                              />
+                            </div>
+                            <div className="flex justify-between text-xs font-black opacity-60 mb-2">
+                              <span>المرحلة: {loadingStatus}</span>
+                              <span>{progress}%</span>
+                            </div>
+                            <div className="flex justify-between text-xs font-black opacity-60 mb-2">
+                              <span>الوقت المنقضي: {Math.floor(loadingTime)}ث</span>
+                              <span>المتبقي التقريبي: {Math.max(1, Math.ceil(estimated - loadingTime))}ث</span>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
                   </div>
                   <div className="flex gap-4">
                     {[0, 1, 2].map(i => (

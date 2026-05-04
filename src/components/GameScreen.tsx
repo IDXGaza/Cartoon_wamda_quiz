@@ -280,7 +280,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     // Performance Tracking
     const timeSpentMs = (TIMER_DURATION - timeLeft) * 1000;
     if (activeQuestion.id && !activeQuestion.id.startsWith('manual') && !activeQuestion.id.startsWith('custom')) {
-      updateQuestionStats(activeQuestion.id, isCorrect, timeSpentMs).catch(err => console.error("Vault update failed", err));
+      updateQuestionStats(activeQuestion, isCorrect, timeSpentMs).catch(err => console.error("Vault update failed", err));
     }
 
     setShowHint(false);
@@ -1307,17 +1307,21 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                       key={type} 
                       disabled={currentPlayerIndex !== idx || (count as number) <= 0}
                       onClick={() => {
-                        if (activePower === type) {
+                        const typeEnum = type as PowerType;
+                        if (activePower === typeEnum) {
                           setActivePower(null);
                           showToast("تم إلغاء تفعيل القدرة", "info");
+                          playSound('click');
                         } else {
-                          setActivePower(type as PowerType);
-                          showToast(`تم تفعيل قدرة: ${type === PowerType.FREEZE ? 'التجميد' : type === PowerType.SHIELD ? 'الدرع' : 'السرقة'}`, "success");
+                          setActivePower(typeEnum);
+                          const powerName = typeEnum === PowerType.FREEZE ? 'التجميد' : typeEnum === PowerType.SHIELD ? 'الدرع' : 'السرقة';
+                          showToast(`تم تفعيل قدرة: ${powerName}`, "success");
+                          playSound('power');
                         }
                       }}
                       className={`flex items-center gap-1 md:gap-3 px-2 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl border-2 md:border-4 border-[var(--color-ink-black)] text-xs md:text-sm font-black transition-all shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none ${
                         (count as number) > 0 
-                          ? (activePower === type 
+                          ? (activePower === (type as PowerType) 
                               ? 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] scale-105 -translate-y-1 ring-2 md:ring-4 ring-white/50' 
                               : 'bg-white text-[var(--color-ink-black)] hover:bg-[var(--color-primary-gold)] hover:-translate-y-0.5 md:hover:shadow-[4px_6px_0px_var(--color-ink-black)]') 
                           : 'bg-slate-100 text-slate-400 cursor-not-allowed grayscale border-slate-300'

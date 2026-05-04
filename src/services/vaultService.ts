@@ -65,14 +65,14 @@ export const saveToVault = async (question: Question) => {
 };
 
 export const updateQuestionStats = async (
-  questionId: string, 
+  question: Question, 
   answeredCorrectly: boolean, 
   timeSpentMs: number
 ) => {
   if (!auth.currentUser) return;
   
   // Force all IDs to be user-prefixed for safety and unique tracking
-  const cleanId = questionId.includes('_') ? questionId.split('_').pop() : questionId;
+  const cleanId = question.id.includes('_') ? question.id.split('_').pop() : question.id;
   const fullId = `${auth.currentUser.uid}_${cleanId}`;
     
   const questionRef = doc(db, VAULT_COLLECTION, fullId);
@@ -89,10 +89,14 @@ export const updateQuestionStats = async (
   }
 
   try {
-    // Use setDoc with merge: true so it works even if the document doesn't exist yet
+    // We include required fields (text, answer, topic_match) so if setDoc triggers a CREATE 
+    // for a new question, it satisfies the isValidVaultQuestion rule's hasAll() requirement.
     await setDoc(questionRef, {
       id: fullId,
       userId: auth.currentUser.uid,
+      text: question.text,
+      answer: question.answer,
+      topic_match: (question.topic || question.category || 'unknown').toLowerCase(),
       times_played: increment(1),
       correct_count: answeredCorrectly ? increment(1) : increment(0),
       last_played_at: now,

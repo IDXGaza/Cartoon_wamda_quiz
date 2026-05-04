@@ -4,7 +4,12 @@ export type Theme = 'light' | 'dark' | 'colorful';
 export type AIModel = 
   | 'gemini-3-flash-preview' 
   | 'gemini-3.1-pro-preview' 
-  | 'gemini-3.1-flash-lite-preview';
+  | 'gemini-3.1-flash-lite-preview'
+  | 'groq-llama-3.3-70b-versatile'
+  | 'groq-llama-3.1-70b-versatile'
+  | 'groq-llama-3.1-8b-instant'
+  | 'groq-mixtral-8x7b-32768'
+  | 'groq-gemma2-9b-it';
 
 export interface AppSettings {
   theme: Theme;
@@ -12,6 +17,7 @@ export interface AppSettings {
   timedDuration: number;
   apiKeys: {
     gemini: string;
+    groq: string;
   };
 }
 
@@ -21,6 +27,7 @@ const defaultSettings: AppSettings = {
   timedDuration: 120,
   apiKeys: {
     gemini: '',
+    groq: '',
   }
 };
 

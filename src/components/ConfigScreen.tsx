@@ -50,6 +50,7 @@ const CATEGORY_CLASSIFICATIONS = [
 
 const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const { showToast } = useToast();
+  const [isOnline] = useState(navigator.onLine);
   const [topic, setTopic] = useState('ثقافة عامة');
   const [activeClassification, setActiveClassification] = useState<string>("العلوم والطبيعة");
   const [mode, setMode] = useState<GameMode>(GameMode.HEX_GRID);
@@ -63,6 +64,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   ]);
 
   const [inputMethod, setInputMethod] = useState<'ai' | 'manual' | 'bank'>('ai');
+  const [buzzerTimeout, setBuzzerTimeout] = useState<number>(20);
 
   React.useEffect(() => {
     if (mode === GameMode.GRID && inputMethod === 'bank' && categories.every(c => c === '')) {
@@ -162,6 +164,10 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   };
 
   const generateAISamples = async () => {
+    if (!navigator.onLine) {
+      showToast("عذراً، توليد الأسئلة بالذكاء الاصطناعي يتطلب اتصالاً بالإنترنت.", "error");
+      return;
+    }
     if (!topic.trim()) {
       showToast("الرجاء إدخال موضوع المسابقة أولاً.", "error");
       return;
@@ -440,7 +446,9 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       manualQuestions: finalManualQuestions,
       hexMode: inputMethod,
       questionSource: inputMethod,
-      hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions as any : undefined
+      hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions as any : undefined,
+      buzzerTimeout: buzzerTimeout,
+      timerDuration: buzzerTimeout
     });
   };
 
@@ -832,17 +840,27 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">طريقة الإدخال</label>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ${!isOnline ? 'opacity-70' : ''}`}>
               {mode === GameMode.GRID && (
                 <button 
                   type="button"
+                  disabled={!isOnline}
                   onClick={() => {
                     playSound('click');
+                    if (!isOnline) {
+                      showToast("هذا الخيار يتطلب اتصالاً بالإنترنت", "warning");
+                      return;
+                    }
                     setInputMethod('ai');
                   }}
-                  className={`relative p-6 md:p-8 rounded-[2rem] transition-all duration-300 text-right overflow-hidden group/btn border-4 border-[var(--color-ink-black)] ${inputMethod === 'ai' ? 'shadow-[6px_6px_0px_var(--color-ink-black)]' : 'bg-[var(--color-off-white)] hover:bg-[var(--color-bg-cream)]'}`}
+                  className={`relative p-6 md:p-8 rounded-[2rem] transition-all duration-300 text-right overflow-hidden group/btn border-4 border-[var(--color-ink-black)] ${inputMethod === 'ai' ? 'shadow-[6px_6px_0px_var(--color-ink-black)]' : 'bg-[var(--color-off-white)] hover:bg-[var(--color-bg-cream)]'} ${!isOnline ? 'grayscale cursor-not-allowed' : ''}`}
                   style={inputMethod === 'ai' ? { backgroundColor: 'var(--color-primary-green)', color: 'white' } : {}}
                 >
+                   {!isOnline && (
+                    <div className="absolute top-4 right-4 bg-red-500 text-white p-1 rounded-full border-2 border-black z-20">
+                      <CartoonX size={12} />
+                    </div>
+                  )}
                   <div className="flex justify-between items-start mb-6 relative z-10">
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12 border-4 border-[var(--color-ink-black)] ${inputMethod === 'ai' ? 'bg-white text-[var(--color-ink-black)]' : 'bg-[var(--color-primary-green)] text-white'}`}>
                       <CartoonBot className="w-10 h-10" />
@@ -892,6 +910,13 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 <p className="text-xs opacity-80">سحب أسئلة عشوائية من مكتبة جاهزة حسب الموضوع.</p>
               </button>
             </div>
+
+            {!isOnline && (
+              <div className="mt-4 bg-red-50 p-4 rounded-xl border-2 border-red-200 text-red-700 font-bold text-center text-sm flex items-center justify-center gap-2">
+                <CartoonAlert size={16} />
+                <span>أنت غير متصل بالإنترنت حالياً، لذا تم تعطيل خيار الذكاء الاصطناعي. يمكنك استخدام بنك الأسئلة أو الإدخال اليدوي.</span>
+              </div>
+            )}
 
           {inputMethod === 'manual' && (
             <div className="space-y-6 animate-fade-in pt-6 border-t border-white/10">
@@ -1115,6 +1140,38 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 ))}
               </div>
             </div>
+
+            {(mode === GameMode.BUZZER || mode === GameMode.TIMED) && (
+              <div className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group border-4 border-dashed border-[var(--color-primary-gold)]">
+                <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-gold)]"></div>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-xl bg-[var(--color-primary-gold)]/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-primary-gold)] font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">6</div>
+                  <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">سرعة الإجابة</label>
+                </div>
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-xl">المهلة الزمنية</span>
+                    <span className="bg-[var(--color-primary-gold)] px-6 py-2 rounded-2xl font-black border-4 border-black text-2xl">{buzzerTimeout}ث</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="5" 
+                    max="60" 
+                    step="5"
+                    value={buzzerTimeout}
+                    onChange={(e) => {
+                      playSound('click');
+                      setBuzzerTimeout(parseInt(e.target.value));
+                    }}
+                    className="w-full h-6 bg-slate-200 rounded-2xl appearance-none cursor-pointer accent-[var(--color-primary-gold)] border-4 border-black"
+                  />
+                  <div className="flex justify-between text-xs font-black opacity-60">
+                    <span>ثواني معدودة ⚡</span>
+                    <span>وقت كافٍ 🐢</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <button type="submit" className="vintage-button w-full py-8 md:py-10 rounded-[2.5rem] text-3xl md:text-5xl font-bold mt-12 relative overflow-hidden group">

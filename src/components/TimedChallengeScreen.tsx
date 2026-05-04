@@ -117,7 +117,7 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
     const now = Date.now();
     const timeSpentMs = now - questionStartTime.current;
     if (activeQuestion?.id && !activeQuestion.id.startsWith('fb-')) {
-      updateQuestionStats(activeQuestion.id, isCorrect, timeSpentMs).catch(err => console.error("Vault update failed", err));
+      updateQuestionStats(activeQuestion, isCorrect, timeSpentMs).catch(err => console.error("Vault update failed", err));
     }
     questionStartTime.current = now;
 

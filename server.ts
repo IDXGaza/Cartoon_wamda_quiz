@@ -17,7 +17,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.post("/api/generate-questions", async (req, res) => {
-  const { promptText, model, apiKeys } = req.body;
+  const { promptText, model, apiKeys, systemInstruction } = req.body;
 
   try {
     const key = apiKeys?.gemini || process.env.GEMINI_API_KEY;
@@ -29,11 +29,11 @@ app.post("/api/generate-questions", async (req, res) => {
     const { GoogleGenAI } = await import("@google/genai");
     const genAI = new GoogleGenAI({ apiKey: key });
 
-    // In @google/genai SDK, generation is done via genAI.models.generateContent
     const result = await genAI.models.generateContent({
       model: model || "gemini-1.5-flash",
       contents: [{ role: "user", parts: [{ text: promptText }] }],
       config: {
+        systemInstruction: systemInstruction || undefined,
         responseMimeType: "application/json",
       }
     });
@@ -42,6 +42,45 @@ app.post("/api/generate-questions", async (req, res) => {
     return res.json({ text });
   } catch (error: any) {
     console.error("Internal API Error:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/groq", async (req, res) => {
+  const { promptText, model, apiKey, systemInstruction } = req.body;
+
+  try {
+    const key = apiKey || process.env.GROQ_API_KEY;
+    if (!key) {
+      return res.status(400).json({ error: "Missing Groq API key" });
+    }
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          { role: "system", content: systemInstruction || "Arabic quiz maker." },
+          { role: "user", content: promptText }
+        ],
+        temperature: 0.1,
+        stream: false
+      })
+    });
+
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => ({}));
+      return res.status(response.status).json(errBody);
+    }
+
+    const data = await response.json();
+    return res.json(data);
+  } catch (error: any) {
+    console.error("Groq Proxy Error:", error);
     return res.status(500).json({ error: error.message });
   }
 });

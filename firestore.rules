@@ -29,7 +29,7 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() >= 1 && id.size() <= 256 && id.matches('^[^/]+$');
     }
 
     function incoming() {
@@ -46,7 +46,7 @@ service cloud.firestore {
 
     function isValidUser(data) {
       return data.keys().hasAll(['name', 'email', 'role', 'createdAt']) &&
-             data.keys().size() == 4 &&
+             data.keys().size() >= 4 &&
              data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
              data.email is string && data.email.size() <= 200 &&
              data.role in ['user', 'admin'] &&
@@ -55,7 +55,7 @@ service cloud.firestore {
 
     function isValidRoom(data) {
       return data.keys().hasAll(['hostId', 'gameState', 'createdAt']) &&
-             data.keys().size() <= 5 &&
+             data.keys().size() <= 10 &&
              data.hostId is string && data.hostId.size() <= 128 &&
              data.gameState in ['waiting', 'playing', 'question', 'revealed'] &&
              data.createdAt is string &&
@@ -65,7 +65,7 @@ service cloud.firestore {
 
     function isValidPlayer(data) {
       return data.keys().hasAll(['name', 'color', 'score', 'joinedAt']) &&
-             data.keys().size() == 4 &&
+             data.keys().size() >= 4 &&
              data.name is string && data.name.size() >= 1 && data.name.size() <= 50 &&
              data.color is string && data.color.size() <= 30 &&
              data.score is number &&
@@ -73,28 +73,20 @@ service cloud.firestore {
     }
 
     function isValidVaultQuestion(data) {
-      return data.keys().hasAll(['id', 'userId', 'text', 'answer', 'topic_match']) &&
-             data.id is string && data.id.size() <= 256 &&
-             data.userId == request.auth.uid &&
-             data.text is string && data.text.size() <= 2000 &&
-             data.answer is string && data.answer.size() <= 500 &&
-             data.topic_match is string && data.topic_match.size() <= 100 &&
-             (!('points' in data) || data.points is number) &&
-             (!('difficulty' in data) || (data.difficulty is string && data.difficulty in ['EASY', 'MEDIUM', 'HARD'])) &&
-             (!('type' in data) || (data.type is string && data.type in ['MCQ', 'TRUE_FALSE', 'OPEN'])) &&
-             (!('mastered' in data) || data.mastered is bool);
+      return data.userId == request.auth.uid &&
+             (!('text' in data) || data.text is string) &&
+             (!('answer' in data) || data.answer is string);
     }
 
     function isValidSavedSet(data) {
-      return data.keys().hasAll(['id', 'userId', 'name', 'topic', 'questions']) &&
-             data.id is string && data.id.size() <= 128 &&
+      return data.keys().hasAll(['userId', 'name', 'questions']) &&
              data.userId == request.auth.uid &&
-             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
-             data.topic is string && data.topic.size() <= 200 &&
-             data.questions is list && data.questions.size() <= 100;
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 256 &&
+             data.questions is list && data.questions.size() <= 200;
     }
 
     function isEmailVerified() {
+      // Allow anonymous users (no email) to pass if needed, but here it's for admins
       return request.auth.token.email_verified == true;
     }
 
@@ -116,14 +108,13 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) && incoming().hostId == request.auth.uid;
       
       allow update: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) && (
-        // Action 1: Host clears/updates state
+        // Action 1: Host updates state
         (existing().hostId == request.auth.uid && incoming().hostId == existing().hostId) ||
         // Action 2: Player buzzes
         (
           existing().gameState == 'question' && 
           existing().buzzedPlayerId == null && 
-          incoming().buzzedPlayerId == request.auth.uid &&
-          incoming().diff(existing()).affectedKeys().hasOnly(['buzzedPlayerId', 'buzzedAt'])
+          incoming().buzzedPlayerId == request.auth.uid
         ) ||
         isAdmin()
       );
@@ -132,8 +123,8 @@ service cloud.firestore {
 
       match /players/{playerId} {
         allow read: if isSignedIn();
-        allow create: if isOwner(playerId) && isValidPlayer(incoming()) && exists(/databases/$(database)/documents/rooms/$(roomId));
-        allow update: if (isOwner(playerId) && isValidPlayer(incoming()) && incoming().joinedAt == existing().joinedAt) || 
+        allow create: if isOwner(playerId) && (incoming().score == 0) && exists(/databases/$(database)/documents/rooms/$(roomId));
+        allow update: if (isOwner(playerId) && incoming().joinedAt == existing().joinedAt) || 
                       (isSignedIn() && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId == request.auth.uid) ||
                       isAdmin();
         allow delete: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId == request.auth.uid);
@@ -141,19 +132,17 @@ service cloud.firestore {
     }
 
     match /questions_vault/{questionId} {
-      allow get: if isSignedIn() && isValidId(questionId) && existing().userId == request.auth.uid;
-      allow list: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn() && isValidId(questionId) && isValidVaultQuestion(incoming());
-      allow update: if isSignedIn() && isValidId(questionId) && existing().userId == request.auth.uid && isValidVaultQuestion(incoming());
-      allow delete: if isSignedIn() && isValidId(questionId) && existing().userId == request.auth.uid;
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid && isValidVaultQuestion(incoming());
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && incoming().userId == request.auth.uid && isValidVaultQuestion(incoming());
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
     }
 
     match /saved_sets/{setId} {
-      allow get: if isSignedIn() && isValidId(setId) && existing().userId == request.auth.uid;
-      allow list: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn() && isValidId(setId) && isValidSavedSet(incoming());
-      allow update: if isSignedIn() && isValidId(setId) && existing().userId == request.auth.uid && isValidSavedSet(incoming());
-      allow delete: if isSignedIn() && isValidId(setId) && existing().userId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSavedSet(incoming());
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidSavedSet(incoming());
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
     }
 
     match /_connectivity_test_/{testId} {

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Player, GameConfig, Question, SavedSet } from '../types';
 import confetti from 'canvas-confetti';
 import { playSound } from '../utils/sound';
+import { auth } from '../firebase';
 import { CartoonStar, CartoonBook, CartoonCheck, CartoonHome, CartoonTrophy, CartoonGear } from './CartoonIcons';
 
 interface Props {
@@ -46,11 +47,12 @@ const SummaryScreen: React.FC<Props> = ({ config, questions, players, onRestart 
   }, []);
 
   const handleSaveToLibrary = () => {
-    if (isSaved) return;
+    if (isSaved || !auth.currentUser) return;
     playSound('click');
     
     const newSet: SavedSet = {
       id: `set-${Date.now()}`,
+      userId: auth.currentUser.uid,
       name: `${config.topic || 'مسابقة'} - ${new Date().toLocaleDateString('ar-EG')}`,
       topic: config.topic || 'مسابقة مخصصة',
       numQuestions: questions.length,

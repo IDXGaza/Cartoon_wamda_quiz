@@ -98,7 +98,7 @@ const SettingsModal: React.FC = () => {
               </button>
             </div>
             <div className="flex flex-col gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-              <div className="text-sm font-display text-[var(--color-bg-dark)] mt-2 mb-1 px-2">Google Gemini</div>
+              <div className="text-sm font-display text-[var(--color-bg-dark)] mt-2 mb-1 px-2 border-b-2 border-black/10 pb-1">Google Gemini</div>
               {(['gemini-3-flash-preview', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview'] as AIModel[]).map(m => (
                 <button
                   key={m}
@@ -113,6 +113,25 @@ const SettingsModal: React.FC = () => {
                   }`}
                 >
                   <span dir="ltr" className="text-base">{m}</span>
+                  {settings.aiModel === m && <CartoonCheck size={24} />}
+                </button>
+              ))}
+
+              <div className="text-sm font-display text-[var(--color-bg-dark)] mt-4 mb-1 px-2 border-b-2 border-black/10 pb-1">Groq (Ultra Fast)</div>
+              {(['groq-llama-3.3-70b-versatile', 'groq-llama-3.1-70b-versatile', 'groq-llama-3.1-8b-instant', 'groq-mixtral-8x7b-32768', 'groq-gemma2-9b-it'] as AIModel[]).map(m => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    playSound('click');
+                    updateSettings({ aiModel: m });
+                  }}
+                  className={`py-3 px-5 rounded-xl font-display text-lg border-4 transition-all text-right flex justify-between items-center shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-0.5 active:shadow-none ${
+                    settings.aiModel === m 
+                      ? 'bg-[var(--color-primary-red)] text-white border-[var(--color-ink-black)]' 
+                      : 'bg-[var(--color-bg-cream)] text-[var(--color-bg-dark)] border-[var(--color-ink-black)] hover:bg-[var(--color-primary-red)]/10'
+                  }`}
+                >
+                  <span dir="ltr" className="text-base">{m.replace('groq-', '')}</span>
                   {settings.aiModel === m && <CartoonCheck size={24} />}
                 </button>
               ))}
@@ -131,6 +150,17 @@ const SettingsModal: React.FC = () => {
                   onChange={(e) => updateSettings({ apiKeys: { ...settings.apiKeys, gemini: e.target.value } })}
                   className="w-full bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] rounded-2xl p-4 font-display text-xl shadow-[4px_4px_0px_var(--color-ink-black)] focus:outline-none"
                   placeholder="AIzaSy..."
+                  dir="ltr"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-display text-[var(--color-bg-dark)] block mb-2 px-2">Groq API Key</label>
+                <input 
+                  type="password" 
+                  value={settings.apiKeys?.groq || ''}
+                  onChange={(e) => updateSettings({ apiKeys: { ...settings.apiKeys, groq: e.target.value } })}
+                  className="w-full bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] rounded-2xl p-4 font-display text-xl shadow-[4px_4px_0px_var(--color-ink-black)] focus:outline-none"
+                  placeholder="gsk_..."
                   dir="ltr"
                 />
               </div>

@@ -79,10 +79,13 @@ export interface GameConfig {
   hexCategories?: string[];
   hexManualQuestions?: Record<string, {question: string, answer: string}>;
   customJson?: string;
+  timerDuration?: number; // for timed racing
+  buzzerTimeout?: number; // for buzzer mode
 }
 
 export interface SavedSet {
   id: string;
+  userId: string;
   name: string;
   topic: string;
   numQuestions: number;

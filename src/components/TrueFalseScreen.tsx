@@ -70,7 +70,7 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
     // Tracking
     const timeSpentMs = Date.now() - questionStartTime.current;
     if (currentQuestion.id && !currentQuestion.id.startsWith('custom') && !currentQuestion.id.startsWith('manual')) {
-      updateQuestionStats(currentQuestion.id, correct, timeSpentMs).catch(err => console.error("Vault update failed", err));
+      updateQuestionStats(currentQuestion, correct, timeSpentMs).catch(err => console.error("Vault update failed", err));
     }
 
     setSelectedAnswer(answer);

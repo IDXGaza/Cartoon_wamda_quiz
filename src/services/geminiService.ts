@@ -207,6 +207,7 @@ export const getQuestionsFromBank = async (
   return allQuestions.slice(0, count);
 };
 
+let useGeminiOnly = true;
 const ARABIC_ALPHABET = "أبتثجحخدذرزسشصضطظعغفقكلمنهوي".split("");
 
 const shuffleArray = <T>(array: T[]): T[] => {
@@ -365,19 +366,7 @@ export const retry = async <T>(fn: () => Promise<T>, retries = 3, delay = 1000):
     return await fn();
   } catch (error: any) {
     const errorStr = getErrorMessage(error);
-    const quotaError = isQuotaError(error);
-    
-    // Only retry if it's NOT a quota error (e.g. 500, 503, network)
-    const isRetryable = !quotaError && (
-                        errorStr.includes("500") || 
-                        errorStr.includes("Rpc failed") || 
-                        errorStr.includes("xhr error") ||
-                        errorStr.includes("ECONNRESET") ||
-                        errorStr.includes("Failed to fetch")
-    );
-    
-    if (retries > 0 && isRetryable) {
-      console.warn(`Retrying AI call (${retries} left)... Error: ${errorStr}`);
+    if (retries > 0 && !isQuotaError(error)) {
       await new Promise(res => setTimeout(res, delay));
       return retry(fn, retries - 1, delay * 2);
     }
@@ -385,71 +374,28 @@ export const retry = async <T>(fn: () => Promise<T>, retries = 3, delay = 1000):
   }
 };
 
-let useGeminiOnly = false;
-
 export const generateQuestions = async (
   topic: string,
   numQuestions: number,
   types: QuestionType[],
   mode: GameMode,
   difficulty: Difficulty,
-  aiModel: string = "gemini-2.0-flash",
+  aiModel: string = "gemini-1.5-flash",
   categories?: string[],
   excludedAnswers?: string[]
 ): Promise<Question[]> => {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    console.warn("Offline detected. Falling back to local bank immediately.");
+    return getQuestionsFromBank(topic, numQuestions, mode, difficulty, excludedAnswers);
+  }
+
   const ai = getAI();
   const difficultyContext = getDifficultyText(difficulty);
   const allQuestions: Question[] = [];
 
-  const newQuestionMechanism = `آلية صياغة الأسئلة الاحترافية: 
-  1. اللغة العربية حصراً وقطقاً: يجب أن يكون كل شيء (السؤال، الإجابة، الفئة، الشرح) باللغة العربية الفصحى. يُمنع منعاً باتاً توليد أي جملة بالإنجليزية.
-  2. الترابط المنطقي الصارم: يجب أن تكون الإجابة (answer) صحيحة تماماً ومرتبطة مباشراً بالسؤال.
-  3. المصطلحات: العربية هي الأساس. يمكن وضع المصطلح الأجنبي (بين قوسين) فقط إذا كان ضرورياً في سياق الألعاب أو التقنية، لكن السؤال نفسه عربي 100%.
-  4. الدقة والعمق. 
-  5. الصياغة الإبداعية بوضوح. 
-  6. الخطوط الحمراء: يُمنع ذكر "إسرائيل" أو مسمياتها لمدن فلسطين.
-  7. الالتزام بالفئة: يمنع خلط أسئلة الألعاب الإلكترونية مع فئات العلوم الحقيقية.
-  8. تدرج الصعوبة: في وضع الشبكة، يجب أن يشعر اللاعب بفرق حقيقي بين سؤال 100 وسؤال 500. سؤال 100 هو معلومة يعرفها الطفل، وسؤال 500 هو معلومة نادرة للمتخصصين.`;
-
   const generateSingleBatch = async (batchNum: number, batchStartIdx: number, batchLetters?: string[], category?: string): Promise<Question[]> => {
-    const isTrueFalseMode = mode === GameMode.TRUE_FALSE;
-    const isTrueFalse = types.includes(QuestionType.TRUE_FALSE);
-    const isTF = isTrueFalseMode || isTrueFalse;
-
-    // Take existing questions and answers in the current generation plus previous exclusions
-    // For True/False, we mostly care about the text, as answers are just True/False
-    const currentItems = isTF 
-      ? allQuestions.map(q => q.text) 
-      : [...allQuestions.map(q => q.text), ...allQuestions.map(q => q.answer)];
-    
-    // Filter out generic True/False answers from historical exclusions too if needed
-    const historicalExclusions = (excludedAnswers || []).filter(item => 
-      item !== 'صح' && item !== 'خطأ' && item !== 'صواب'
-    );
-
-    const combinedExclusions = Array.from(new Set([...historicalExclusions, ...currentItems])).filter(Boolean);
-    
-    // Take the most recent 200 exclusions to prevent repetition while keeping prompt size reasonable
-    const limitedExclusions = combinedExclusions.slice(-200);
-    const exclusionText = limitedExclusions.length > 0 
-      ? `\nمهم جداً (أولوية قصوى): يمنع تكرار أي من المواضيع أو الأسئلة التالية: [${limitedExclusions.join("، ")}].`
-      : "";
-
-    const randomAngle = [
-      "من زاوية تاريخية", 
-      "من زاوية علمية", 
-      "من زاوية ثقافية شعبية", 
-      "من زاوية جغرافية", 
-      "من زاوية ترفيهية",
-      "من زاوية الألغاز العقلية",
-      "من زاوية الحقائق الغريبة",
-      "من زاوية المقارنات المدهشة",
-      "من زاوية الشخصيات المؤثرة",
-      "من زاوية الابتكارات والاختراعات"
-    ][Math.floor(Math.random() * 10)];
-
+    const isTF = mode === GameMode.TRUE_FALSE || types.includes(QuestionType.TRUE_FALSE);
     const schema = {
-      description: "List of quiz questions",
       type: Type.ARRAY,
       items: {
         type: Type.OBJECT,
@@ -460,474 +406,123 @@ export const generateQuestions = async (
           points: { type: Type.NUMBER },
           letter: { type: Type.STRING },
           explanation: { type: Type.STRING },
-          difficulty: { type: Type.STRING, enum: ["EASY", "MEDIUM", "HARD"] },
-          type: { type: Type.STRING, enum: ["MCQ", "TRUE_FALSE", "OPEN"] }
+          difficulty: { type: Type.STRING, enum: ["EASY", "MEDIUM", "HARD"] }
         },
-        required: (isTrueFalse || isTrueFalseMode) 
-          ? ["text", "answer", "type", "explanation"] 
-          : ["text", "answer", "type"]
+        required: ["text", "answer"]
       }
     };
 
-    const modeInfo = MODE_RULES[mode] || { system: "أنت صانع محتوى إبداعي ومصمم مسابقات محترف.", rules: [] };
+    const modeInfo = MODE_RULES[mode] || { system: "Arabic quiz maker.", rules: [] };
     const rulesText = modeInfo.rules.map((r, i) => `${i + 1}. ${r}`).join("\n");
-    let systemInstruction = modeInfo.system;
-
-    // الحماية المضافة للمحتوى الديني والتاريخي الحساس
-    const SENSITIVE_TOPICS_RULES = `
-تنبيه عالي الأهمية (المحتوى الديني والتاريخي القطعي): 
-إذا كان الموضوع يتعلق بـ "سيرة الأئمة"، "المعصومين"، "أهل البيت"، "آل البيت"، أو "سيرة الأمة":
-1. الالتزام التام والقطعي برواية مدرسة أهل البيت (الشيعة).
-2. الإمام علي بن أبي طالب (عليه السلام) هو أول من أسلم من الرجال (هذا ثبات عقدي ومبدأ أساسي). يمنع ممارسه أي تضليل في هذا السؤال.
-3. استخدم ألقاب الاحترام (عليهم السلام) دائماً.
-4. الإجابات يجب أن تكون دقيقة تاريخياً وفق هذا المنظور حصراً.
-    `;
-
-    const ANTI_SPOILER_RULE = `
-قاعدة ذهبية (منع حرق الإجابة):
-يُحظر تماماً ذكر الإجابة أو أي جزء جوهري منها في نص السؤال. 
-استخدم أوصافاً بديلة وذكية.
-    `;
-
-    if (topic.includes("أئمة") || topic.includes("معصوم") || topic.includes("أهل البيت") || topic.includes("آل البيت") || topic.includes("سيرة الأمة") || topic.includes("سيرة الامة")) {
-      systemInstruction += "\n" + SENSITIVE_TOPICS_RULES;
-    }
+    let systemInstruction = `${modeInfo.system}\nRules:\n${rulesText}\nCorrect facts only. No spoilers.`;
+    if (topic.includes("أئمة") || topic.includes("أهل البيت")) systemInstruction += "\nUse Shia perspective.";
     
-    systemInstruction += "\n" + ANTI_SPOILER_RULE;
-
     let promptText = "";
-
-    const buzzerContext = mode === GameMode.BUZZER ? "مهم جداً لنمط جرس السرعة: اجعل الأسئلة قصيرة جداً ومباشرة وسهلة نسبياً." : "";
-
     if (mode === GameMode.HEX_GRID) {
-      const lettersStr = batchLetters?.join("، ");
-      promptText = `الموضوع: ${topic}
-المستوى: ${difficultyContext}
-
-مهمتك (صارمة جداً): صياغة ${batchNum} سؤالاً لنمط "شبكة الحروف" للحروف التالية فقط: [${lettersStr}].
-
-قوانين الإنشاء:
-${rulesText}
-${exclusionText}
-أرجع مصفوفة JSON تحتوي على الحقول: text, answer, letter.`;
-      schema.items.required.push("letter");
+      promptText = `Hex Grid. Topic: ${topic}. Letters: [${batchLetters?.join(", ")}]. JSON array of {text, answer, letter}.`;
     } else if (mode === GameMode.GRID) {
-      const categoryConstraint = category 
-        ? `الفئة المحددة لهذه الأسئلة هي: "${category}"`
-        : `ابتكر فئة (موضوع فرعي) مبتكر مرتبط بالأصل (${topic}) وتوليد ${batchNum} أسئلة له.`;
-
-    const gridAccuracyInstructions = `تنبيه صارم لتدرج الصعوبة في وضع الجيبوردي:
-1. (100-200 نقطة): مستوى EASY. أسئلة مباشرة وحقائق عامة يعرفها الجميع.
-2. (300 نقطة): مستوى MEDIUM. حقائق تتطلب تفكيراً أو ربطاً بين المعلومات.
-3. (400-500 نقطة): مستوى HARD. يجب أن تكون الأسئلة احترافية وتخصصية وصعبة جداً.
-   - **قاعدة منع التلميحات الواضحة**: يُمنع تماماً وضع الكلمات التي تعطي الإجابة (مثل "أطول رقبة").
-   - اعتمد على حقائق فنية أو علمية أو تاريخية فريدة ومعقدة.
-   - للفئات ذات الصعوبة العالية (400-500)، ابحث عن المعلومة الأكثر ندرة في الفئة.
-4. **نقاوة الفئة**: الأسئلة في فئة "جغرافيا" أو "تاريخ" أو "علوم" يجب أن تكون عن العالم الحقيقي فقط. لا تضع أسئلة عن ألعاب فيديو أو أفلام في فئات أكاديمية حقيقية.
-5. الالتزام بالحقول: text, answer, category, points, difficulty.`;
-
-      promptText = `الموضوع: ${topic}
-${categoryConstraint}
-${gridAccuracyInstructions}
-المطلوب: توليد 5 أسئلة لهذه الفئة بالقيم 100، 200، 300، 400، 500 نقطة (سؤال واحد لكل قيمة).`;
-      schema.items.required.push("category", "points", "difficulty");
+      promptText = `Jeopardy Style. Topic: ${topic}. Categories: [${category}]. Request exactly 5 questions for EACH category with points 100, 200, 300, 400, 500. Total 25 questions. JSON array of {text, answer, category, points, difficulty}.`;
     } else {
-      const silentGuessContext = mode === GameMode.SILENT_GUESS ? "مهم جداً للتمثيل الصامت (بدون ولا كلمة): يجب أن تكون الإجابة (answer) غالباً عبارة عن أكثر من كلمة واحدة (مثل: جمل قصيرة، أمثال شعبية، أسماء أفلام، أفعال، أو مواقف مضحكة للتمثيل). لا تقصر الإجابة على كلمة واحدة فقط إلا نادراً. اجعلها عشوائية وممتعة وتتطلب حركة للتمثيل، ويرجى ملء حقل 'category' بنوع العبارة." : "";
-      const trueFalseContext = (isTrueFalse || isTrueFalseMode) ? `تنبيه هام لوضع الصواب والخطأ:
-1. تجنب تماماً استخدام الكلمات المفتاحية التي تدل على الإجابة مثل (فقط، دائماً، أبداً، حصرياً، جداً، مطلقاً).
-2. اجعل الجمل طويلة وتفصيلية.
-3. ادمج حقائق دقيقة مع تفاصيل فنية لزيادة التضليل (Misdirection).
-4. الجمل الصحيحة يجب أن تكون حقائق مذهلة تبدو كأنها خرافة، والجمل الخاطئة يجب أن تكون خرافات صياغتها علمية ووقورة.
-5. يجب ملء حقل 'explanation' بشرح مفصل وممتع للحقيقة العلمية أو التاريخية المتعلقة بالجملة.
-6. الإجابة حصراً 'صواب' أو 'خطأ'.` : "";
-      
-      promptText = `أنشئ ${batchNum} سؤالاً حول "${topic}" بمستوى "${difficultyContext}".
-${silentGuessContext}
-${trueFalseContext}
-وضع اللعبة الحالي: ${mode}
-${buzzerContext}
-
-معايير الجودة والأداء:
-1. ${newQuestionMechanism}
-2. الملاءمة الثقافية العالية.
-3. التنوع الإبداعي المطلوب: ${randomAngle}
-4. الالتزام بالعدد: يجب توليد ${batchNum} سؤالاً بالضبط في هذه الدفعة.
-5. في وضع الصواب والخطأ، يجب أن يحتوي كل سؤال على حقل 'explanation' يشرح الحقيقة بوضوح.
-${exclusionText}`;
-
-      systemInstruction = `أنت صانع محتوى إبداعي ومصمم مسابقات محترف.
-يجب عليك دائماً إرجاع مصفوفة JSON كاملة تحتوي على الحقول:
-- text: نص السؤال.
-- answer: الإجابة الصحيحة (إلزامية).${(isTrueFalse || isTrueFalseMode) ? " يجب أن تكون فقط 'صواب' أو 'خطأ'." : ""}
-- category: الفئة.
-- points: النقاط.
-- difficulty: مستوى الصعوبة (EASY/MEDIUM/HARD).
-- explanation: الشرح.
-
-تنبيه هام: حقل "answer" يجب أن يحتوي على الإجابة الصحيحة دائماً.`;
+      promptText = `Mode: ${mode}. Topic: ${topic}. Num: ${batchNum}. Difficulty: ${difficultyContext}. JSON array of {text, answer}.`;
     }
 
-    const modelsToTry = [
-      aiModel,
-      "gemini-2.0-flash-lite",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-      "gemini-1.5-flash-8b",
-      "gemini-flash-latest"
-    ].filter((m, i, self) => m && self.indexOf(m) === i);
+    const modelsToTry = aiModel.startsWith('groq') || aiModel.startsWith('qrok')
+      ? [aiModel.replace('qrok', 'groq')] 
+      : ["gemini-1.5-flash", "gemini-2.0-flash-lite"];
 
-    let lastErrorMsg = "";
-
-    for (const currentModel of modelsToTry) {
+    for (const model of modelsToTry) {
       try {
-        let textOutput = "";
-        const seed = Math.floor(Math.random() * 1000000);
+        let data: any = null;
         
-        if (currentModel.includes("gemini")) {
-          const result = await retry(() => ai.models.generateContent({
-            model: currentModel,
-            contents: [{ role: "user", parts: [{ text: promptText }] }],
-            config: {
-              systemInstruction: systemInstruction,
-              responseMimeType: "application/json",
-              responseSchema: schema,
-              maxOutputTokens: 4096,
-              seed: seed
-            }
-          })) as any;
-          
-          textOutput = result.text || "";
-          
-          // Fallback if result.text is missing but candidates exist
-          if (!textOutput || textOutput === "[]" || textOutput === "{}") {
-            const candidate = result.candidates?.[0];
-            if (candidate?.content?.parts?.[0]?.text) {
-              textOutput = candidate.content.parts[0].text;
-            } else if (candidate?.finishReason === 'SAFETY') {
-              throw new Error("تم حجب الرد من قبل فلاتر الأمان.");
-            }
-          }
-        } else {
-          let apiKeys = {};
+        if (model.startsWith('groq') || model.startsWith('qrok')) {
+          let groqKey = "";
           try {
             const savedSettings = localStorage.getItem('appSettings');
             if (savedSettings) {
               const parsed = JSON.parse(savedSettings);
-              if (parsed.apiKeys) apiKeys = parsed.apiKeys;
+              if (parsed.apiKeys?.groq) groqKey = parsed.apiKeys.groq;
             }
           } catch (e) {}
 
-          const sanitizedApiKeys = Object.entries(apiKeys || {}).reduce((acc, [key, value]) => {
-            acc[key] = typeof value === 'string' ? value.replace(/[^\x20-\x7E]/g, "").trim() : value;
-            return acc;
-          }, {} as any);
+          const groqModelName = model.replace('groq-', '').replace('qrok-', '');
 
-          const res = await fetch('/api/generate-questions', {
+          const response = await fetch('/api/groq', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ promptText: promptText + " Return ONLY valid JSON array.", model: currentModel, apiKeys: sanitizedApiKeys })
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: groqModelName,
+              apiKey: groqKey,
+              systemInstruction: systemInstruction + "\nيجب أن يكون الرد مصفوفة JSON صالحة فقط. لا تضع رموز ماركداون.",
+              promptText: promptText
+            })
           });
-          
-          if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.error || `Backend failed with status ${res.status}`);
+
+          if (!response.ok) {
+            const errBody = await response.json().catch(() => ({}));
+            throw new Error(`Groq Proxy Error: ${response.status} ${JSON.stringify(errBody)}`);
           }
-          const data = await res.json();
-          textOutput = data.text;
+
+          const result = await response.json();
+          const content = result.choices[0].message.content;
+          data = JSON.parse(extractJson(content));
+        } else {
+          const result = await retry(() => ai.models.generateContent({
+            model,
+            contents: [{ role: "user", parts: [{ text: promptText }] }],
+            config: { systemInstruction, responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: 2048 }
+          })) as any;
+          
+          data = JSON.parse(extractJson(result.text || "[]"));
         }
 
-        textOutput = extractJson(textOutput);
-        textOutput = textOutput.replace(/:\s*([0-9]{15,})[^,}\]]*/g, ': 100');
-        
-        let data: any = null;
-        try {
-          data = JSON.parse(textOutput || "[]");
-          // Handle nested JSON like { "questions": [...] }
-          if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
-            const possibleArray = Object.values(data).find(v => Array.isArray(v));
-            if (possibleArray) {
-              data = possibleArray;
-            } else {
-              data = [data];
-            }
-          }
-          if (!Array.isArray(data) || data.length === 0) {
-            throw new Error("Empty or invalid JSON array");
-          }
-        } catch (e) {
-          throw new Error("فشل في تحليل الرد من الذكاء الاصطناعي.");
-        }
+        if (!Array.isArray(data)) data = data.questions || Object.values(data).find(Array.isArray) || [data];
 
-        const processedQuestions = data.map((q: any, idx: number) => {
-          if (!q) return null;
-          const text = (q.text || q.question || "").trim();
-          const answer = (q.target || q.answer || "").trim();
-          
-          if (!text || !answer) return null;
-          
-          // Quality check: detection of English spam/hallucination
-          const englishContent = (text + answer).match(/[a-zA-Z]{4,}/g);
-          if (englishContent && englishContent.length > 5) {
-            console.warn("Rejected: Content contains too much English code or text.");
-            return null;
-          }
-
-          // Quality check: text too short or just a character
-          if (text.length < 8) return null;
-          
-          // Quality check: answer too long (usually a hallucination if it's a whole paragraph)
-          if (answer.length > 100) return null;
-
-          const rawAnswer = answer;
-          const cleanText = text.toLowerCase();
-          
-          if (mode === GameMode.HEX_GRID) {
-            const targetLetter = q.letter || (batchLetters ? batchLetters[idx] : null);
-            if (targetLetter) {
-              const normalizedAnswer = rawAnswer.replace(/^(ال|الـ)/, "").trim();
-              if (normalizedAnswer[0] !== targetLetter) {
-                console.warn(`AI Hallucination: Letter '${targetLetter}' requested, but got '${rawAnswer}'`);
-                return null;
-              }
-            }
-          }
-
-          // Spoiler detection: Ensure the answer (or its significant words) isn't in the question
-          const answerWords = rawAnswer.toLowerCase().split(' ').filter((w: string) => w.length > 3);
-          let finalCleanText = text;
-          for (const word of answerWords) {
-            if (cleanText.includes(word)) {
-              console.warn(`Spoiler detection: Answer word '${word}' found in question. Attempting to mask...`);
-              // Instead of failing, just mask it if it's found
-              const regex = new RegExp(word, 'gi');
-              finalCleanText = finalCleanText.replace(regex, '___');
-            }
-          }
-
-          return { ...q, text: finalCleanText, answer: rawAnswer };
-        }).filter((q: any) => q !== null);
-        
-        if (processedQuestions.length === 0) {
-          throw new Error("لم يتم العثور على أسئلة صالحة في الرد بعد التحقق.");
-        }
-
-        return await Promise.all(processedQuestions.map(async (q: any, idx: number) => {
-          const globalIdx = batchStartIdx + idx;
-          let actualLetter = q.letter;
-          if (mode === GameMode.HEX_GRID && batchLetters) {
-            actualLetter = q.letter || (batchLetters.length === data.length ? batchLetters[data.indexOf(q)] : q.letter);
-          }
-
-          let categoryName = q.category || category || topic;
-          let questionPoints = 100;
-          let qDifficulty = (q.difficulty as Difficulty) || difficulty;
-
+        return data.filter((q: any) => q && q.text && q.answer).map((q: any, idx: number) => {
+          let points = q.points || 100;
+          let diff = (q.difficulty as Difficulty) || difficulty;
           if (mode === GameMode.GRID) {
-            questionPoints = q.points || ((idx % 5) + 1) * 100;
-            // Force difficulty based on points for Jeopardy mode
-            if (questionPoints >= 400) qDifficulty = Difficulty.HARD;
-            else if (questionPoints === 300) qDifficulty = Difficulty.MEDIUM;
-            else qDifficulty = Difficulty.EASY;
+            points = q.points || ((idx % 5) + 1) * 100;
+            diff = points >= 400 ? Difficulty.HARD : (points === 300 ? Difficulty.MEDIUM : Difficulty.EASY);
           }
-
-          const newQuestion: Question = {
-            id: `q-${Date.now()}-${globalIdx}-${Math.random().toString(36).substr(2, 5)}`,
-            text: q.text || "",
-            answer: (isTrueFalse || isTrueFalseMode) 
-              ? (q.answer?.includes("خطأ") || q.answer?.includes("غلط") || q.answer?.includes("false") ? "خطأ" : "صواب")
-              : (q.target || q.answer || ""),
-            category: categoryName,
-            points: questionPoints,
-            letter: actualLetter,
-            hint: q.hint,
+          return {
+            id: `q-${Date.now()}-${batchStartIdx + idx}-${Math.random().toString(36).substr(2, 5)}`,
+            text: q.text,
+            answer: isTF ? (q.answer.includes("خطأ") ? "خطأ" : "صواب") : q.answer,
+            category: q.category || category || topic,
+            points,
+            letter: q.letter || (batchLetters ? batchLetters[idx] : undefined),
             explanation: q.explanation,
-            type: (isTrueFalse || isTrueFalseMode) ? QuestionType.TRUE_FALSE : QuestionType.OPEN,
-            difficulty: qDifficulty,
-            emojis: q.emojis,
-            topic: topic, // Associate with the generation topic
-            generatedBy: currentModel,
+            type: isTF ? QuestionType.TRUE_FALSE : QuestionType.OPEN,
+            difficulty: diff,
+            topic: topic,
+            generatedBy: model,
             mode: mode
           };
-          
-          // Save new questions to vault for future recycling
-          saveToVault(newQuestion).catch(err => console.error("Vault save failed", err));
-          
-          return newQuestion;
-        }));
-      } catch (error: any) {
-        lastErrorMsg = getErrorMessage(error);
-        const isQuota = isQuotaError(error);
-        
-        console.warn(`Model ${currentModel} failed: ${lastErrorMsg}. Trying next model...`);
-        
-        if (currentModel === modelsToTry[modelsToTry.length - 1]) {
-          break;
-        }
-        continue;
-      }
+        });
+      } catch (e) { console.warn(`Model ${model} failed`, e); continue; }
     }
-    
-    // LAST RESORT: Try to recycle random questions from vault if everything else failed
-    try {
-      const recycled = await getRandomQuestionsFromVault(batchNum, mode, difficulty, batchLetters);
-      if (recycled.length > 0) {
-        console.warn(`Recycling ${recycled.length} random questions from vault as absolute last resort.`);
-        return recycled;
-      }
-    } catch (e) {}
-
-    throw new Error(`فشل توليد الأسئلة بعد تجربة جميع المحركات المتاحة. (آخر خطأ: ${lastErrorMsg || "غير معروف"})`);
+    return [];
   };
 
   try {
     if (mode === GameMode.HEX_GRID) {
-      const selectedLetters = shuffleArray(ARABIC_ALPHABET.slice(0, 28));
-      const BATCH_SIZE = 7; 
-      const totalBatches = Math.ceil(selectedLetters.length / BATCH_SIZE);
-      
-      // Parallelize Hex batches (limiting to 4 concurrent calls for safety)
-      const batchPromises = [];
-      for (let i = 0; i < totalBatches; i++) {
-        const start = i * BATCH_SIZE;
-        const currentBatchLetters = selectedLetters.slice(start, start + BATCH_SIZE);
-        batchPromises.push(generateSingleBatch(currentBatchLetters.length, start, currentBatchLetters));
-      }
-      
-      const batchResults = await Promise.all(batchPromises.map(p => p.catch(e => {
-        console.error("Hex batch failed:", e);
-        return [];
-      })));
-      
-      batchResults.forEach(batch => allQuestions.push(...batch));
+      const letters = shuffleArray(ARABIC_ALPHABET.slice(0, 28));
+      const questions = await generateSingleBatch(28, 0, letters);
+      allQuestions.push(...questions);
     } else if (mode === GameMode.GRID) {
-      const hasCategories = categories && categories.length > 0;
-      const catsToUse = hasCategories 
-        ? categories.slice(0, 5) 
-        : ["ثقافة عامة", "علوم وطبيعة", "تاريخ وجغرافيا", "أمثال وحكم", "فنون وترفيه"];
-      
-      const systemInstruction = `أنت مصمم مسابقات محترف وصارم جداً. مهمتك توليد شبكة جيبوردي (Jeopardy) كاملة باللغة العربية الفصحى حصراً.
-تتكون الشبكة من 5 فئات، كل فئة تحتوي على 5 أسئلة متدرجة الصعوبة بشكل تصاعدي حقيقي.
-
-قواعد صارمة لا يمكن كسرها (Zero Tolerance):
-1. اللغة العربية: يُمنع استخدام الإنجليزية في نص السؤال أو الإجابة. إذا كان السؤال عن لعبة، ترجم المصطلحات أو اكتبها بالعربي مع وضع الإنجليزي (بين قوسين) فقط.
-2. تدرج الصعوبة (Critical): 
-   - سؤال 100: سهل جداً (معلومة عامة).
-   - سؤال 200: سهل.
-   - سؤال 300: متوسط.
-   - سؤال 400: صعب.
-   - سؤال 500: صعب جداً ودقيق (معلومة نادرة).
-3. نقاء الفئة المطلق: يُمنع منعاً باتاً وضع سؤال واحد خارج موضوع فئته. 
-   - فئة "جغرافيا" و"تاريخ" و"علوم" هي للعالم الحقيقي فقط. يمنع وضع أسئلة ألعاب أو خيال فيها.
-   - فئة ألعاب مثل "أوفرواتش" أو "هولو نايت" يجب أن تلتزم بمحتوى اللعبة فقط.
-4. هيكلية الرد: يجب أن يكون الرد مصفوفة من الفئات، كل فئة تحتوي على مصفوفة من الأسئلة.`;
-
-      const promptText = `أنشئ شبكة مسابقات (Jeopardy) كاملة باللغة العربية لـ 5 فئات حول موضوع "${topic}".
-الفئات المطلوبة هي بالترتيب: [${catsToUse.join("، ")}].
-
-المتطلبات:
-1. يجب أن يحتوي الرد على مصفوفة JSON لـ 5 كائنات (فئات).
-2. كل كائن فئة يحتوي على "categoryName" و "questions" (مصفوفة من 5 أسئلة).
-3. الأسئلة تترتب حسب النقاط (100، 200، 300، 400، 500). يجب أن تزداد الصعوبة بشكل ملحوظ مع كل قفزة نقاط.
-4. الالتزام الكامل بموضوع كل فئة وعدم الخلط بينها نهائياً.`;
-
-      const modelsToTry = [
-        aiModel,
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b"
-      ].filter((m, i, self) => m && self.indexOf(m) === i);
-
-      let success = false;
-      for (const currentModel of modelsToTry) {
-        try {
-          const ai = getAI();
-          const response = await retry(() => (ai.models as any).generateContent({
-            model: currentModel,
-            contents: [{ role: "user", parts: [{ text: promptText }] }],
-            config: {
-              systemInstruction: systemInstruction,
-              responseMimeType: "application/json",
-              maxOutputTokens: 8192,
-              responseSchema: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    categoryName: { type: Type.STRING },
-                    questions: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          text: { type: Type.STRING },
-                          answer: { type: Type.STRING },
-                          points: { type: Type.NUMBER }
-                        },
-                        required: ["text", "answer", "points"]
-                      }
-                    }
-                  },
-                  required: ["categoryName", "questions"]
-                }
-              }
-            }
-          })) as any;
-
-          const textOutput = extractJson(response.text || "[]");
-          const categoriesData = JSON.parse(textOutput);
-          
-          if (Array.isArray(categoriesData) && categoriesData.length > 0) {
-            categoriesData.forEach((catObj, catIdx) => {
-              const currentCatName = catsToUse[catIdx] || catObj.categoryName;
-              if (catObj.questions && Array.isArray(catObj.questions)) {
-                catObj.questions.forEach((q: any, qIdx: number) => {
-                  allQuestions.push({
-                    id: `gen-grid-${Date.now()}-${catIdx}-${qIdx}`,
-                    text: q.text || "سؤال غير محدد",
-                    answer: q.answer || "",
-                    category: currentCatName,
-                    points: q.points || (qIdx + 1) * 100,
-                    type: QuestionType.OPEN,
-                    difficulty: (qIdx < 2 ? Difficulty.EASY : qIdx < 4 ? Difficulty.MEDIUM : Difficulty.HARD)
-                  });
-                });
-              }
-            });
-            success = true;
-            break;
-          }
-        } catch (err) {
-          console.warn(`Grid generation with ${currentModel} failed, trying next...`, err);
-          continue;
-        }
-      }
-
-      if (!success) {
-        console.warn("All AI models failed for Grid, falling back to local bank.");
-        return getQuestionsFromBank(topic, 25, mode, difficulty);
-      }
+      const cats = (categories && categories.length > 0) ? categories.slice(0, 5) : ["ثقافة", "علوم", "تاريخ", "أمثال", "فن"];
+      const questions = await generateSingleBatch(25, 0, undefined, cats.join(", "));
+      allQuestions.push(...questions);
     } else {
-      // Faster batching for other modes
-      const batchSize = 15;
-      const numBatches = Math.ceil(numQuestions / batchSize);
-      const batchPromises = [];
-      
-      for (let i = 0; i < numBatches; i++) {
-        batchPromises.push(generateSingleBatch(batchSize, i * batchSize));
-      }
-      
-      const results = await Promise.all(batchPromises.map(p => p.catch(() => [])));
-      results.forEach(batch => allQuestions.push(...batch));
+      const questions = await generateSingleBatch(numQuestions, 0);
+      allQuestions.push(...questions);
     }
-
-    if (allQuestions.length === 0) {
-      // Final emergency fallback
-      return getQuestionsFromBank(topic, numQuestions, mode, difficulty);
-    }
-
+    
+    if (allQuestions.length === 0) return getQuestionsFromBank(topic, numQuestions, mode, difficulty);
     return allQuestions.slice(0, numQuestions);
-  } catch (error: any) {
-    console.error("Generation failed:", error);
+  } catch (e) {
     return getQuestionsFromBank(topic, numQuestions, mode, difficulty);
   }
 };
@@ -939,49 +534,21 @@ export const autoGenerateAllQuestions = async (
   signal?: AbortSignal
 ): Promise<void> => {
   const modesToGenerate = [
-    { mode: GameMode.HEX_GRID, count: 120, label: "شبكة الحروف" },
-    { mode: GameMode.GRID, count: 100, label: "الشبكة الكلاسيكية" },
-    { mode: GameMode.BUZZER, count: 40, label: "تحدي البازر" },
-    { mode: GameMode.TRUE_FALSE, count: 40, label: "صواب أم خطأ" },
-    { mode: GameMode.SILENT_GUESS, count: 40, label: "تمثيل صامت" }
+    { mode: GameMode.HEX_GRID, count: 28, label: "شبكة الحروف" }, // Reduced count for faster auto-gen
+    { mode: GameMode.GRID, count: 25, label: "الشبكة الكلاسيكية" },
+    { mode: GameMode.BUZZER, count: 20, label: "تحدي البازر" },
+    { mode: GameMode.TRUE_FALSE, count: 20, label: "صواب أم خطأ" },
+    { mode: GameMode.SILENT_GUESS, count: 20, label: "تمثيل صامت" }
   ];
 
   for (const { mode, count, label } of modesToGenerate) {
     if (signal?.aborted) throw new Error("تم إلغاء التوليد");
     if (onProgress) onProgress(`جاري توليد أسئلة: ${label}...`);
-    
     try {
-      // For HEX_GRID, we generate in a specific way
-      if (mode === GameMode.HEX_GRID) {
-        // 4 questions per letter (28 letters * 4 = 112) + 8 steal = 120
-        const letters = ARABIC_ALPHABET.slice(0, 28);
-        const allHexQuestions: Question[] = [];
-        
-        for (const letter of letters) {
-          if (signal?.aborted) throw new Error("تم إلغاء التوليد");
-          if (onProgress) onProgress(`توليد حرف (${letter}) لشبكة الحروف...`);
-          const batch = await generateQuestions(topic, 4, [QuestionType.OPEN], mode, difficulty, undefined, undefined, allHexQuestions.map(q => q.answer));
-          allHexQuestions.push(...batch);
-        }
-        
-        // Add 8 steal questions
-        if (signal?.aborted) throw new Error("تم إلغاء التوليد");
-        if (onProgress) onProgress(`توليد أسئلة السرقة...`);
-        const stealBatch = await generateQuestions(topic, 8, [QuestionType.OPEN], mode, difficulty, undefined, undefined, allHexQuestions.map(q => q.answer));
-        allHexQuestions.push(...stealBatch);
-      } else if (mode === GameMode.GRID) {
-        // 4 rounds of 5 categories = 20 categories total
-        // Parallelize rounds for significant speed boost (target 30-40s total)
-        if (onProgress) onProgress(`توليد 4 جولات للشبكة الكلاسيكية بالتوازي...`);
-        const roundPromises = [1, 2, 3, 4].map(r => generateQuestions(topic, 25, [QuestionType.OPEN], mode, difficulty));
-        await Promise.all(roundPromises);
-      } else {
-        await generateQuestions(topic, count, [mode === GameMode.TRUE_FALSE ? QuestionType.TRUE_FALSE : QuestionType.OPEN], mode, difficulty);
-      }
+      await generateQuestions(topic, count, [mode === GameMode.TRUE_FALSE ? QuestionType.TRUE_FALSE : QuestionType.OPEN], mode, difficulty);
     } catch (err: any) {
       if (err.message === "تم إلغاء التوليد") throw err;
       console.error(`Failed to generate for mode ${mode}:`, err);
-      // Continue to next mode even if one fails
     }
   }
 };
@@ -1197,6 +764,39 @@ ${mode === GameMode.SILENT_GUESS ? "الإجابات للتمثيل الصامت
 
 export const testAI = async (model: string): Promise<{ success: boolean, message: string }> => {
   try {
+    if (model.startsWith('groq')) {
+      let groqKey = "";
+      try {
+        const savedSettings = localStorage.getItem('appSettings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          if (parsed.apiKeys?.groq) groqKey = parsed.apiKeys.groq;
+        }
+      } catch (e) {}
+
+      const groqModelName = model.replace('groq-', '');
+
+      const response = await fetch('/api/groq', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: groqModelName,
+          apiKey: groqKey,
+          systemInstruction: "Verify connection.",
+          promptText: "Say 'OK'"
+        })
+      });
+
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        return { success: false, message: `Groq Error: ${response.status} ${JSON.stringify(errBody)}` };
+      }
+
+      return { success: true, message: "تم الاتصال بـ Groq بنجاح!" };
+    }
+
     const ai = getAI();
     const modelName = model.includes("gemini") ? model : "gemini-2.0-flash";
     
@@ -1374,6 +974,38 @@ export const fetchSingleQuestion = async (
               throw new Error("تم حجب الرد من قبل فلاتر الأمان.");
             }
           }
+        } else if (currentModel.startsWith('groq') || currentModel.startsWith('qrok')) {
+          let groqKey = "";
+          try {
+            const savedSettings = localStorage.getItem('appSettings');
+            if (savedSettings) {
+              const parsed = JSON.parse(savedSettings);
+              if (parsed.apiKeys?.groq) groqKey = parsed.apiKeys.groq;
+            }
+          } catch (e) {}
+
+          if (!groqKey) throw new Error("Groq API Key missing");
+
+          const groqModelName = currentModel.replace('groq-', '').replace('qrok-', '');
+
+          const response = await fetch('/api/groq', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: groqModelName,
+              apiKey: groqKey,
+              systemInstruction: systemInstruction + "\nيجب أن يكون الرد كائن JSON صالح فقط. لا تضع رموز ماركداون.",
+              promptText: promptText
+            })
+          });
+
+          if (!response.ok) {
+            const errBody = await response.json().catch(() => ({}));
+            throw new Error(`Groq Proxy Error: ${response.status} ${JSON.stringify(errBody)}`);
+          }
+
+          const result = await response.json();
+          textOutput = result.choices[0].message.content;
         } else {
           let apiKeys = {};
           try {
@@ -1392,7 +1024,7 @@ export const fetchSingleQuestion = async (
           const res = await fetch('/api/generate-questions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ promptText: promptText + " Return ONLY valid JSON object.", model: currentModel, apiKeys: sanitizedApiKeys })
+            body: JSON.stringify({ promptText: promptText + " Return ONLY valid JSON object.", model: currentModel, apiKeys: sanitizedApiKeys, systemInstruction })
           });
           
           if (!res.ok) {

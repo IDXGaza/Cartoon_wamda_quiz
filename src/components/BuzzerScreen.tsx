@@ -14,7 +14,8 @@ import {
   CartoonX, 
   CartoonEye,
   CartoonTrophy,
-  CartoonBot
+  CartoonBot,
+  CartoonTimer
 } from './CartoonIcons';
 import confetti from 'canvas-confetti';
 import { playSound } from '../utils/sound';
@@ -33,7 +34,29 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish }) => {
   const [remotePlayers, setRemotePlayers] = useState<Player[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(config.buzzerTimeout || 20);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const timerInterval = React.useRef<any>(null);
+
+  useEffect(() => {
+    if (isGameStarted && !roomState?.buzzedPlayerId && !showAnswer) {
+      timerInterval.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timerInterval.current);
+            setShowAnswer(true);
+            playSound('wrong');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      clearInterval(timerInterval.current);
+    }
+    return () => clearInterval(timerInterval.current);
+  }, [isGameStarted, roomState?.buzzedPlayerId, showAnswer]);
+
   const questionStartTime = React.useRef(Date.now());
   const { showToast } = useToast();
 
@@ -125,7 +148,7 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish }) => {
     // Performance Tracking
     const timeSpentMs = Date.now() - questionStartTime.current;
     if (currentQuestion.id && !currentQuestion.id.startsWith('custom') && !currentQuestion.id.startsWith('manual')) {
-      updateQuestionStats(currentQuestion.id, correct, timeSpentMs).catch(err => console.error("Vault update failed", err));
+      updateQuestionStats(currentQuestion, correct, timeSpentMs).catch(err => console.error("Vault update failed", err));
     }
 
     const buzzedPlayer = remotePlayers.find(p => p.id === roomState.buzzedPlayerId);
@@ -164,6 +187,7 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish }) => {
         });
         setCurrentQuestionIndex(prev => prev + 1);
         setShowAnswer(false);
+        setTimeLeft(config.buzzerTimeout || 20);
       } else {
         onFinish(remotePlayers);
       }
@@ -260,6 +284,10 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish }) => {
             <span className="bg-[var(--color-primary-gold)] px-6 py-2 rounded-xl border-4 border-[var(--color-ink-black)] font-display text-xl shadow-[4px_4px_0px_var(--color-ink-black)]">
               سؤال {currentQuestionIndex + 1} / {questions.length}
             </span>
+            <div className={`flex items-center gap-2 px-6 py-2 rounded-xl border-4 border-[var(--color-ink-black)] font-display text-xl shadow-[4px_4px_0px_var(--color-ink-black)] ${timeLeft <= 5 ? 'bg-red-500 text-white animate-pulse' : 'bg-white text-[var(--color-ink-black)]'}`}>
+              <CartoonTimer size={24} />
+              <span>{timeLeft} ث</span>
+            </div>
             {currentQuestion.generatedBy && (
               <span className="bg-white px-4 py-2 rounded-xl border-2 border-[var(--color-ink-black)] font-bold text-xs flex items-center gap-2 shadow-[2px_2px_0px_var(--color-ink-black)]">
                 <CartoonBot size={14} />
