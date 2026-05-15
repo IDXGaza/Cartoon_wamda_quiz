@@ -1,4 +1,3 @@
-```tsx
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { collection, doc, onSnapshot, setDoc, updateDoc, query, orderBy } from 'firebase/firestore';
@@ -109,7 +108,7 @@ const TabooScreen: React.FC<Props> = ({ config, questions, players, onFinish }) 
     }
   };
 
-  const joinUrl = `${window.location.origin}${window.location.pathname}?mode=taboo&roomId=${roomId}`;
+  const joinUrl = `${window.location.origin}${window.location.pathname}#/?mode=taboo&roomId=${roomId}`;
 
   const currentWord = roomState?.currentWord || '';
   const tabooWords = roomState?.tabooWords || [];
@@ -191,4 +190,3 @@ const TabooScreen: React.FC<Props> = ({ config, questions, players, onFinish }) 
 };
 
 export default TabooScreen;
-```

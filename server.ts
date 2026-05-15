@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 
 const app = express();
-const PORT = parseInt(process.env.PORT || "8080");
+const PORT = 3000;
 
 app.use(express.json());
 
@@ -122,7 +122,7 @@ async function startServer() {
     app.use(express.static(distPath));
 
     // Fallback index.html for all other request
-    app.get("/*", (req, res) => {
+    app.use((req, res) => {
       res.sendFile(path.resolve(distPath, "index.html"));
     });
   }
