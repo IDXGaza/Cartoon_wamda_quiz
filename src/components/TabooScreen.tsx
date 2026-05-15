@@ -6,6 +6,7 @@ import { GameConfig, Question, Player } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { useToast } from '../contexts/ToastContext';
 import { playSound } from '../utils/sound';
+import { TABOO_QUESTIONS } from '../data/tabooBank';
 
 interface Props {
   config?: GameConfig;
@@ -63,10 +64,23 @@ const TabooScreen: React.FC<Props> = ({ config, questions, players, onFinish }) 
   const handleStart = async () => {
     if (!questions || questions.length === 0) return;
     const roomRef = doc(db, 'rooms', roomId);
+
+    console.log("Taboo words for current question:", questions[0].tabooWords);
+    
+    let tabooWordsToUse = questions[0].tabooWords || [];
+    
+    if (tabooWordsToUse.length === 0) {
+      const foundQuestion = TABOO_QUESTIONS.find(q => q.text === questions[0].text);
+      if (foundQuestion && foundQuestion.tabooWords) {
+        tabooWordsToUse = foundQuestion.tabooWords;
+        console.log("Found taboo words from bank:", tabooWordsToUse);
+      }
+    }
+
     await updateDoc(roomRef, {
       gameState: 'playing',
       currentWord: questions[0].text,
-      tabooWords: questions[0].tabooWords || [],
+      tabooWords: tabooWordsToUse,
       score: 0
     });
   };
