@@ -4,14 +4,14 @@ import { Question, Player, GameConfig, GameMode } from '../types';
 import { playSound } from '../utils/sound';
 import { CartoonTimer, CartoonEye, CartoonSkip, CartoonRocket } from './CartoonIcons';
 
-interface SilentGuessScreenProps {
+interface SilentActingScreenProps {
   config: GameConfig;
   questions: Question[];
   players: Player[];
   onFinish: (players: Player[]) => void;
 }
 
-const SilentGuessScreen: React.FC<SilentGuessScreenProps> = ({ config, questions, players, onFinish }) => {
+const SilentActingScreen: React.FC<SilentActingScreenProps> = ({ config, questions, players, onFinish }) => {
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [showWordToActor, setShowWordToActor] = useState(false);
   const initialTime = config.timerDuration || 60;
@@ -40,38 +40,23 @@ const SilentGuessScreen: React.FC<SilentGuessScreenProps> = ({ config, questions
         className="w-full max-w-2xl vintage-panel p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] text-center relative overflow-hidden border-4 md:border-8 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)]"
       >
         <div className="flex justify-between items-center mb-6 md:mb-10 text-[var(--color-ink-black)] flex-wrap gap-4">
-          <h1 className="text-4xl md:text-7xl font-display drop-shadow-[2px_2px_0_var(--color-primary-gold)] md:drop-shadow-[4px_4px_0_var(--color-primary-gold)]">الوضع الصامت</h1>
+          <h1 className="text-4xl md:text-7xl font-display drop-shadow-[2px_2px_0_var(--color-primary-gold)] md:drop-shadow-[4px_4px_0_var(--color-primary-gold)]">بدون كلام 🤐</h1>
           {activeQuestion.generatedBy && (
-            <span className="bg-white px-4 py-2 rounded-xl border-2 border-[var(--color-ink-black)] font-bold text-xs flex items-center gap-2 shadow-[2px_2px_0_var(--color-ink-black)]">
+            <span className="bg-white px-4 py-2 rounded-xl border-2 border-[var(--color-ink-black)] font-bold text-xs flex items-center gap-2 shadow-[2px_2px_0px_var(--color-ink-black)]">
               <CartoonRocket size={14} className="rotate-45" />
               {activeQuestion.generatedBy}
             </span>
           )}
         </div>
         
-         <div className="bg-[var(--color-off-white)] p-6 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] border-4 border-[var(--color-ink-black)] mb-6 md:mb-10 shadow-[inner_4px_4px_0_rgba(0,0,0,0.1)]">
-          <p className="text-xl md:text-3xl font-display mb-4 md:mb-6 text-[var(--color-bg-dark)]">
-            {showWordToActor ? 'الكلمة المطلوبة (لا تقلها!):' : 'الكلمة الحالية:'}
-          </p>
+        <div className="bg-[var(--color-off-white)] p-6 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] border-4 border-[var(--color-ink-black)] mb-6 md:mb-10 shadow-[inner_4px_4px_0_rgba(0,0,0,0.1)]">
+          <p className="text-xl md:text-3xl font-display mb-4 md:mb-6 text-[var(--color-bg-dark)]">الكلمة الحالية:</p>
           {showWordToActor ? (
             <>
               {activeQuestion.category && (
                 <p className="text-lg md:text-2xl font-display text-[var(--color-bg-dark)]/60 mb-2 md:mb-4">الفئة: {activeQuestion.category}</p>
               )}
               <p className="text-4xl md:text-8xl font-display text-[var(--color-primary-blue)] drop-shadow-[1px_1px_0_var(--color-ink-black)] md:drop-shadow-[2px_2px_0_var(--color-ink-black)] mb-8">{activeQuestion.answer}</p>
-              
-              {activeQuestion.tabooWords && activeQuestion.tabooWords.length > 0 && (
-                <div className="mt-8 pt-8 border-t-4 border-dashed border-[var(--color-ink-black)]/20">
-                  <p className="text-2xl md:text-3xl font-display text-[var(--color-primary-red)] mb-4">الكلمات المحظورة (ممنوع قولها): 🚫</p>
-                  <div className="flex flex-wrap justify-center gap-3">
-                    {activeQuestion.tabooWords.map((word, i) => (
-                      <span key={i} className="bg-white px-4 py-2 rounded-xl border-2 border-[var(--color-primary-red)] text-xl md:text-2xl font-display shadow-[3px_3px_0px_var(--color-primary-red)]">
-                        {word}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </>
           ) : (
             <p className="text-4xl md:text-8xl font-display text-[var(--color-bg-dark)]/30">******</p>
@@ -132,4 +117,4 @@ const SilentGuessScreen: React.FC<SilentGuessScreenProps> = ({ config, questions
   );
 };
 
-export default SilentGuessScreen;
+export default SilentActingScreen;

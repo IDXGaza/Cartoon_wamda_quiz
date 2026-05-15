@@ -6,7 +6,8 @@ export enum GameMode {
   BUZZER = 'BUZZER',
   TIMED = 'TIMED',
   SILENT_GUESS = 'SILENT_GUESS',
-  TRUE_FALSE = 'TRUE_FALSE'
+  TRUE_FALSE = 'TRUE_FALSE',
+  TABOO = 'TABOO'
 }
 
 export enum QuestionType {
@@ -16,9 +17,11 @@ export enum QuestionType {
 }
 
 export enum Difficulty {
+  BEGINNER = 'BEGINNER',
   EASY = 'EASY',
   MEDIUM = 'MEDIUM',
-  HARD = 'HARD'
+  HARD = 'HARD',
+  EXPERT = 'EXPERT'
 }
 
 export interface Question {
@@ -39,6 +42,7 @@ export interface Question {
   emojis?: string[];
   topic?: string;
   generatedBy?: string;
+  tabooWords?: string[];
   
   // Vault Metadata
   times_played?: number;
@@ -81,6 +85,7 @@ export interface GameConfig {
   customJson?: string;
   timerDuration?: number; // for timed racing
   buzzerTimeout?: number; // for buzzer mode
+  aiModel?: string;
 }
 
 export interface SavedSet {

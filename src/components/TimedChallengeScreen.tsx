@@ -27,7 +27,7 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
   const [localQuestions, setLocalQuestions] = useState<Question[]>(initialQuestions);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(settings.timedDuration);
+  const [timeLeft, setTimeLeft] = useState(config.timerDuration || settings.timedDuration);
   const [gameState, setGameState] = useState<'ready' | 'playing' | 'turn_finished' | 'finished'>('ready');
   const [revealed, setRevealed] = useState(false);
   const [roundScore, setRoundScore] = useState(0);
@@ -98,7 +98,7 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
   }, [gameState, timeLeft]);
 
   const handleStartTurn = () => {
-    setTimeLeft(settings.timedDuration);
+    setTimeLeft(config.timerDuration || settings.timedDuration);
     setRoundScore(0);
     setGameState('playing');
   };
@@ -188,7 +188,7 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
           </div>
           <h2 className="text-4xl md:text-8xl font-display text-[var(--color-ink-black)] mb-4 md:mb-6 drop-shadow-[2px_2px_0_var(--color-primary-blue)] md:drop-shadow-[4px_4px_0_var(--color-primary-blue)]">دور {currentPlayer.name}</h2>
           <p className="text-lg md:text-2xl text-[var(--color-bg-dark)] font-arabic font-bold mb-8 md:mb-12 leading-relaxed bg-[var(--color-off-white)] p-4 md:p-6 rounded-2xl md:rounded-3xl border-4 border-[var(--color-ink-black)] shadow-[inner_4px_4px_0_rgba(0,0,0,0.1)]">
-            أمامك {settings.timedDuration} ثانية للإجابة على أكبر عدد ممكن من الأسئلة. 
+            أمامك {config.timerDuration || settings.timedDuration} ثانية للإجابة على أكبر عدد ممكن من الأسئلة. 
             السرعة والتركيز هما مفتاح الفوز!
           </p>
           <button 
@@ -272,7 +272,7 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
             <div className="absolute top-0 left-0 right-0 h-2 md:h-3 bg-[var(--color-ink-black)]/10 overflow-hidden">
               <div 
                 className={`h-full transition-all duration-1000 ${timeLeft <= 10 ? 'bg-[var(--color-primary-red)]' : 'bg-[var(--color-primary-green)]'}`}
-                style={{ width: `${(timeLeft / settings.timedDuration) * 100}%` }}
+                style={{ width: `${(timeLeft / (config.timerDuration || settings.timedDuration)) * 100}%` }}
               />
             </div>
 
@@ -308,13 +308,6 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
                     </button>
                     
                     <div className="flex gap-4">
-                      <button 
-                        onClick={refreshQuestion}
-                        className="flex-1 bg-[var(--color-accent-sky)] text-[var(--color-ink-black)] p-4 md:p-6 rounded-xl md:rounded-[2rem] text-lg md:text-2xl font-display flex items-center justify-center gap-3 md:gap-4 border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0_var(--color-ink-black)] hover:scale-105 transition-transform"
-                      >
-                        <CartoonBot size={24} className="md:w-8 md:h-8" />
-                        <span>تغيير السؤال</span>
-                      </button>
 
                       <button 
                         onClick={() => handleAnswer(false)}

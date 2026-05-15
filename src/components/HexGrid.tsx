@@ -16,6 +16,14 @@ interface HexGridProps {
   handleHexClick: (q: Question) => void;
 }
 
+const LETTERS = [
+  'أ', 'ب', 'ت', 'ث', 'ج', 'ح',
+  'خ', 'د', 'ذ', 'ر', 'ز',
+  'س', 'ش', 'ص', 'ض', 'ط', 'ظ',
+  'ع', 'غ', 'ف', 'ق', 'ك',
+  'ل', 'م', 'ن', 'ه', 'و', 'ي'
+];
+
 const HexGrid: React.FC<HexGridProps> = ({
   grid,
   players,
@@ -63,11 +71,11 @@ const HexGrid: React.FC<HexGridProps> = ({
           <g key={`top-${i}`} transform={`translate(${(i - 1) * hexHorizontalSpacing + hexHalfWidth}, ${-hexVerticalSpacing})`}>
             <polygon 
               points={points} 
-              className={`goal-hex ${currentPlayerIndex === 1 ? 'animate-pulse' : ''}`}
+              className="goal-hex"
               style={{ 
                 fill: players[1].color, 
                 stroke: players[1].color, 
-                strokeWidth: currentPlayerIndex === 1 ? 10 * scale : 5 * scale,
+                strokeWidth: 5 * scale,
                 strokeLinejoin: 'round'
               }} 
             />
@@ -79,11 +87,11 @@ const HexGrid: React.FC<HexGridProps> = ({
           <g key={`bottom-${i}`} transform={`translate(${(i - 1) * hexHorizontalSpacing + hexHalfWidth}, ${5 * hexVerticalSpacing})`}>
             <polygon 
               points={points} 
-              className={`goal-hex ${currentPlayerIndex === 1 ? 'animate-pulse' : ''}`}
+              className="goal-hex"
               style={{ 
                 fill: players[1].color, 
                 stroke: players[1].color, 
-                strokeWidth: currentPlayerIndex === 1 ? 10 * scale : 5 * scale,
+                strokeWidth: 5 * scale,
                 strokeLinejoin: 'round'
               }} 
             />
@@ -97,11 +105,11 @@ const HexGrid: React.FC<HexGridProps> = ({
             <g key={`left-${rIdx}`} transform={`translate(${-hexHorizontalSpacing + xOffset}, ${rIdx * hexVerticalSpacing})`}>
               <polygon 
                 points={points} 
-                className={`goal-hex ${currentPlayerIndex === 0 ? 'animate-pulse' : ''}`}
+                className="goal-hex"
                 style={{ 
                   fill: players[0].color, 
                   stroke: players[0].color, 
-                  strokeWidth: currentPlayerIndex === 0 ? 10 * scale : 5 * scale,
+                  strokeWidth: 5 * scale,
                   strokeLinejoin: 'round'
                 }} 
               />
@@ -116,11 +124,11 @@ const HexGrid: React.FC<HexGridProps> = ({
             <g key={`right-${rIdx}`} transform={`translate(${size * hexHorizontalSpacing + xOffset}, ${rIdx * hexVerticalSpacing})`}>
               <polygon 
                 points={points} 
-                className={`goal-hex ${currentPlayerIndex === 0 ? 'animate-pulse' : ''}`}
+                className="goal-hex"
                 style={{ 
                   fill: players[0].color, 
                   stroke: players[0].color, 
-                  strokeWidth: currentPlayerIndex === 0 ? 10 * scale : 5 * scale,
+                  strokeWidth: 5 * scale,
                   strokeLinejoin: 'round'
                 }} 
               />

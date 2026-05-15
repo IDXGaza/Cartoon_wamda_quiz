@@ -22,6 +22,7 @@ import StartScreen from './components/StartScreen';
 import GameScreen from './components/GameScreen';
 import SummaryScreen from './components/SummaryScreen';
 import RemoteBuzzer from './components/RemoteBuzzer';
+import TabooScreen from './components/TabooScreen';
 import SettingsModal from './components/SettingsModal';
 import LibraryScreen from './components/LibraryScreen';
 import BankManager from './components/BankManager';
@@ -33,13 +34,13 @@ import { auth, db } from './firebase';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 const App: React.FC = () => {
-  const [gameState, setGameState] = useState<'start' | 'config' | 'loading' | 'playing' | 'summary' | 'remote' | 'error' | 'library' | 'bank'>('start');
+  const [gameState, setGameState] = useState<'start' | 'config' | 'loading' | 'playing' | 'summary' | 'remote' | 'remote-taboo' | 'error' | 'library' | 'bank'>('start');
   const [config, setConfig] = useState<GameConfig | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [loadingTime, setLoadingTime] = useState(0);
-  const [loadingStatus, setLoadingStatus] = useState("جاري التحضير...");
+  const [loadingStatus, setLoadingStatus] = useState("جاري تجهيز اللعبة...");
   const loadingTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const [sessionId] = useState(() => Math.random().toString(36).substr(2, 9));
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -155,10 +156,14 @@ const App: React.FC = () => {
       const hashParams = new URLSearchParams(window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '');
       
       const isRemote = searchParams.get('mode') === 'remote' || hashParams.get('mode') === 'remote';
+      const isRemoteTaboo = searchParams.get('mode') === 'taboo' || hashParams.get('mode') === 'taboo';
       
       if (isRemote) {
         console.log("Remote mode detected from URL params");
         setGameState('remote');
+      } else if (isRemoteTaboo) {
+        console.log("Remote Taboo mode detected from URL params");
+        setGameState('remote-taboo');
       }
     };
     
@@ -183,14 +188,14 @@ const App: React.FC = () => {
     setPlayers(newConfig.players);
     setGameState('loading');
     setLoadingTime(0);
-    setLoadingStatus("جاري بدء محرك توليد الأسئلة...");
+    setLoadingStatus("تنشيط الذكاء الاصطناعي...");
     setErrorMessage('');
 
     if (loadingTimerRef.current) clearInterval(loadingTimerRef.current);
     loadingTimerRef.current = setInterval(() => {
       setLoadingTime(prev => {
         const next = prev + 0.1;
-        if (next < 3) setLoadingStatus("جاري الاتصال بخوادم Gemini...");
+        if (next < 3) setLoadingStatus("جاري الاتصال بالخوادم...");
         else if (next < 7) setLoadingStatus("توليد الفئات وتحليل الموضوع...");
         else if (next < 12) setLoadingStatus("صياغة الأسئلة بالتوازي (دقة عالية)...");
         else if (next < 16) setLoadingStatus("ضبط مستويات الصعوبة والمراجعة...");
@@ -245,7 +250,7 @@ const App: React.FC = () => {
         const requiredCount = newConfig.mode === GameMode.HEX_GRID ? 28 : (newConfig.mode === GameMode.GRID ? 25 : newConfig.numQuestions);
         // Use the new getQuestionsFromBank helper
         const { getQuestionsFromBank } = await import('./services/geminiService');
-        generated = await getQuestionsFromBank(topicToUse, requiredCount, newConfig.mode, newConfig.difficulty, Array.from(excludedItemsSet));
+        generated = await getQuestionsFromBank(topicToUse, requiredCount, newConfig.mode, newConfig.difficulty, Array.from(excludedItemsSet), newConfig.categories);
         
         // Final shuffle ONLY if not in GRID mode to preserve category/point ordering
         if (newConfig.mode !== GameMode.GRID) {
@@ -290,7 +295,7 @@ const App: React.FC = () => {
               newConfig.questionTypes,
               newConfig.mode,
               newConfig.difficulty,
-              settings.aiModel,
+              settings.aiModel === 'custom' ? (settings.customModel || 'gemini-1.5-flash') : settings.aiModel,
               newConfig.categories,
               activeExclusions
             );
@@ -570,7 +575,7 @@ const App: React.FC = () => {
                   <CartoonGear size={40} className="animate-spin-slow" />
                 </div>
               </div>
-              <h2 className="text-3xl font-bold text-[var(--color-ink-black)] mt-8 vintage-text">جاري تهيئة النظام...</h2>
+              <h2 className="text-3xl font-bold text-[var(--color-ink-black)] mt-8 vintage-text">جاري تجهيز النظام...</h2>
               <p className="text-[var(--color-bg-dark)] font-bold mt-2">نحن نجهز لك تجربة فريدة</p>
             </motion.div>
           ) : (
@@ -610,6 +615,8 @@ const App: React.FC = () => {
 
               {!authError && isAuthReady && gameState === 'remote' && <RemoteBuzzer />}
               
+              {!authError && isAuthReady && gameState === 'remote-taboo' && <TabooScreen />}
+              
               {!authError && isAuthReady && gameState === 'config' && <ConfigScreen onStart={handleStartGame} />}
               
               {!authError && isAuthReady && gameState === 'library' && <LibraryScreen onPlaySet={handlePlaySavedSet} onClose={() => setGameState('config')} />}
@@ -633,7 +640,7 @@ const App: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <h2 className="text-4xl font-bold text-[var(--color-ink-black)] mb-4 vintage-text">جاري تحضير التحدي...</h2>
-                    <p className="text-[var(--color-bg-dark)] text-xl font-bold">الذكاء الاصطناعي يقوم بتأليف الأسئلة وتجهيز اللعبة</p>
+                    <p className="text-[var(--color-bg-dark)] text-xl font-bold">جاري تأليف الأسئلة وتجهيز اللعبة</p>
                     <div className="mt-8 bg-black/5 p-6 rounded-2xl border-2 border-dashed border-black/20 max-w-sm mx-auto">
                       {(() => {
                         // Dynamic estimation based on mode and expected parallel speed

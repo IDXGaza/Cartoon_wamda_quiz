@@ -26,8 +26,8 @@ const MODE_RULES = {
     system: "أنت محترف في تصميم مسابقات الجيبوردي (Jeopardy) باللغة العربية، مع فئات متدرجة الصعوبة بشكل حقيقي.",
     rules: [
       "اللغة: العربية الفصحى هي اللغة الوحيدة. يُمنع كتابة أسئلة بالإنجليزية.",
-      "تدرج الصعوبة: يجب أن يكون السؤال ذو الـ 100 سهل جداً، والـ 500 يتطلب معرفة عميقة جداً أو نادرة.",
-      "كل فئة يجب أن تحتوي على 5 أسئلة متسلسلة في الصعوبة.",
+      "تدرج الصعوبة يتصاعد حسب النقاط: 100 نقطة (مبتدئ)، 200 نقطة (سهل)، 300 نقطة (متوسط)، 400 نقطة (صعب)، 500 نقطة (خبير).",
+      "كل فئة يجب أن تحتوي على 5 أسئلة متسلسلة في الصعوبة بهيكل النقاط المذكور.",
       "الإجابات يجب أن تكون محددة وقصيرة.",
       "ابتكار فئات مبتكرة ومرتبطة بالموضوع الرئيسي."
     ]
@@ -50,7 +50,7 @@ const MODE_RULES = {
     ]
   },
   [GameMode.SILENT_GUESS]: {
-    system: "أنت مصمم مسابقات 'بدون كلام' وتمثيل إيماءات.",
+    system: "أنت مصمم مسابقات 'قول بس لا تقول' وتمثيل إيماءات.",
     rules: [
       "الإجابات يجب أن تكون أشياء قابلة للتمثيل الحركي (أمثال، أفلام، مهن، ميمز، شخصيات مشهورة).",
       "تجنب تماماً الكلمات المجردة (مثل 'الأمل'، 'المسؤولية'، 'الحب') التي يصعب تمثيلها بالأداء الحركي.",
@@ -67,7 +67,8 @@ export const getQuestionsFromBank = async (
   count: number,
   mode: GameMode,
   difficulty: Difficulty,
-  excludedAnswers: string[] = []
+  excludedAnswers: string[] = [],
+  categories?: string[]
 ): Promise<Question[]> => {
   let allQuestions: Question[] = [];
 
@@ -89,14 +90,18 @@ export const getQuestionsFromBank = async (
     
     // تصفية الأسئلة حسب الموضوع والمستبعد سابقاً
     const normalizedExclusions = new Set((excludedAnswers || []).map(item => item.trim().toLowerCase()));
+    const topicTokens = topic.split('،').map(t => t.trim()).filter(Boolean);
 
     let filtered = rawLocalBank.filter((q: any) => 
       !normalizedExclusions.has(q.id?.toLowerCase()) && 
       !normalizedExclusions.has(q.text?.trim().toLowerCase()) &&
-      !normalizedExclusions.has(q.answer?.trim().toLowerCase()) && (
+      !normalizedExclusions.has(q.answer?.trim().toLowerCase())
+    );
+
+    if (mode !== GameMode.GRID || !categories || categories.length === 0) {
+      filtered = filtered.filter((q: any) => (
         (q.category && (
-          q.category.includes(topic) || 
-          topic.includes(q.category) ||
+          topicTokens.some((t: string) => q.category.includes(t) || t.includes(q.category)) ||
           topic === 'عام' ||
           topic === 'ثقافة عامة' ||
           topic === 'معلومات عامة'
@@ -104,8 +109,13 @@ export const getQuestionsFromBank = async (
         topic === 'عام' ||
         topic === 'ثقافة عامة' ||
         topic === 'معلومات عامة'
-      )
-    );
+      ));
+    } else if (mode === GameMode.GRID && categories && categories.length > 0) {
+      // In GRID mode when categories are explicitly set, filter by those categories
+      filtered = filtered.filter((q: any) => 
+        q.category && categories.some(cat => q.category.includes(cat) || cat.includes(q.category))
+      );
+    }
 
     if (filtered.length === 0) {
       filtered = rawLocalBank.filter((q: any) => 
@@ -122,7 +132,7 @@ export const getQuestionsFromBank = async (
 
     let selectedQuestions: any[] = [];
 
-    const difficultyScore = { [Difficulty.EASY]: 1, [Difficulty.MEDIUM]: 2, [Difficulty.HARD]: 3 };
+    const difficultyScore = { [Difficulty.BEGINNER]: 1, [Difficulty.EASY]: 2, [Difficulty.MEDIUM]: 3, [Difficulty.HARD]: 4, [Difficulty.EXPERT]: 5 };
 
     if (mode === GameMode.HEX_GRID) {
       // منطق الشبكة: اختيار سؤال واحد لكل حرف من الحروف الـ 28
@@ -149,20 +159,26 @@ export const getQuestionsFromBank = async (
         groupedByCat[cat].push(q);
       });
 
-      const availableCats = shuffleArray(Object.keys(groupedByCat));
-      const catsToUse = availableCats.slice(0, 5);
+      const availableCats = categories && categories.length > 0 
+        ? categories 
+        : shuffleArray(Object.keys(groupedByCat)).slice(0, 5);
+      const catsToUse = availableCats;
 
       catsToUse.forEach(cat => {
-        const catQs = groupedByCat[cat];
+        const catQs = groupedByCat[cat] || [];
+        const beginnerQs = shuffleArray(catQs.filter((q: any) => q.difficulty === 'beginner' || q.difficulty === 'BEGINNER'));
         const easyQs = shuffleArray(catQs.filter((q: any) => q.difficulty === 'easy' || q.difficulty === 'EASY'));
         const mediumQs = shuffleArray(catQs.filter((q: any) => q.difficulty === 'medium' || q.difficulty === 'MEDIUM'));
         const hardQs = shuffleArray(catQs.filter((q: any) => q.difficulty === 'hard' || q.difficulty === 'HARD'));
+        const expertQs = shuffleArray(catQs.filter((q: any) => q.difficulty === 'expert' || q.difficulty === 'EXPERT'));
 
         let selectedForCat: any[] = [];
-        // تدرج: 2 سهل، 2 متوسط، 1 صعب
-        selectedForCat.push(...easyQs.slice(0, 2));
-        selectedForCat.push(...mediumQs.slice(0, 2));
+        // تدرج: 1 مبتدئ، 1 سهل، 1 متوسط، 1 صعب، 1 خبير (للفئات الـ 5 المعتادة في الجيوبوردي)
+        selectedForCat.push(...beginnerQs.slice(0, 1));
+        selectedForCat.push(...easyQs.slice(0, 1));
+        selectedForCat.push(...mediumQs.slice(0, 1));
         selectedForCat.push(...hardQs.slice(0, 1));
+        selectedForCat.push(...expertQs.slice(0, 1));
 
         // إكمال النقص إذا وجد
         if (selectedForCat.length < 5) {
@@ -187,19 +203,23 @@ export const getQuestionsFromBank = async (
         .slice(0, needed);
     }
 
-    const adaptedLocal = selectedQuestions.map((q: any, i: number) => ({
-      id: q.id,
-      text: q.text,
-      answer: q.answer,
-      category: q.category,
-      points: mode === GameMode.GRID ? ((i % 5) + 1) * 100 : 100,
-      letter: q.letter,
-      type: mode === GameMode.TRUE_FALSE ? QuestionType.TRUE_FALSE : QuestionType.OPEN,
-      difficulty: (q.difficulty?.toUpperCase() as Difficulty) || difficulty,
-      explanation: q.explanation,
-      generatedBy: "Local Bank",
-      mode: mode
-    }));
+    const adaptedLocal = selectedQuestions.map((q: any, i: number) => {
+      const diff = (q.difficulty?.toUpperCase() as Difficulty) || difficulty;
+      return {
+        id: q.id,
+        text: q.text,
+        answer: q.answer,
+        category: q.category,
+        points: q.points || pointsFromDifficulty(diff),
+        letter: q.letter,
+        type: mode === GameMode.TRUE_FALSE ? QuestionType.TRUE_FALSE : QuestionType.OPEN,
+        difficulty: diff,
+        explanation: q.explanation,
+        tabooWords: q.tabooWords,
+        generatedBy: "Local Bank",
+        mode: mode
+      };
+    });
 
     allQuestions.push(...adaptedLocal);
   }
@@ -294,26 +314,36 @@ export const extractJson = (textInput: any): string => {
 
 const getDifficultyText = (diff: Difficulty) => {
   switch (diff) {
+    case Difficulty.BEGINNER: return "مبتدئ (للمبتدئين جداً)";
     case Difficulty.EASY: return "سهل (للمبتدئين)";
     case Difficulty.MEDIUM: return "متوسط (للمثقف العام)";
     case Difficulty.HARD: return "صعب (للمتخصصين)";
+    case Difficulty.EXPERT: return "خبير (للمحترفين أو المتخصصين بعمق)";
     default: return "متوازن";
   }
 };
 
-export const getAI = () => {
-  // Respect the system instruction to use GEMINI_API_KEY as primary
-  let apiKey = process.env.GEMINI_API_KEY || "";
-  
-  // Also check for API_KEY as a literal fallback if specifically set for this app
-  if (!apiKey && process.env.API_KEY) {
-    apiKey = process.env.API_KEY;
+const pointsFromDifficulty = (diff: Difficulty | string): number => {
+  const d = typeof diff === 'string' ? diff.toUpperCase() : diff;
+  switch (d) {
+    case 'BEGINNER': return 100;
+    case 'EASY': return 200;
+    case 'MEDIUM': return 300;
+    case 'HARD': return 400;
+    case 'EXPERT': return 500;
+    default: return 100;
   }
+};
+
+export const getAI = () => {
+  // Use the pre-configured environment key as baseline
+  let apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || "";
   
+  // Try to override with user-provided key from localStorage
   try {
-    const savedSettings = localStorage.getItem('appSettings');
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
+    const saved = localStorage.getItem('appSettings');
+    if (saved) {
+      const parsed = JSON.parse(saved);
       if (parsed.apiKeys?.gemini && parsed.apiKeys.gemini.trim() !== "") {
         apiKey = parsed.apiKeys.gemini;
       }
@@ -325,7 +355,7 @@ export const getAI = () => {
   const sanitizedApiKey = String(apiKey || "").replace(/[^\x20-\x7E]/g, "").trim();
 
   if (!sanitizedApiKey) {
-    console.warn("No Gemini API key found. AI features will likely fail.");
+    console.warn("No Gemini API key found in environment or settings.");
   }
 
   return new GoogleGenAI({ apiKey: sanitizedApiKey });
@@ -406,7 +436,7 @@ export const generateQuestions = async (
           points: { type: Type.NUMBER },
           letter: { type: Type.STRING },
           explanation: { type: Type.STRING },
-          difficulty: { type: Type.STRING, enum: ["EASY", "MEDIUM", "HARD"] }
+          difficulty: { type: Type.STRING, enum: ["BEGINNER", "EASY", "MEDIUM", "HARD", "EXPERT"] }
         },
         required: ["text", "answer"]
       }
@@ -417,75 +447,103 @@ export const generateQuestions = async (
     let systemInstruction = `${modeInfo.system}\nRules:\n${rulesText}\nCorrect facts only. No spoilers.`;
     if (topic.includes("أئمة") || topic.includes("أهل البيت")) systemInstruction += "\nUse Shia perspective.";
     
+    // Add avoidance instruction if exclusions exist
+    if (excludedAnswers && excludedAnswers.length > 0) {
+      systemInstruction += `\n\nتنبيه هام جداً: يُمنع منعاً باتاً تكرار أي سؤال أو إجابة من القائمة التالية:\n${excludedAnswers.slice(0, 50).join(", ")}`;
+    }
+    
+    systemInstruction += "\n\nCRITICAL: You are an expert Quiz Master. Factual accuracy is paramount.\n- Verify every answer for 100% correctness. If unsure or if the factual basis seems weak, do not invent an answer - return 'unknown' or omit the question.\n- Phrasing: Keep questions brief, direct, and completely unambiguous. Avoid 'crowding' information; one question should test exactly one fact.\n- For technical terms, entities, or concepts that have famous English names, please provide the answer as: 'Arabic Name (English Name)' for better clarity and educational value.\n- Do not add conversational filler. Just the JSON.";
+    
     let promptText = "";
     if (mode === GameMode.HEX_GRID) {
       promptText = `Hex Grid. Topic: ${topic}. Letters: [${batchLetters?.join(", ")}]. JSON array of {text, answer, letter}.`;
     } else if (mode === GameMode.GRID) {
-      promptText = `Jeopardy Style. Topic: ${topic}. Categories: [${category}]. Request exactly 5 questions for EACH category with points 100, 200, 300, 400, 500. Total 25 questions. JSON array of {text, answer, category, points, difficulty}.`;
+      promptText = `Jeopardy Style. Topic: ${topic}. Categories: [${category}]. Request exactly 5 questions for EACH category with points 100, 200, 300, 400, 500. Total 25 questions. IMPORTANT: Return ALL 25 questions in ONE SINGLE COMPLETE JSON block. Do not split. JSON array of {text, answer, category, points, difficulty}.`;
     } else {
       promptText = `Mode: ${mode}. Topic: ${topic}. Num: ${batchNum}. Difficulty: ${difficultyContext}. JSON array of {text, answer}.`;
     }
 
-    const modelsToTry = aiModel.startsWith('groq') || aiModel.startsWith('qrok')
-      ? [aiModel.replace('qrok', 'groq')] 
-      : ["gemini-1.5-flash", "gemini-2.0-flash-lite"];
+    if (mode === GameMode.GRID && !aiModel.startsWith('gemini')) {
+      try {
+        const response = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: `${systemInstruction}\n\n${promptText}`, model: aiModel })
+        });
+        if (!response.ok) throw new Error("Failed to call /api/ask");
+        const json = await response.json();
+        const text = json.choices[0].message.content;
+        let data = JSON.parse(extractJson(text || "[]"));
+        
+        if (!Array.isArray(data)) data = data.questions || Object.values(data).find(Array.isArray) || [data];
+        
+        return data.filter((q: any) => q && q.text && q.answer).map((q: any, idx: number) => {
+          let points = q.points || 100;
+          let diff = (q.difficulty as Difficulty) || difficulty;
+          const isGridMode = (mode as any) === GameMode.GRID;
+          if (isGridMode) {
+            points = q.points || ((idx % 5) + 1) * 100;
+            const pts = points;
+            if (pts <= 100) diff = Difficulty.BEGINNER;
+            else if (pts <= 200) diff = Difficulty.EASY;
+            else if (pts <= 300) diff = Difficulty.MEDIUM;
+            else if (pts <= 400) diff = Difficulty.HARD;
+            else diff = Difficulty.EXPERT;
+          }
+          return {
+            id: `q-${Date.now()}-${batchStartIdx + idx}-${Math.random().toString(36).substr(2, 5)}`,
+            text: q.text,
+            answer: isTF ? (q.answer.includes("خطأ") ? "خطأ" : "صواب") : q.answer,
+            category: q.category || category || topic,
+            points,
+            letter: q.letter || (batchLetters ? batchLetters[idx] : undefined),
+            explanation: q.explanation,
+            type: isTF ? QuestionType.TRUE_FALSE : QuestionType.OPEN,
+            difficulty: diff,
+            topic: topic,
+            generatedBy: aiModel,
+            mode: mode
+          };
+        });
+      } catch (e: any) {
+        console.warn("Proxy API failed", e);
+        return [];
+      }
+    }
+
+    const modelsToTry = aiModel.startsWith('gemini') ? [aiModel] : ["gemini-1.5-flash", "gemini-2.0-flash-lite", "gemini-1.5-pro"];
 
     for (const model of modelsToTry) {
       try {
         let data: any = null;
         
-        if (model.startsWith('groq') || model.startsWith('qrok')) {
-          let groqKey = "";
-          try {
-            const savedSettings = localStorage.getItem('appSettings');
-            if (savedSettings) {
-              const parsed = JSON.parse(savedSettings);
-              if (parsed.apiKeys?.groq) groqKey = parsed.apiKeys.groq;
-            }
-          } catch (e) {}
-
-          const groqModelName = model.replace('groq-', '').replace('qrok-', '');
-
-          const response = await fetch('/api/groq', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: groqModelName,
-              apiKey: groqKey,
-              systemInstruction: systemInstruction + "\nيجب أن يكون الرد مصفوفة JSON صالحة فقط. لا تضع رموز ماركداون.",
-              promptText: promptText
-            })
-          });
-
-          if (!response.ok) {
-            const errBody = await response.json().catch(() => ({}));
-            throw new Error(`Groq Proxy Error: ${response.status} ${JSON.stringify(errBody)}`);
-          }
-
-          const result = await response.json();
-          const content = result.choices[0].message.content;
-          data = JSON.parse(extractJson(content));
-        } else {
-          const result = await retry(() => ai.models.generateContent({
-            model,
-            contents: [{ role: "user", parts: [{ text: promptText }] }],
-            config: { systemInstruction, responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: 2048 }
-          })) as any;
-          
-          data = JSON.parse(extractJson(result.text || "[]"));
-        }
+        const result = await retry(() => ai.models.generateContent({
+          model,
+          contents: [{ role: "user", parts: [{ text: promptText }] }],
+          config: { systemInstruction, responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: 4096 }
+        })) as any;
+        
+        data = JSON.parse(extractJson(result.text || "[]"));
 
         if (!Array.isArray(data)) data = data.questions || Object.values(data).find(Array.isArray) || [data];
 
+        const isGridMode = (mode as any) === GameMode.GRID;
         return data.filter((q: any) => q && q.text && q.answer).map((q: any, idx: number) => {
-          let points = q.points || 100;
           let diff = (q.difficulty as Difficulty) || difficulty;
-          if (mode === GameMode.GRID) {
-            points = q.points || ((idx % 5) + 1) * 100;
-            diff = points >= 400 ? Difficulty.HARD : (points === 300 ? Difficulty.MEDIUM : Difficulty.EASY);
+          let points = q.points;
+
+          if (isGridMode) {
+            points = points || ((idx % 5) + 1) * 100;
+            const pts = points;
+            if (pts <= 100) diff = Difficulty.BEGINNER;
+            else if (pts <= 200) diff = Difficulty.EASY;
+            else if (pts <= 300) diff = Difficulty.MEDIUM;
+            else if (pts <= 400) diff = Difficulty.HARD;
+            else diff = Difficulty.EXPERT;
+          } else {
+            points = points || pointsFromDifficulty(diff);
           }
+
           return {
             id: `q-${Date.now()}-${batchStartIdx + idx}-${Math.random().toString(36).substr(2, 5)}`,
             text: q.text,
@@ -501,7 +559,10 @@ export const generateQuestions = async (
             mode: mode
           };
         });
-      } catch (e) { console.warn(`Model ${model} failed`, e); continue; }
+      } catch (e: any) { 
+        console.warn(`Model ${model} failed`, e); 
+        continue; 
+      }
     }
     return [];
   };
@@ -550,6 +611,63 @@ export const autoGenerateAllQuestions = async (
       if (err.message === "تم إلغاء التوليد") throw err;
       console.error(`Failed to generate for mode ${mode}:`, err);
     }
+  }
+};
+
+export const parseQuestionsWithAI = async (
+  input: string,
+  mode: GameMode,
+  defaultDifficulty: Difficulty
+): Promise<Question[]> => {
+  const ai = getAI();
+  const schema = {
+    type: Type.ARRAY,
+    items: {
+      type: Type.OBJECT,
+      properties: {
+        text: { type: Type.STRING },
+        answer: { type: Type.STRING },
+        category: { type: Type.STRING },
+        topic: { type: Type.STRING },
+        difficulty: { type: Type.STRING, enum: ["BEGINNER", "EASY", "MEDIUM", "HARD", "EXPERT"] },
+      },
+      required: ["text", "answer"]
+    }
+  };
+
+  const systemInstruction = `أنت مساعد ذكي لإدارة بنك أسئلة مسابقة ثقافية.
+مهمتك هي تحليل نص مدخل من المستخدم يحتوي على أوامر (مثل: أضف 10 أسئلة... لفئة كذا...) ومحتوى أسئلة.
+استخرج الأسئلة والإجابات، وحدد الفئة والموضوع بناءً على أوامر المستخدم أو السياق.
+إذا لم يحدد المستخدم الفئة أو الموضوع، استنبطهما.
+أرجع مصفوفة JSON فقط من الكائنات {text, answer, category, topic, difficulty}.`;
+
+  const promptText = `النص المدخل:
+${input}
+
+قم باستخراج الأسئلة وتنسيقها.`;
+
+  try {
+    const result = await ai.models.generateContent({
+      model: "gemini-2.0-flash-lite",
+      contents: [{ role: "user", parts: [{ text: promptText }] }],
+      config: { systemInstruction, responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: 2048 }
+    });
+
+    const data = JSON.parse(extractJson(result.text || "[]"));
+    return data.map((q: any) => ({
+      id: `ai-parsed-${Date.now()}-${Math.random()}`,
+      text: q.text,
+      answer: q.answer,
+      category: q.category || "عام",
+      topic: q.topic || "عام",
+      difficulty: q.difficulty || defaultDifficulty,
+      type: QuestionType.OPEN,
+      mode,
+      generatedBy: 'Smart Assistant'
+    }));
+  } catch (e) {
+    console.error("AI Assistant Parsing Failed", e);
+    return [];
   }
 };
 
@@ -662,43 +780,8 @@ ${mode === GameMode.SILENT_GUESS ? "الإجابات للتمثيل الصامت
       })) as any;
       textOutput = response.text || "[]";
     } else {
-      let apiKeys = {};
-      try {
-        const savedSettings = localStorage.getItem('appSettings');
-        if (savedSettings) {
-          const parsed = JSON.parse(savedSettings);
-          if (parsed.apiKeys) {
-            apiKeys = parsed.apiKeys;
-          }
-        }
-      } catch (e) {
-        console.error("Failed to read API keys from settings", e);
-      }
-
-      const sanitizedApiKeys = Object.entries(apiKeys || {}).reduce((acc, [key, value]) => {
-        acc[key] = typeof value === 'string' ? value.replace(/[^\x20-\x7E]/g, "").trim() : value;
-        return acc;
-      }, {} as any);
-
-      const sanitizedModel = String(currentModel || "").replace(/[^\x20-\x7E]/g, "").trim();
-
-      const res = await fetch('/api/generate-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptText: promptText + " Return ONLY valid JSON array.", model: sanitizedModel, apiKeys: sanitizedApiKeys })
-      });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        const errorMsg = errorData.error || `Backend failed with status ${res.status}`;
-        if (res.status === 429 || errorMsg.includes("429") || errorMsg.includes("quota") || errorMsg.includes("QUOTA_EXCEEDED")) {
-          console.warn("Quota exceeded for non-Gemini model during fallback, switching to Gemini...");
-          useGeminiOnly = true;
-          return fallbackGenerate(topic, num, mode, difficulty, "gemini-2.0-flash");
-        }
-        throw new Error("Backend failed during fallback: " + errorMsg);
-      }
-      const data = await res.json();
-      textOutput = data.text;
+      // Default to Gemini if another model was somehow requested
+      return fallbackGenerate(topic, num, mode, difficulty, "gemini-2.0-flash");
     }
 
     textOutput = extractJson(textOutput);
@@ -764,55 +847,37 @@ ${mode === GameMode.SILENT_GUESS ? "الإجابات للتمثيل الصامت
 
 export const testAI = async (model: string): Promise<{ success: boolean, message: string }> => {
   try {
-    if (model.startsWith('groq')) {
-      let groqKey = "";
-      try {
-        const savedSettings = localStorage.getItem('appSettings');
-        if (savedSettings) {
-          const parsed = JSON.parse(savedSettings);
-          if (parsed.apiKeys?.groq) groqKey = parsed.apiKeys.groq;
-        }
-      } catch (e) {}
-
-      const groqModelName = model.replace('groq-', '');
-
-      const response = await fetch('/api/groq', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: groqModelName,
-          apiKey: groqKey,
-          systemInstruction: "Verify connection.",
-          promptText: "Say 'OK'"
-        })
-      });
-
-      if (!response.ok) {
-        const errBody = await response.json().catch(() => ({}));
-        return { success: false, message: `Groq Error: ${response.status} ${JSON.stringify(errBody)}` };
-      }
-
-      return { success: true, message: "تم الاتصال بـ Groq بنجاح!" };
-    }
-
     const ai = getAI();
-    const modelName = model.includes("gemini") ? model : "gemini-2.0-flash";
+    const modelName = model || "gemini-1.5-flash";
     
+    console.log("Testing AI connection with model:", modelName);
     const response = await (ai.models as any).generateContent({
       model: modelName,
-      contents: [{ role: "user", parts: [{ text: "Say 'OK' if you can read this." }] }],
-      config: { maxOutputTokens: 10 }
+      contents: [{ role: "user", parts: [{ text: "Say 'OK'" }] }]
     }) as any;
     
-    if (response.text && response.text.includes("OK")) {
-      return { success: true, message: "تم الاتصال بنجاح!" };
+    // Check various response formats
+    const text = response.text || (response.response && response.response.text && response.response.text());
+    
+    if (text) {
+      return { success: true, message: "تم الاتصال بالذكاء الاصطناعي بنجاح!" };
     }
     return { success: false, message: "استجابة غير متوقعة من المحرك." };
   } catch (error: any) {
     console.error("AI Test Failed:", error);
-    return { success: false, message: error.message || "فشل الاتصال بالمحرك." };
+    let msg = "فشل الاتصال بالمحرك.";
+    
+    // Stringify the full error object or message to look for markers
+    const errorStr = (error.message || "") + JSON.stringify(error);
+    
+    if (errorStr.includes("429") || errorStr.includes("RESOURCE_EXHAUSTED") || errorStr.includes("quota")) {
+      msg = "تم تجاوز الحصة المسموحة (429). سيقوم التطبيق بالاعتماد على بنك الأسئلة المدمج حالياً.";
+    } else if (errorStr.includes("API_KEY_INVALID")) {
+      msg = "مفتاح API غير صالح.";
+    } else if (errorStr.includes("not_found") || errorStr.includes("not found")) {
+      msg = "النموذج غير متوفر حالياً.";
+    }
+    return { success: false, message: msg };
   }
 };
 
@@ -844,15 +909,16 @@ export const fetchSingleQuestion = async (
   );
   
   if (foundInBank) {
+    const d = (foundInBank.difficulty?.toUpperCase() as Difficulty) || Difficulty.MEDIUM;
     return {
       id: `bank-${foundInBank.id}-${Date.now()}`,
       text: foundInBank.text,
       answer: foundInBank.answer,
       category: foundInBank.category || "عام",
-      points: 100,
+      points: foundInBank.points || pointsFromDifficulty(d),
       letter: letter,
       type: QuestionType.OPEN,
-      difficulty: (foundInBank.difficulty?.toUpperCase() as Difficulty) || Difficulty.MEDIUM
+      difficulty: d
     };
   }
 
@@ -869,7 +935,7 @@ export const fetchSingleQuestion = async (
       text: randomFallback.text,
       answer: randomFallback.answer,
       category: "عام",
-      points: 100,
+      points: pointsFromDifficulty(Difficulty.MEDIUM),
       letter: matchingLetterQs.length > 0 ? letter : (randomFallback.letter || letter),
       type: QuestionType.OPEN,
       difficulty: Difficulty.MEDIUM
@@ -1057,7 +1123,7 @@ export const fetchSingleQuestion = async (
           text: cleanText,
           answer: cleanAnswer,
           category: topic,
-          points: 100,
+          points: pointsFromDifficulty(difficulty),
           letter: letter,
           hint: (data.hint || "").trim(),
           type: QuestionType.OPEN,

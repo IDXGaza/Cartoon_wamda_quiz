@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useSettings, Theme, AIModel } from '../contexts/SettingsContext';
 import { testAI } from '../services/geminiService';
 import { seedVault } from '../services/seederService';
@@ -80,62 +81,64 @@ const SettingsModal: React.FC = () => {
         </h2>
 
         <div className="space-y-10 bg-[var(--color-off-white)] p-8 rounded-[2.5rem] border-4 border-[var(--color-ink-black)] shadow-[inner_4px_4px_0px_rgba(0,0,0,0.1)]">
+          {/* AI Connection Test */}
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <label className="text-xl font-display text-[var(--color-bg-dark)] bg-[var(--color-primary-gold)] px-4 py-1 rounded-xl border-2 border-[var(--color-ink-black)] inline-block shadow-[2px_2px_0px_var(--color-ink-black)]">حالة الذكاء الاصطناعي</label>
+                <button 
+                  onClick={handleTestAI}
+                  disabled={testStatus.loading}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-xl border-2 border-[var(--color-ink-black)] text-sm font-bold transition-all shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-0.5 active:shadow-none bg-[var(--color-bg-cream)] hover:bg-[var(--color-primary-gold)] ${
+                    testStatus.loading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {testStatus.loading ? <CartoonRefresh size={16} className="animate-spin" /> : <CartoonRocket size={16} />}
+                  <span>اختبار الاتصال</span>
+                </button>
+              </div>
+              
+              <AnimatePresence>
+                {testStatus.result && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className={`p-3 rounded-xl border-2 border-black text-xs font-bold shadow-[2px_2px_0px_rgba(0,0,0,1)] ${
+                      testStatus.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {testStatus.result}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <p className="text-xs text-[var(--color-ink-black)] opacity-60 font-medium">تم ضبط التطبيق ليعتمد على الذكاء الاصطناعي المدمج لتوفير أفضل دقة في الأسئلة.</p>
+          </div>
+
           {/* AI Model Selection */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <label className="text-xl font-display text-[var(--color-bg-dark)] bg-[var(--color-primary-gold)] px-4 py-1 rounded-xl border-2 border-[var(--color-ink-black)] inline-block shadow-[2px_2px_0px_var(--color-ink-black)]">محرك الذكاء الاصطناعي</label>
-              <button 
-                onClick={handleTestAI}
-                disabled={testStatus.loading}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-xl border-2 border-[var(--color-ink-black)] text-sm font-bold transition-all shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-0.5 active:shadow-none ${
-                  testStatus.loading ? 'opacity-50 cursor-not-allowed' : 
-                  testStatus.result ? (testStatus.success ? 'bg-green-500 text-white' : 'bg-red-500 text-white') :
-                  'bg-[var(--color-bg-cream)] hover:bg-[var(--color-primary-gold)]'
-                }`}
-              >
-                {testStatus.loading ? <CartoonRefresh size={16} className="animate-spin" /> : <CartoonRocket size={16} />}
-                <span>{testStatus.result || 'اختبار الاتصال'}</span>
-              </button>
-            </div>
-            <div className="flex flex-col gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-              <div className="text-sm font-display text-[var(--color-bg-dark)] mt-2 mb-1 px-2 border-b-2 border-black/10 pb-1">Google Gemini</div>
-              {(['gemini-3-flash-preview', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview'] as AIModel[]).map(m => (
-                <button
-                  key={m}
-                  onClick={() => {
-                    playSound('click');
-                    updateSettings({ aiModel: m });
-                  }}
-                  className={`py-3 px-5 rounded-xl font-display text-lg border-4 transition-all text-right flex justify-between items-center shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-0.5 active:shadow-none ${
-                    settings.aiModel === m 
-                      ? 'bg-[var(--color-primary-blue)] text-white border-[var(--color-ink-black)]' 
-                      : 'bg-[var(--color-bg-cream)] text-[var(--color-bg-dark)] border-[var(--color-ink-black)] hover:bg-[var(--color-primary-blue)]/10'
-                  }`}
-                >
-                  <span dir="ltr" className="text-base">{m}</span>
-                  {settings.aiModel === m && <CartoonCheck size={24} />}
-                </button>
-              ))}
-
-              <div className="text-sm font-display text-[var(--color-bg-dark)] mt-4 mb-1 px-2 border-b-2 border-black/10 pb-1">Groq (Ultra Fast)</div>
-              {(['groq-llama-3.3-70b-versatile', 'groq-llama-3.1-70b-versatile', 'groq-llama-3.1-8b-instant', 'groq-mixtral-8x7b-32768', 'groq-gemma2-9b-it'] as AIModel[]).map(m => (
-                <button
-                  key={m}
-                  onClick={() => {
-                    playSound('click');
-                    updateSettings({ aiModel: m });
-                  }}
-                  className={`py-3 px-5 rounded-xl font-display text-lg border-4 transition-all text-right flex justify-between items-center shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-0.5 active:shadow-none ${
-                    settings.aiModel === m 
-                      ? 'bg-[var(--color-primary-red)] text-white border-[var(--color-ink-black)]' 
-                      : 'bg-[var(--color-bg-cream)] text-[var(--color-bg-dark)] border-[var(--color-ink-black)] hover:bg-[var(--color-primary-red)]/10'
-                  }`}
-                >
-                  <span dir="ltr" className="text-base">{m.replace('groq-', '')}</span>
-                  {settings.aiModel === m && <CartoonCheck size={24} />}
-                </button>
-              ))}
-            </div>
+            <label className="text-xl font-display text-[var(--color-bg-dark)] bg-[var(--color-primary-gold)] px-4 py-1 rounded-xl border-2 border-[var(--color-ink-black)] inline-block shadow-[2px_2px_0px_var(--color-ink-black)]">نموذج الذكاء الاصطناعي</label>
+            <select
+              value={settings.aiModel}
+              onChange={(e) => updateSettings({ aiModel: e.target.value as AIModel })}
+              className="w-full bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] rounded-2xl p-4 font-display text-xl shadow-[4px_4px_0px_var(--color-ink-black)] focus:outline-none"
+            >
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+              <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+              <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+              <option value="custom">نموذج مخصص (Custom)</option>
+            </select>
+            {settings.aiModel === 'custom' && (
+              <input
+                type="text"
+                value={settings.customModel || ''}
+                onChange={(e) => updateSettings({ customModel: e.target.value })}
+                className="w-full bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] rounded-2xl p-4 font-display text-xl shadow-[4px_4px_0px_var(--color-ink-black)] focus:outline-none"
+                placeholder="أدخل اسم النموذج (مثال: meta-llama/llama-3-8b-instruct)"
+                dir="ltr"
+              />
+            )}
           </div>
 
           {/* API Keys */}
@@ -143,7 +146,7 @@ const SettingsModal: React.FC = () => {
             <label className="text-xl font-display text-[var(--color-bg-dark)] bg-[var(--color-primary-gold)] px-4 py-1 rounded-xl border-2 border-[var(--color-ink-black)] inline-block shadow-[2px_2px_0px_var(--color-ink-black)]">مفاتيح API</label>
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-display text-[var(--color-bg-dark)] block mb-2 px-2">Gemini API Key</label>
+                <label className="text-sm font-display text-[var(--color-bg-dark)] block mb-2 px-2">مفتاح الذكاء الاصطناعي (AI Key)</label>
                 <input 
                   type="password" 
                   value={settings.apiKeys?.gemini || ''}
@@ -153,23 +156,6 @@ const SettingsModal: React.FC = () => {
                   dir="ltr"
                 />
               </div>
-              <div>
-                <label className="text-sm font-display text-[var(--color-bg-dark)] block mb-2 px-2">Groq API Key</label>
-                <input 
-                  type="password" 
-                  value={settings.apiKeys?.groq || ''}
-                  onChange={(e) => updateSettings({ apiKeys: { ...settings.apiKeys, groq: e.target.value } })}
-                  className="w-full bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] rounded-2xl p-4 font-display text-xl shadow-[4px_4px_0px_var(--color-ink-black)] focus:outline-none"
-                  placeholder="gsk_..."
-                  dir="ltr"
-                />
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-4 bg-[var(--color-primary-gold)]/10 rounded-2xl border-2 border-[var(--color-primary-gold)]">
-              <CartoonAlert size={24} className="text-[var(--color-primary-gold)] shrink-0" />
-              <p className="text-sm font-display text-[var(--color-bg-dark)]">
-                يتم حفظ مفاتيح API محلياً في متصفحك فقط لضمان الخصوصية.
-              </p>
             </div>
           </div>
 

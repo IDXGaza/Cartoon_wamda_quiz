@@ -2,32 +2,28 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Theme = 'light' | 'dark' | 'colorful';
 export type AIModel = 
-  | 'gemini-3-flash-preview' 
-  | 'gemini-3.1-pro-preview' 
-  | 'gemini-3.1-flash-lite-preview'
-  | 'groq-llama-3.3-70b-versatile'
-  | 'groq-llama-3.1-70b-versatile'
-  | 'groq-llama-3.1-8b-instant'
-  | 'groq-mixtral-8x7b-32768'
-  | 'groq-gemma2-9b-it';
+  | 'gemini-1.5-flash' 
+  | 'gemini-2.0-flash-lite'
+  | 'gemini-1.5-pro'
+  | 'custom';
 
 export interface AppSettings {
   theme: Theme;
   aiModel: AIModel;
+  customModel?: string;
   timedDuration: number;
   apiKeys: {
     gemini: string;
-    groq: string;
   };
 }
 
 const defaultSettings: AppSettings = {
   theme: 'light',
-  aiModel: 'gemini-3-flash-preview',
+  aiModel: 'gemini-1.5-flash',
+  customModel: '',
   timedDuration: 120,
   apiKeys: {
     gemini: '',
-    groq: '',
   }
 };
 

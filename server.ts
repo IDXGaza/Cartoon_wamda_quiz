@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 
 const app = express();
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || "8080");
 
 app.use(express.json());
 
@@ -14,6 +14,54 @@ app.get("/api/health", (req, res) => {
     env: process.env.NODE_ENV,
     time: new Date().toISOString()
   });
+});
+
+app.post("/api/ask", async (req, res) => {
+  const { prompt, model } = req.body;
+  const apiKey = process.env.OPENROUTER_KEY;
+
+  console.log("--- /api/ask request received ---");
+  console.log("Prompt length:", prompt?.length);
+  
+  if (!apiKey) {
+    console.error("OpenRouter API key missing");
+    return res.status(500).json({ error: "OpenRouter API key not configured" });
+  }
+
+  try {
+    console.info("Calling OpenRouter API...");
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://ais-dev-eiamvsyls5orbfmjbujxi7-196113868583.europe-west1.run.app", 
+        "X-Title": "Wamda App",
+      },
+      body: JSON.stringify({
+        model: model || "tencent/hy3-preview:free",
+        messages: [
+          { role: "user", content: prompt }
+        ],
+      }),
+    });
+
+    const responseText = await response.text();
+    console.info("OpenRouter response status:", response.status);
+    console.info("OpenRouter response body:", responseText.substring(0, 500)); // Log first 500 chars
+
+    if (!response.ok) {
+      console.error("OpenRouter API error response:", response.status, responseText);
+      return res.status(response.status).json({ error: "OpenRouter API failed", details: responseText });
+    }
+
+    const data = JSON.parse(responseText);
+    console.info("OpenRouter API success");
+    return res.json(data);
+  } catch (error: any) {
+    console.error("OpenRouter API Exception:", error);
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 app.post("/api/generate-questions", async (req, res) => {
@@ -46,45 +94,6 @@ app.post("/api/generate-questions", async (req, res) => {
   }
 });
 
-app.post("/api/groq", async (req, res) => {
-  const { promptText, model, apiKey, systemInstruction } = req.body;
-
-  try {
-    const key = apiKey || process.env.GROQ_API_KEY;
-    if (!key) {
-      return res.status(400).json({ error: "Missing Groq API key" });
-    }
-
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: "system", content: systemInstruction || "Arabic quiz maker." },
-          { role: "user", content: promptText }
-        ],
-        temperature: 0.1,
-        stream: false
-      })
-    });
-
-    if (!response.ok) {
-      const errBody = await response.json().catch(() => ({}));
-      return res.status(response.status).json(errBody);
-    }
-
-    const data = await response.json();
-    return res.json(data);
-  } catch (error: any) {
-    console.error("Groq Proxy Error:", error);
-    return res.status(500).json({ error: error.message });
-  }
-});
-
 async function startServer() {
   console.log("--- Server Startup ---");
   console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -107,30 +116,14 @@ async function startServer() {
     }
   } else {
     console.log("Mode: Production (Static)");
-    console.log("Dist Path:", distPath);
+    console.log("Dist Path for static:", distPath);
     
-    if (fs.existsSync(distPath)) {
-      app.use(express.static(distPath));
-      console.log("Static middleware attached");
-    } else {
-      console.error("WARNING: Dist folder not found!");
-    }
+    // Serve static files
+    app.use(express.static(distPath));
 
-    app.get("*all", (req, res) => {
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: "API route not found" });
-      }
-      
-      const indexPath = path.join(distPath, "index.html");
-      if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-      } else {
-        res.status(404).send(`
-          <h1>404 - Not Found</h1>
-          <p>The application build artifacts were not found.</p>
-          <p>Path: ${indexPath}</p>
-        `);
-      }
+    // Fallback index.html for all other request
+    app.get("/*", (req, res) => {
+      res.sendFile(path.resolve(distPath, "index.html"));
     });
   }
 

@@ -58,28 +58,36 @@ const LibraryScreen: React.FC<Props> = ({ onPlaySet, onClose }) => {
   ]);
 
   useEffect(() => {
-    const fetchSavedSets = async () => {
-      if (!auth.currentUser) return;
-      
-      setIsLoading(true);
-      const path = 'saved_sets';
-      try {
-        const q = query(
-          collection(db, path), 
-          where('userId', '==', auth.currentUser.uid),
-          orderBy('createdAt', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        const sets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedSet));
-        setSavedSets(sets);
-      } catch (err: any) {
-        handleFirestoreError(err, OperationType.GET, path);
-      } finally {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (!user) {
+        setSavedSets([]);
         setIsLoading(false);
+        return;
       }
-    };
+      
+      const fetchSavedSets = async () => {
+        setIsLoading(true);
+        const path = 'saved_sets';
+        try {
+          const q = query(
+            collection(db, path), 
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc')
+          );
+          const snapshot = await getDocs(q);
+          const sets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedSet));
+          setSavedSets(sets);
+        } catch (err: any) {
+          handleFirestoreError(err, OperationType.GET, path);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchSavedSets();
+    });
 
-    fetchSavedSets();
+    return () => unsubscribe();
   }, []);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -132,6 +140,18 @@ const LibraryScreen: React.FC<Props> = ({ onPlaySet, onClose }) => {
         }
       }
 
+      // Load history
+      let excludedItemsSet = new Set<string>();
+      try {
+        const data = localStorage.getItem('gemini_quiz_question_history');
+        if (data) {
+          const history: string[][] = JSON.parse(data);
+          excludedItemsSet = new Set(history.flat().map(i => i.trim().toLowerCase()));
+        }
+      } catch (e) {
+        console.error("Failed to load history", e);
+      }
+
       const generated = await generateQuestions(
         finalTopic,
         requiredCount,
@@ -139,7 +159,8 @@ const LibraryScreen: React.FC<Props> = ({ onPlaySet, onClose }) => {
         mode,
         difficulty,
         settings.aiModel,
-        detectedCategories
+        detectedCategories,
+        Array.from(excludedItemsSet)
       );
 
       if (!generated || generated.length === 0) {

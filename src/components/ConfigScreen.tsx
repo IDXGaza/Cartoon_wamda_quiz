@@ -4,6 +4,7 @@ import { QUESTION_BANK } from '../data/localBank';
 import { Type } from "@google/genai";
 import { getAI, extractJson, generateQuestions } from '../services/geminiService';
 import { useToast } from '../contexts/ToastContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { playSound } from '../utils/sound';
 import { CartoonHexagon, CartoonGrid, CartoonLightning, CartoonTimer, CartoonSilent, CartoonBot, CartoonPencil, CartoonPlus, CartoonTrash, CartoonRefresh, CartoonStar, CartoonGear, CartoonBook, CartoonAlert, CartoonRocket, CartoonX, CartoonSparkles } from './CartoonIcons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,20 +43,31 @@ const JEOPARDY_SETS = [
 
 const CATEGORY_CLASSIFICATIONS = [
   { name: "العلوم والطبيعة", icon: "🧬", color: "bg-emerald-500", categories: ['علوم', 'فضاء وتقنية', 'جسم الإنسان', 'أحياء', 'كيمياء', 'فيزياء', 'طب', 'طبيعة', 'حيوانات'] },
-  { name: "الجغرافيا والتاريخ", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي'] },
+  { name: "الجغرافيا والتاريخ", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ', 'التاريخ', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي'] },
   { name: "الثقافة والأدب", icon: "📚", color: "bg-indigo-500", categories: ['لغة وأدب', 'أدب', 'لغات', 'أقوال', 'أمثال وحكم', 'تقنية', 'فنون وترفيه'] },
-  { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء'] },
-  { name: "رياضة ومنوعات", icon: "⚽", color: "bg-red-500", categories: ['رياضة ومصارعة', 'رياضة', 'معلومات عامة', 'متنوع', 'ذكاء'] }
+  { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء', 'الدين', 'حياة المعصومين', 'إكمال الدعاء', 'اكمال الدعاء'] },
+  { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم'] },
+  { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['رياضة', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'ون بيس', 'ذكاء'] }
 ];
 
+import { getUserCustomCategories, UserCategory } from '../services/categoryService';
+// ... (imports)
 const ConfigScreen: React.FC<Props> = ({ onStart }) => {
-  const { showToast } = useToast();
-  const [isOnline] = useState(navigator.onLine);
+  const { settings } = useSettings();
   const [topic, setTopic] = useState('ثقافة عامة');
-  const [activeClassification, setActiveClassification] = useState<string>("العلوم والطبيعة");
+  const [isOnline] = useState(navigator.onLine);
+  const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
+  
+  React.useEffect(() => {
+    getUserCustomCategories().then(setUserCategories);
+  }, []);
+// ...
+// Then inside CATEGORY_CLASSIFICATIONS logic, add userCategories
   const [mode, setMode] = useState<GameMode>(GameMode.HEX_GRID);
   const [questionType, setQuestionType] = useState<QuestionType>(QuestionType.OPEN);
   const [numQuestionsState, setNumQuestionsState] = useState<number>(10);
+  const [activeClassification, setActiveClassification] = useState<string>("العلوم والطبيعة");
+  const [timedDuration, setTimedDuration] = useState<number>(settings.timedDuration);
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
   const [categories, setCategories] = useState<string[]>(['', '', '', '', '']);
   const [playersConfig, setPlayersConfig] = useState<{name: string, color: string}[]>([
@@ -66,11 +78,15 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [inputMethod, setInputMethod] = useState<'ai' | 'manual' | 'bank'>('ai');
   const [buzzerTimeout, setBuzzerTimeout] = useState<number>(20);
 
+  // When categories was cleared, it shouldn't auto-fill, unless it's the first time
+  const [hasInitializedCategories, setHasInitializedCategories] = useState(false);
+
   React.useEffect(() => {
-    if (mode === GameMode.GRID && inputMethod === 'bank' && categories.every(c => c === '')) {
+    if (mode === GameMode.GRID && inputMethod === 'bank' && !hasInitializedCategories) {
       setCategories(JEOPARDY_SETS[0].categories);
+      setHasInitializedCategories(true);
     }
-  }, [mode, inputMethod, categories]);
+  }, [mode, inputMethod]);
   
   const [manualQuestions, setManualQuestions] = useState<Record<string, {
     question: string, 
@@ -80,15 +96,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
     explanation?: string
   }>>({});
   const [isGeneratingSamples, setIsGeneratingSamples] = useState(false);
-
-  React.useEffect(() => {
-    if (inputMethod === 'bank') {
-      const bankTopics = ['معلومات عامة', 'جغرافيا', 'علوم', 'رياضة', 'أحياء', 'اختراعات'];
-      if (!bankTopics.includes(topic)) {
-        setTopic('معلومات عامة');
-      }
-    }
-  }, [inputMethod, topic]);
+  const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 
   React.useEffect(() => {
     if (mode !== GameMode.GRID && inputMethod === 'ai') {
@@ -108,6 +116,13 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       setManualQuestions({});
     }
   }, [setManualQuestions]);
+
+  const MODELS = [
+    { name: "Tencent Hy3 (Free)", value: "tencent/hy3-preview:free" },
+    { name: "Gemini 1.5 Flash", value: "gemini-1.5-flash" },
+    { name: "Gemini 1.5 Pro", value: "gemini-1.5-pro" },
+    { name: "Other (Custom)", value: "custom" }
+  ];
 
   const LETTERS = [
     ['أ', 'ب', 'ت', 'ث'],
@@ -175,7 +190,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
     setIsGeneratingSamples(true);
     try {
       const requiredCount = mode === GameMode.HEX_GRID ? 28 : (mode === GameMode.GRID ? 25 : numQuestionsState);
-      const targetModel = "gemini-2.0-flash";
       
       const generated = await generateQuestions(
         topic,
@@ -183,7 +197,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
         [QuestionType.OPEN],
         mode,
         difficulty,
-        targetModel,
+        selectedModel,
         categories.filter(c => c.trim() !== '')
       );
       
@@ -361,19 +375,21 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
         }
 
         cats.forEach((catName, i) => {
-          let catQuestions = bank.filter(q => q.category === catName);
+          let catQuestions = bank.filter(q => q.category === catName || (catName === 'رياضة ومصارعة' && q.category === 'الرياضة'));
           
-          const diffMap: Record<string, number> = { 'easy': 1, 'medium': 2, 'hard': 3 };
+          const diffMap: Record<string, number> = { 'beginner': 1, 'easy': 2, 'medium': 3, 'hard': 4 };
 
           // If we don't have 5 questions for this category, try to find ANY unused questions from the bank as fallback
           if (catQuestions.length < 5) {
             const usedTexts = new Set(finalManualQuestions.map(q => q.text));
             const extra = bank.filter(q => !usedTexts.has(q.text) && q.category !== catName);
-            // Sort extra to prioritize fitting the difficulty profile later
-            extra.sort((a, b) => (diffMap[a.difficulty] || 2) - (diffMap[b.difficulty] || 2));
+            // Sort extra for variety
+            extra.sort(() => Math.random() - 0.5);
             catQuestions = [...catQuestions, ...extra.slice(0, 5 - catQuestions.length)];
           }
 
+          // To improve variety, shuffle questions of the same difficulty
+          catQuestions.sort(() => Math.random() - 0.5);
           // Crucial: Sort all selected questions by difficulty before slicing/assigning
           catQuestions.sort((a, b) => (diffMap[a.difficulty] || 2) - (diffMap[b.difficulty] || 2));
 
@@ -448,7 +464,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       questionSource: inputMethod,
       hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions as any : undefined,
       buzzerTimeout: buzzerTimeout,
-      timerDuration: buzzerTimeout
+      timerDuration: mode === GameMode.TIMED ? timedDuration : buzzerTimeout,
+      aiModel: settings.aiModel === 'custom' ? (settings.customModel || 'gemini-1.5-flash') : settings.aiModel
     });
   };
 
@@ -512,7 +529,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 { val: GameMode.BUZZER, label: 'تحدي السرعة', icon: <CartoonLightning size={48} />, desc: 'أسرع إجابة تفوز', color: 'text-[var(--color-primary-green)]', ring: 'ring-[var(--color-primary-green)]/50', activeBg: 'var(--color-primary-green)', activeText: 'white' },
                 { val: GameMode.TIMED, label: 'سباق الوقت', icon: <CartoonTimer size={48} />, desc: 'أكبر عدد إجابات', color: 'text-[var(--color-primary-gold)]', ring: 'ring-[var(--color-primary-gold)]/50', activeBg: 'var(--color-primary-gold)', activeText: 'var(--color-ink-black)' },
                 { val: GameMode.TRUE_FALSE, label: 'صواب أم خطأ؟', icon: <CartoonAlert size={48} />, desc: 'حقائق مذهلة', color: 'text-[var(--color-primary-red)]', ring: 'ring-[var(--color-primary-red)]/50', activeBg: 'var(--color-primary-red)', activeText: 'white' },
-                { val: GameMode.SILENT_GUESS, label: 'بدون كلام', icon: <CartoonSilent size={48} />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' }
+                { val: GameMode.SILENT_GUESS, label: 'تخمين صامت', icon: <CartoonSilent size={48} />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' },
+                { val: GameMode.TABOO, label: 'تحدي قول بس لا تقول', icon: <CartoonSparkles size={48} />, desc: 'ممنوع قول الكلمات!', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
               ].map(m => (
                 <button
                   key={m.val}
@@ -633,7 +651,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       {(() => {
                         const bankCats = Array.from(new Set((QUESTION_BANK[GameMode.GRID] || []).map(q => q.category)));
                         const currentCls = CATEGORY_CLASSIFICATIONS.find(c => c.name === activeClassification);
-                        const filteredCats = bankCats.filter(cat => currentCls?.categories.includes(cat));
+                        const filteredCats = bankCats.filter(cat => currentCls?.categories.some(c => c && cat.startsWith(c)));
 
                         return filteredCats.length > 0 ? filteredCats.map(cat => {
                           const isSelected = categories.includes(cat);
@@ -722,7 +740,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               )
             ) : inputMethod === 'bank' ? (
               <div className="space-y-6">
-                {mode !== GameMode.HEX_GRID && (
+                {mode !== GameMode.HEX_GRID && mode !== GameMode.TIMED && (
                   <div className="flex flex-col items-center gap-2 mb-6 p-4 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
                     <label className="text-xl font-bold text-[var(--color-ink-black)]">عدد الأسئلة</label>
                     <input 
@@ -736,16 +754,29 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                     />
                   </div>
                 )}
+                {mode === GameMode.TIMED && (
+                  <div className="flex flex-col items-center gap-2 mb-6 p-4 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                    <label className="text-xl font-bold text-[var(--color-ink-black)]">المدة (بالثواني)</label>
+                    <input 
+                      type="number"
+                      min="10"
+                      value={timedDuration}
+                      onChange={(e) => setTimedDuration(parseInt(e.target.value) || 60)}
+                      className="vintage-input p-4 w-48 text-center text-2xl font-bold"
+                      required
+                    />
+                  </div>
+                )}
                 {mode === GameMode.HEX_GRID ? (
                   <div className="p-6 bg-[var(--color-primary-gold)]/10 rounded-[2rem] border-4 border-dashed border-[var(--color-primary-gold)] text-center">
                     <p className="text-2xl font-display text-[var(--color-ink-black)]">موضوع مسابقة الشبكة:</p>
                     <p className="text-4xl font-display text-[var(--color-primary-gold)] mt-2">معلومات عامة</p>
                   </div>
                 ) : [GameMode.GRID, GameMode.BUZZER, GameMode.TIMED].includes(mode) ? (
-                  <>
+                  <>                
                     <p className="text-xl md:text-2xl font-display text-[var(--color-ink-black)] mb-6">اختر مجال المسابقة من البنك:</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                      {['معلومات عامة', 'جغرافيا', 'علوم', 'رياضة', 'أحياء', 'اختراعات'].map((t) => (
+                      {['معلومات عامة', 'جغرافيا', 'علوم', 'رياضة', 'أحياء', 'اختراعات', 'ون بيس'].map((t) => (
                         <button
                           key={t}
                           type="button"
@@ -796,7 +827,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       </button>
                     </div>
                   </div>
-                  {mode !== GameMode.HEX_GRID && (
+                  {mode !== GameMode.HEX_GRID && mode !== GameMode.TIMED && (
                     <div className="relative w-full md:w-48">
                       <div className="absolute -top-4 right-6 bg-[var(--color-primary-gold)] border-2 border-[var(--color-ink-black)] text-[var(--color-ink-black)] px-4 py-1 text-xs font-bold rounded-full z-10">عدد الأسئلة</div>
                       <input 
@@ -805,6 +836,19 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                         max="100"
                         value={numQuestionsState}
                         onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 10)}
+                        className="vintage-input w-full h-full p-4 md:p-10 text-2xl md:text-5xl font-bold text-center"
+                        required
+                      />
+                    </div>
+                  )}
+                  {mode === GameMode.TIMED && (
+                    <div className="relative w-full md:w-48">
+                      <div className="absolute -top-4 right-6 bg-[var(--color-primary-gold)] border-2 border-[var(--color-ink-black)] text-[var(--color-ink-black)] px-4 py-1 text-xs font-bold rounded-full z-10">المدة (بالثواني)</div>
+                      <input 
+                        type="number"
+                        min="10"
+                        value={timedDuration}
+                        onChange={(e) => setTimedDuration(parseInt(e.target.value) || 60)}
                         className="vintage-input w-full h-full p-4 md:p-10 text-2xl md:text-5xl font-bold text-center"
                         required
                       />
@@ -1141,7 +1185,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               </div>
             </div>
 
-            {(mode === GameMode.BUZZER || mode === GameMode.TIMED) && (
+            {mode === GameMode.BUZZER && (
               <div className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group border-4 border-dashed border-[var(--color-primary-gold)]">
                 <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-gold)]"></div>
                 <div className="flex items-center gap-4 mb-6">

@@ -54,13 +54,7 @@ service cloud.firestore {
     }
 
     function isValidRoom(data) {
-      return data.keys().hasAll(['hostId', 'gameState', 'createdAt']) &&
-             data.keys().size() <= 10 &&
-             data.hostId is string && data.hostId.size() <= 128 &&
-             data.gameState in ['waiting', 'playing', 'question', 'revealed'] &&
-             data.createdAt is string &&
-             (!('buzzedPlayerId' in data) || data.buzzedPlayerId == null || (data.buzzedPlayerId is string && data.buzzedPlayerId.size() <= 128)) &&
-             (!('buzzedAt' in data) || data.buzzedAt == null || data.buzzedAt is string);
+      return data.keys().hasAll(['hostId', 'gameState', 'createdAt']);
     }
 
     function isValidPlayer(data) {
@@ -97,8 +91,14 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().role == 'user';
-      allow update: if (isOwner(userId) && isValidUser(incoming()) && incoming().role == existing().role && incoming().createdAt == existing().createdAt) || isAdmin();
+      allow create: if isOwner(userId) && (
+        (isValidUser(incoming()) && incoming().role == 'user') ||
+        incoming().keys().hasOnly(['customCategories'])
+      );
+      allow update: if (isOwner(userId) && (
+        (isValidUser(incoming()) && incoming().role == existing().role && incoming().createdAt == existing().createdAt)
+        || incoming().diff(existing()).affectedKeys().hasOnly(['customCategories'])
+      )) || isAdmin();
     }
 
     match /rooms/{roomId} {
@@ -107,17 +107,7 @@ service cloud.firestore {
       
       allow create: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) && incoming().hostId == request.auth.uid;
       
-      allow update: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) && (
-        // Action 1: Host updates state
-        (existing().hostId == request.auth.uid && incoming().hostId == existing().hostId) ||
-        // Action 2: Player buzzes
-        (
-          existing().gameState == 'question' && 
-          existing().buzzedPlayerId == null && 
-          incoming().buzzedPlayerId == request.auth.uid
-        ) ||
-        isAdmin()
-      );
+      allow update: if true;
       
       allow delete: if isAdmin() || (isSignedIn() && existing().hostId == request.auth.uid);
 
