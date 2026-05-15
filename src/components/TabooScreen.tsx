@@ -27,6 +27,7 @@ const TabooScreen: React.FC<Props> = ({ config, questions, players, onFinish }) 
   const [name, setName] = useState('');
   const [hasJoined, setHasJoined] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [enrichedQuestions, setEnrichedQuestions] = useState<Question[]>([]);
   const { showToast } = useToast();
 
   const isHosting = !!questions;
@@ -64,25 +65,25 @@ const TabooScreen: React.FC<Props> = ({ config, questions, players, onFinish }) 
   const handleStart = async () => {
     if (!questions || questions.length === 0) return;
     const roomRef = doc(db, 'rooms', roomId);
-
-    console.log("Taboo words for current question:", questions[0].tabooWords);
     
-    let tabooWordsToUse = questions[0].tabooWords || [];
-    
-    if (tabooWordsToUse.length === 0) {
-      const foundQuestion = TABOO_QUESTIONS.find(q => q.text === questions[0].text);
-      if (foundQuestion && foundQuestion.tabooWords) {
-        tabooWordsToUse = foundQuestion.tabooWords;
-        console.log("Found taboo words from bank:", tabooWordsToUse);
+    // ابحث عن tabooWords من tabooBank إذا كانت فارغة
+    const enriched = questions.map(q => {
+      if (!q.tabooWords || q.tabooWords.length === 0) {
+        const found = TABOO_QUESTIONS.find(tq => tq.text === q.text);
+        return found ? { ...q, tabooWords: found.tabooWords } : q;
       }
-    }
-
+      return q;
+    });
+    
     await updateDoc(roomRef, {
       gameState: 'playing',
-      currentWord: questions[0].text,
-      tabooWords: tabooWordsToUse,
+      currentWord: enriched[0].text,
+      tabooWords: enriched[0].tabooWords || [],
       score: 0
     });
+    
+    // احفظ الأسئلة المحدثة محلياً
+    setEnrichedQuestions(enriched);
   };
 
   const handleJoin = async () => {
@@ -104,13 +105,15 @@ const TabooScreen: React.FC<Props> = ({ config, questions, players, onFinish }) 
     const roomRef = doc(db, 'rooms', roomId);
     const newScore = (roomState?.score || 0) + (scoreChange > 0 ? 1 : 0);
 
-    if (isHosting && questions) {
-      if (currentQuestionIndex < questions.length - 1) {
+    const questionsToUse = enrichedQuestions.length > 0 ? enrichedQuestions : questions || [];
+
+    if (isHosting && questionsToUse.length > 0) {
+      if (currentQuestionIndex < questionsToUse.length - 1) {
         const nextIndex = currentQuestionIndex + 1;
         setCurrentQuestionIndex(nextIndex);
         await updateDoc(roomRef, {
-          currentWord: questions[nextIndex].text,
-          tabooWords: questions[nextIndex].tabooWords || [],
+          currentWord: questionsToUse[nextIndex].text,
+          tabooWords: questionsToUse[nextIndex].tabooWords || [],
           score: newScore
         });
       } else {
