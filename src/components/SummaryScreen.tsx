@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Player, GameConfig, Question, SavedSet } from '../types';
+import { Player, GameConfig, Question, SavedSet, GameMode, Difficulty } from '../types';
 import confetti from 'canvas-confetti';
 import { playSound } from '../utils/sound';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { setDoc, doc } from 'firebase/firestore';
 import { CartoonStar, CartoonBook, CartoonCheck, CartoonHome, CartoonTrophy, CartoonGear } from './CartoonIcons';
 
 interface Props {
@@ -46,27 +47,31 @@ const SummaryScreen: React.FC<Props> = ({ config, questions, players, onRestart 
     frame();
   }, []);
 
-  const handleSaveToLibrary = () => {
+  const handleSaveToLibrary = async () => {
     if (isSaved || !auth.currentUser) return;
     playSound('click');
     
+    const setId = `set-${Date.now()}`;
     const newSet: SavedSet = {
-      id: `set-${Date.now()}`,
+      id: setId,
       userId: auth.currentUser.uid,
       name: `${config.topic || 'مسابقة'} - ${new Date().toLocaleDateString('ar-EG')}`,
       topic: config.topic || 'مسابقة مخصصة',
       numQuestions: questions.length,
-      mode: config.mode,
-      difficulty: config.difficulty,
+      mode: config.mode || GameMode.GRID,
+      difficulty: config.difficulty || Difficulty.MEDIUM,
       questions: questions,
       createdAt: Date.now()
     };
     
-    const existingSets = localStorage.getItem('savedSets');
-    const parsedSets: SavedSet[] = existingSets ? JSON.parse(existingSets) : [];
-    
-    localStorage.setItem('savedSets', JSON.stringify([newSet, ...parsedSets]));
-    setIsSaved(true);
+    try {
+      // Remove any undefined values to avoid Firestore issues
+      const cleanedSet = JSON.parse(JSON.stringify(newSet));
+      await setDoc(doc(db, 'saved_sets', setId), cleanedSet);
+      setIsSaved(true);
+    } catch (err) {
+      console.error("Error saving set to Firestore", err);
+    }
   };
 
   return (

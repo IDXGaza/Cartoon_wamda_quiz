@@ -60,20 +60,32 @@ const SettingsModal: React.FC = () => {
     }
   };
 
-  if (!isSettingsOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="vintage-panel w-full max-w-md p-10 relative max-h-[90vh] overflow-y-auto custom-scrollbar rounded-[3rem] border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] bg-[var(--color-bg-cream)]">
-        <button 
-          onClick={() => {
-            playSound('click');
-            setIsSettingsOpen(false);
-          }}
-          className="absolute top-6 left-6 w-14 h-14 bg-[var(--color-primary-red)] text-white rounded-2xl flex items-center justify-center hover:scale-110 transition-transform border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none"
+    <AnimatePresence>
+      {isSettingsOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
         >
-          <CartoonX size={32} />
-        </button>
+          <motion.div 
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.9, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="vintage-panel w-full max-w-md p-10 relative max-h-[90vh] overflow-y-auto custom-scrollbar rounded-[3rem] border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] bg-[var(--color-bg-cream)]"
+          >
+            <button 
+              onClick={() => {
+                playSound('click');
+                setIsSettingsOpen(false);
+              }}
+              className="absolute top-6 left-6 w-14 h-14 bg-[var(--color-primary-red)] text-white rounded-2xl flex items-center justify-center hover:scale-110 transition-transform border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none"
+            >
+              <CartoonX size={32} />
+            </button>
         
         <h2 className="text-4xl font-display text-[var(--color-ink-black)] mb-10 flex items-center gap-4">
           <CartoonGear size={48} className="animate-spin-slow" />
@@ -175,9 +187,29 @@ const SettingsModal: React.FC = () => {
               <CartoonRocket size={32} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-primary-red)]" />
             </div>
           </div>
+
+          {/* Reset App State */}
+          <div className="space-y-4 mt-6">
+            <button 
+              onClick={() => {
+                playSound('click');
+                import('../utils/playedQuestions').then(module => {
+                  module.clearPlayedQuestionHashes();
+                  setTestStatus({ loading: false, result: 'تم تصفير سجل الأسئلة بنجاح!', success: true });
+                  setTimeout(() => setTestStatus(prev => ({ ...prev, result: null })), 3000);
+                });
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-4 border-[var(--color-ink-black)] font-bold transition-all shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none bg-slate-200 hover:bg-slate-300"
+            >
+              <CartoonRefresh size={24} />
+              <span>تصفير الأسئلة الملعوبة (السماح بتكرار الأسئلة السابقة)</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
   );
 };
 

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { Dices } from 'lucide-react';
 import { GameConfig, GameMode, QuestionType, Player, Difficulty } from '../types';
 import { QUESTION_BANK } from '../data/localBank';
+import { filterPlayedQuestions, addPlayedQuestionHashes } from '../utils/playedQuestions';
 import { Type } from "@google/genai";
 import { getAI, extractJson, generateQuestions } from '../services/geminiService';
 import { useToast } from '../contexts/ToastContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { playSound } from '../utils/sound';
 import { CartoonHexagon, CartoonGrid, CartoonLightning, CartoonTimer, CartoonSilent, CartoonBot, CartoonPencil, CartoonPlus, CartoonTrash, CartoonRefresh, CartoonStar, CartoonGear, CartoonBook, CartoonAlert, CartoonRocket, CartoonX, CartoonSparkles } from './CartoonIcons';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
   onStart: (config: GameConfig) => void;
@@ -37,23 +39,24 @@ const JEOPARDY_SETS = [
   { name: "خماسية التحدي (منظم)", categories: ['جسم الإنسان', 'جغرافيا', 'علوم', 'تاريخ وثقافة', 'رياضة ومصارعة'], icon: "🏆" },
   { name: "منوعة كلاسيكية", categories: ['معلومات عامة', 'جغرافيا', 'تاريخ وثقافة', 'إسلاميات', 'رياضة ومصارعة'], icon: "🌟" },
   { name: "تكنولوجيا وفضاء", categories: ['علوم', 'فضاء وتقنية', 'تاريخ وثقافة', 'جسم الإنسان', 'معلومات عامة'], icon: "🚀" },
-  { name: "لغة ودين", categories: ['لغة وأدب', 'إسلاميات', 'تاريخ وثقافة', 'معلومات عامة', 'جغرافيا'], icon: "📖" },
+  { name: "لغة ودين", categories: ['علوم', 'إسلاميات', 'تاريخ وثقافة', 'معلومات عامة', 'جغرافيا'], icon: "📖" },
   { name: "مستكشف العالم", categories: ['جغرافيا', 'تاريخ وثقافة', 'فضاء وتقنية', 'علوم', 'معلومات عامة'], icon: "🌍" },
 ];
 
 const CATEGORY_CLASSIFICATIONS = [
-  { name: "العلوم والطبيعة", icon: "🧬", color: "bg-emerald-500", categories: ['علوم', 'فضاء وتقنية', 'جسم الإنسان', 'أحياء', 'كيمياء', 'فيزياء', 'طب', 'طبيعة', 'حيوانات'] },
-  { name: "الجغرافيا والتاريخ", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ', 'التاريخ', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي'] },
-  { name: "الثقافة والأدب", icon: "📚", color: "bg-indigo-500", categories: ['لغة وأدب', 'أدب', 'لغات', 'أقوال', 'أمثال وحكم', 'تقنية', 'فنون وترفيه'] },
-  { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء', 'الدين', 'حياة المعصومين', 'إكمال الدعاء', 'اكمال الدعاء'] },
-  { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم'] },
-  { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['رياضة', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'ون بيس', 'ذكاء'] }
+  { name: "العلوم والطبيعة", icon: "🧬", color: "bg-emerald-500", categories: ['علوم', 'فضاء وتقنية', 'الفضاء', 'فضاء', 'جسم الإنسان', 'أحياء', 'كيمياء', 'فيزياء', 'طب', 'طبيعة', 'حيوانات', 'مملكة الحيوان'] },
+  { name: "اطلس", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ', 'التاريخ', 'العملات', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي', 'العواصم العالمية', 'الحرب العالمية الأولى والثانية'] },
+  { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء', 'الدين', 'حياة المعصومين', 'إكمال الدعاء', 'اكمال الدعاء', 'فقه السيد السيستاني', 'القرآن'] },
+  { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم', 'فورمولا 1'] },
+  { name: "مسلسلات و انمي", icon: "🎬", color: "bg-purple-500", categories: ['Game of Thrones', 'ون بيس', 'هجوم العمالقة', 'كرتون', 'Breaking Bad', 'Dexter'] },
+  { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['رياضة', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'هاري بوتر', 'الدن رينج', 'ذكاء', 'سيارات', 'التقنية'] }
 ];
 
 import { getUserCustomCategories, UserCategory } from '../services/categoryService';
 // ... (imports)
 const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const { settings } = useSettings();
+  const { showToast } = useToast();
   const [topic, setTopic] = useState('ثقافة عامة');
   const [isOnline] = useState(navigator.onLine);
   const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
@@ -68,7 +71,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [numQuestionsState, setNumQuestionsState] = useState<number>(10);
   const [activeClassification, setActiveClassification] = useState<string>("العلوم والطبيعة");
   const [timedDuration, setTimedDuration] = useState<number>(settings.timedDuration);
-  const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
   const [categories, setCategories] = useState<string[]>(['', '', '', '', '']);
   const [playersConfig, setPlayersConfig] = useState<{name: string, color: string}[]>([
     { name: 'الفريق الأحمر', color: '#ef4444' },
@@ -77,16 +79,14 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
 
   const [inputMethod, setInputMethod] = useState<'ai' | 'manual' | 'bank'>('ai');
   const [buzzerTimeout, setBuzzerTimeout] = useState<number>(20);
-
-  // When categories was cleared, it shouldn't auto-fill, unless it's the first time
-  const [hasInitializedCategories, setHasInitializedCategories] = useState(false);
+  const [isRestrictedMode, setIsRestrictedMode] = useState<boolean>(true);
 
   React.useEffect(() => {
-    if (mode === GameMode.GRID && inputMethod === 'bank' && !hasInitializedCategories) {
-      setCategories(JEOPARDY_SETS[0].categories);
-      setHasInitializedCategories(true);
-    }
-  }, [mode, inputMethod]);
+    setIsRestrictedMode(mode === GameMode.GRID || mode === GameMode.HEX_GRID || mode === GameMode.LISTING);
+  }, [mode]);
+
+  // Categories should start empty without autofilling as requested by the user
+  const [hasInitializedCategories] = useState(true);
   
   const [manualQuestions, setManualQuestions] = useState<Record<string, {
     question: string, 
@@ -109,6 +109,22 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
     const topics = ["تاريخ إسلامي", "عواصم العالم", "اختراعات غيرت العالم", "أدب عالمي", "عجائب الدنيا", "فضاء ونجوم", "كيمياء حيوية", "تاريخ الأندلس", "أساطير قديمة", "أفلام ومسلسلات"];
     setTopic(topics[Math.floor(Math.random() * topics.length)]);
   }, [setTopic]);
+
+  const randomizeCategories = React.useCallback(() => {
+    playSound('click');
+    const bank = QUESTION_BANK[GameMode.GRID] || [];
+    const allBankCats = Array.from(new Set(bank.map(q => q.category)));
+    
+    // Pick 5 unique random
+    const shuffled = [...allBankCats].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 5);
+    
+    // Fill to 5 if less than 5
+    while (selected.length < 5) {
+        selected.push('');
+    }
+    setCategories(selected);
+  }, []);
 
   const clearManualQuestions = React.useCallback(() => {
     playSound('click');
@@ -196,7 +212,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
         requiredCount,
         [QuestionType.OPEN],
         mode,
-        difficulty,
+        Difficulty.MEDIUM,
         selectedModel,
         categories.filter(c => c.trim() !== '')
       );
@@ -305,6 +321,15 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === GameMode.GRID && inputMethod !== 'manual') {
+      const selectedCats = categories.filter(c => c.trim() !== '');
+      if (selectedCats.length < 5) {
+        playSound('wrong');
+        showToast(`يجب اختيار أو كتابة 5 فئات كاملة لبدء مسابقة الجيبوردي (لقد حددت ${selectedCats.length} من 5)`, "error");
+        return;
+      }
+    }
+
     if (inputMethod === 'manual' && !isManualValid()) {
       playSound('wrong');
       showToast('الرجاء إكمال جميع الأسئلة المطلوبة بشكل صحيح', "error");
@@ -341,7 +366,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               category: q.category || cat.category,
               points: p,
               type: QuestionType.OPEN,
-              difficulty
+              difficulty: Difficulty.MEDIUM
             });
           });
         });
@@ -357,7 +382,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             points: 100,
             explanation: q?.explanation,
             type: QuestionType.OPEN,
-            difficulty,
+            difficulty: Difficulty.MEDIUM,
           });
         }
       }
@@ -367,7 +392,16 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
         const bank = QUESTION_BANK[GameMode.GRID] || [];
         // Use user-selected categories if available, else fallback to first 5 unique categories
         const selectedCats = categories.filter(c => c.trim() !== '');
-        let cats = selectedCats.length >= 3 ? selectedCats : Array.from(new Set(bank.map(q => q.category))).slice(0, 5);
+        let cats = [...selectedCats];
+        
+        // Pad to exactly 5 categories using other categories from the bank
+        const allBankCats = Array.from(new Set(bank.map(q => q.category)));
+        for (const bankCat of allBankCats) {
+          if (cats.length >= 5) break;
+          if (!cats.includes(bankCat)) {
+            cats.push(bankCat);
+          }
+        }
         
         // Ensure we always have 5 categories
         while (cats.length < 5) {
@@ -375,17 +409,25 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
         }
 
         cats.forEach((catName, i) => {
-          let catQuestions = bank.filter(q => q.category === catName || (catName === 'رياضة ومصارعة' && q.category === 'الرياضة'));
+          let allCatQuestions = bank.filter(q => q.category === catName || (catName === 'رياضة ومصارعة' && q.category === 'الرياضة'));
+          let catQuestions = filterPlayedQuestions(allCatQuestions);
           
           const diffMap: Record<string, number> = { 'beginner': 1, 'easy': 2, 'medium': 3, 'hard': 4 };
 
-          // If we don't have 5 questions for this category, try to find ANY unused questions from the bank as fallback
+          // If we don't have enough unplayed questions for this category, try unplayed from other categories or just reuse played
           if (catQuestions.length < 5) {
+            // First fallback: unplayed extra questions
             const usedTexts = new Set(finalManualQuestions.map(q => q.text));
-            const extra = bank.filter(q => !usedTexts.has(q.text) && q.category !== catName);
-            // Sort extra for variety
+            let extra = filterPlayedQuestions(bank).filter(q => !usedTexts.has(q.text) && q.category !== catName);
             extra.sort(() => Math.random() - 0.5);
-            catQuestions = [...catQuestions, ...extra.slice(0, 5 - catQuestions.length)];
+            catQuestions = [...catQuestions, ...extra].slice(0, 5);
+            
+            // Second fallback: reuse played questions if still less than 5
+            if (catQuestions.length < 5) {
+              const playedExtra = bank.filter(q => !usedTexts.has(q.text) && !catQuestions.some(cq => cq.id === q.id));
+              playedExtra.sort(() => Math.random() - 0.5);
+              catQuestions = [...catQuestions, ...playedExtra].slice(0, 5);
+            }
           }
 
           // To improve variety, shuffle questions of the same difficulty
@@ -421,14 +463,23 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             }
           }
         });
+        
+        // Add selected questions to played history
+        addPlayedQuestionHashes(finalManualQuestions.map(q => ({ category: q.category, difficulty: q.difficulty, text: q.text })));
       } else if (mode === GameMode.HEX_GRID) {
          // HEX_GRID handles bank directly in GameScreen if no manualQuestions
       } else {
         const modeBank = QUESTION_BANK[mode] || [];
         // Filter by topic if selected
         const filteredBank = topic && topic !== 'عام' ? modeBank.filter(q => q.category === topic) : modeBank;
-        let bank = [...(filteredBank.length > 0 ? filteredBank : modeBank)];
+        let allBank = [...(filteredBank.length > 0 ? filteredBank : modeBank)];
+        let bank = filterPlayedQuestions(allBank);
         
+        if (bank.length < numQuestionsState) {
+          // Fallback to all questions if not enough unplayed
+          bank = allBank;
+        }
+
         // Shuffle for variety using Fisher-Yates
         for (let i = bank.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -437,9 +488,9 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
         
         const count = numQuestionsState;
         for (let i = 0; i < count; i++) {
-          const q = bank[i % bank.length] || { id: 'bk-def', text: 'ما هي عاصمة العالم في الثقافة والجمال؟', answer: 'باريس', category: 'عام', difficulty: 'medium' };
+          const q = bank[i % bank.length] || { id: 'bk-def', text: 'ما هي عاصمة العالم في الثقافة والجمال؟', answer: 'باريس', category: 'عام', difficulty: Difficulty.MEDIUM };
           finalManualQuestions.push({
-            id: `bk-${q.id}-${i}-${Date.now()}`,
+            id: q.id, // Keep original ID to mark as played
             text: q.text,
             answer: q.answer,
             category: q.category,
@@ -448,6 +499,9 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             difficulty: (q.difficulty?.toUpperCase() as Difficulty) || Difficulty.MEDIUM
           });
         }
+        
+        // Add selected questions to played history
+        addPlayedQuestionHashes(finalManualQuestions.map(q => ({ category: q.category, difficulty: q.difficulty, text: q.text })));
       }
     }
     
@@ -456,7 +510,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       numQuestions: mode === GameMode.HEX_GRID ? 28 : (mode === GameMode.GRID ? 25 : numQuestionsState), 
       mode, 
       questionTypes: mode === GameMode.TRUE_FALSE ? [QuestionType.TRUE_FALSE] : [questionType], 
-      difficulty,
+      difficulty: Difficulty.MEDIUM,
       players,
       categories: mode === GameMode.GRID ? (inputMethod === 'bank' ? Array.from(new Set(finalManualQuestions.map(q => q.category))) : categories.filter(c => c.trim() !== '')) : [],
       manualQuestions: finalManualQuestions,
@@ -516,7 +570,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
 
         <form onSubmit={handleSubmit} className="space-y-12 relative z-10">
           {/* Game Mode Selection */}
-          <div className="space-y-8 animate-fade-in vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-8 vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-indigo-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
               <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-primary-gold)] border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-ink-black)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">1</div>
@@ -530,28 +584,31 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 { val: GameMode.TIMED, label: 'سباق الوقت', icon: <CartoonTimer size={48} />, desc: 'أكبر عدد إجابات', color: 'text-[var(--color-primary-gold)]', ring: 'ring-[var(--color-primary-gold)]/50', activeBg: 'var(--color-primary-gold)', activeText: 'var(--color-ink-black)' },
                 { val: GameMode.TRUE_FALSE, label: 'صواب أم خطأ؟', icon: <CartoonAlert size={48} />, desc: 'حقائق مذهلة', color: 'text-[var(--color-primary-red)]', ring: 'ring-[var(--color-primary-red)]/50', activeBg: 'var(--color-primary-red)', activeText: 'white' },
                 { val: GameMode.SILENT_GUESS, label: 'تخمين صامت', icon: <CartoonSilent size={48} />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' },
-                { val: GameMode.TABOO, label: 'تحدي قول بس لا تقول', icon: <CartoonSparkles size={48} />, desc: 'ممنوع قول الكلمات!', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
+                { val: GameMode.LISTING, label: 'تحدي القائمة', icon: <CartoonSparkles size={48} />, desc: 'كم تقدر تعدد؟', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
               ].map(m => (
-                <button
+                <motion.button
+                  layout
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   key={m.val}
                   type="button"
                   onClick={() => {
                     playSound('click');
                     setMode(m.val);
                   }}
-                  className={`vintage-button rounded-3xl p-8 flex flex-col items-center gap-4 text-center transition-all duration-300 ${mode === m.val ? `ring-4 ${m.ring} scale-105 shadow-[8px_8px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)] hover:scale-105'}`}
+                  className={`vintage-button rounded-3xl p-8 flex flex-col items-center gap-4 text-center transition-all duration-300 ${mode === m.val ? `ring-4 ${m.ring} shadow-[8px_8px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)]'}`}
                   style={mode === m.val ? { backgroundColor: m.activeBg, color: m.activeText } : {}}
                 >
-                  <div className={`mb-2 transition-colors ${mode === m.val ? 'text-inherit' : m.color}`}>{m.icon}</div>
-                  <h3 className="font-bold text-xl vintage-text">{m.label}</h3>
-                  <p className="text-xs opacity-70">{m.desc}</p>
-                </button>
+                  <motion.div layout className={`mb-2 transition-colors ${mode === m.val ? 'text-inherit' : m.color}`}>{m.icon}</motion.div>
+                  <motion.h3 layout className="font-bold text-xl vintage-text">{m.label}</motion.h3>
+                  <motion.p layout className="text-xs opacity-70">{m.desc}</motion.p>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Topic Selection */}
-          <div className="space-y-8 animate-fade-in vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-8 vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6">
               <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-accent-sky)] border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-ink-black)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">2</div>
@@ -563,66 +620,19 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             {mode === GameMode.GRID ? (
               inputMethod === 'bank' ? (
                 <div className="space-y-8 w-full">
-                  {/* Jeopardy Sets - Primary Choice */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center bg-white/40 p-4 rounded-2xl border-2 border-dashed border-[var(--color-ink-black)]">
-                      <p className="text-xl font-bold text-[var(--color-bg-dark)] flex items-center gap-2">
-                        <CartoonBook className="w-8 h-8 text-[var(--color-primary-blue)]" /> اختر مجموعة فئات جاهزة:
-                      </p>
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          playSound('click');
-                          setCategories(['', '', '', '', '']);
-                        }}
-                        className="text-xs font-bold underline text-red-600"
-                      >
-                        إعادة تعيين
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {JEOPARDY_SETS.map(set => (
-                        <button
-                          key={set.name}
-                          type="button"
-                          onClick={() => {
-                            playSound('click');
-                            setCategories(set.categories);
-                            showToast(`تم اختيار مجموعة: ${set.name}`, "info");
-                          }}
-                          className={`p-6 rounded-[2rem] border-4 transition-all text-right flex items-center gap-4 group/set relative ${
-                            JSON.stringify(categories) === JSON.stringify(set.categories)
-                              ? 'bg-[var(--color-primary-gold)] border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] scale-105'
-                              : 'bg-white border-white/20 hover:border-[var(--color-primary-gold)] hover:bg-[var(--color-bg-cream)] shadow-[4px_4px_0px_rgba(0,0,0,0.1)]'
-                          }`}
-                        >
-                          <div className="w-16 h-16 rounded-2xl bg-white/50 border-2 border-[var(--color-ink-black)] flex items-center justify-center text-3xl group-hover/set:rotate-6 transition-transform">
-                            {set.icon}
-                          </div>
-                          <div className="flex-1 overflow-hidden">
-                            <p className="font-bold text-xl mb-1">{set.name}</p>
-                            <div className="flex flex-wrap gap-1">
-                              {set.categories.slice(0, 5).map(c => (
-                                <span key={c} className="text-[9px] bg-black/5 px-2 py-0.5 rounded-full">{c}</span>
-                              ))}
-                              {set.categories.length > 5 && <span className="text-[9px] bg-black/5 px-2 py-0.5 rounded-full">+{set.categories.length - 5}</span>}
-                            </div>
-                          </div>
-                          {JSON.stringify(categories) === JSON.stringify(set.categories) && (
-                            <div className="absolute -top-3 -left-3 w-8 h-8 bg-green-500 text-white rounded-full border-4 border-[var(--color-ink-black)] flex items-center justify-center shadow-md">
-                              ✓
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Classification Explorer - Secondary Choice */}
                   <div className="pt-8 border-t-4 border-dashed border-black/5 space-y-6">
                     <p className="text-xl font-bold text-[var(--color-bg-dark)] flex items-center gap-2">
-                      <CartoonSparkles className="w-8 h-8 text-[var(--color-primary-gold)]" /> أو صمم مجموعتك باختيار 5 فئات من التصنيفات:
+                       صمم مجموعتك باختيار 5 فئات من التصنيفات:
+                       <button
+                         id="random-selector-button"
+                         type="button"
+                         onClick={randomizeCategories}
+                         className="p-2 bg-[var(--color-primary-gold)] rounded-xl border-2 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] hover:scale-105 active:scale-95 transition-all"
+                         title="اختيار فئات عشوائية"
+                       >
+                         <Dices className="w-6 h-6" />
+                       </button>
                     </p>
                     
                     {/* Classifications Tabs */}
@@ -873,11 +883,11 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 </div>
               </>
             )}
-          </div>
+          </motion.div>
 
 
           {/* Input Method Selection */}
-          <div className="space-y-8 animate-fade-in vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-8 vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-green)]"></div>
             <div className="flex items-center gap-4 mb-6">
               <div className="w-14 h-14 rounded-xl bg-[var(--color-primary-green)] border-4 border-[var(--color-ink-black)] flex items-center justify-center text-white font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">3</div>
@@ -962,8 +972,16 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               </div>
             )}
 
+          <AnimatePresence mode="wait">
           {inputMethod === 'manual' && (
-            <div className="space-y-6 animate-fade-in pt-6 border-t border-white/10">
+            <motion.div 
+              layout
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6 pt-6 border-t border-black/10 overflow-hidden"
+            >
               <div className="bg-amber-500/10 p-5 rounded-3xl border border-amber-500/30 flex flex-col md:flex-row gap-4 justify-between items-center">
                 <p className="font-bold text-amber-400 text-sm md:text-base flex items-center gap-2">
                   <CartoonAlert className="w-5 h-5" />
@@ -1100,13 +1118,14 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                   })
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+          </AnimatePresence>
+        </motion.div>
 
-          {/* Players and Difficulty */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-            <div className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group">
+          <div className="mt-12 flex justify-center">
+            {/* Players and Difficulty */}
+            <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-2 h-full bg-violet-500"></div>
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 rounded-xl bg-violet-500/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-violet-600 font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">4</div>
@@ -1115,7 +1134,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               <div className="space-y-4">
                 {playersConfig.map((p, i) => (
                   <div key={i} className="group/player flex gap-4 items-center bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] p-3 rounded-2xl shadow-[4px_4px_0px_var(--color-ink-black)]">
-                    {playersConfig.length > 2 && (
+                    {!isRestrictedMode && playersConfig.length > 2 && (
                       <button 
                         type="button" 
                         onClick={() => setPlayersConfig(playersConfig.filter((_, idx) => idx !== i))} 
@@ -1125,7 +1144,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                         <CartoonTrash className="w-6 h-6" />
                       </button>
                     )}
-                    <div className="relative w-14 h-14 rounded-xl overflow-hidden border-4 border-[var(--color-ink-black)] shrink-0 group-hover/player:scale-105 transition-transform">
+                    <div className="relative w-14 h-14 rounded-xl overflow-hidden border-4 border-[var(--color-ink-black)] shrink-0 transition-opacity group-hover/player:opacity-90">
                       <input 
                         type="color"
                         value={p.color}
@@ -1151,42 +1170,24 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                     </div>
                   </div>
                 ))}
-                <button type="button" onClick={() => setPlayersConfig([...playersConfig, { name: `متسابق ${playersConfig.length + 1}`, color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') }])} className="vintage-button w-full flex items-center justify-center gap-3 bg-[var(--color-primary-blue)] text-[var(--color-off-white)]">
-                  <CartoonPlus className="w-6 h-6" /> إضافة منافس
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-2 h-full bg-fuchsia-500"></div>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-fuchsia-500/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-fuchsia-600 font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">5</div>
-                <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">مستوى الصعوبة</label>
-              </div>
-              <div className="flex flex-col gap-4">
-                {[
-                  { val: Difficulty.EASY, label: 'سهل', color: '#84cc16', text: 'white' },
-                  { val: Difficulty.MEDIUM, label: 'متوسط', color: 'var(--color-primary-gold)', text: 'var(--color-ink-black)' },
-                  { val: Difficulty.HARD, label: 'صعب', color: 'var(--color-primary-red)', text: 'white' }
-                ].map(d => (
-                  <button
-                    key={d.val}
-                    type="button"
-                    onClick={() => {
-                    playSound('click');
-                    setDifficulty(d.val);
-                  }}
-                    className={`vintage-button py-5 text-xl transition-all ${difficulty === d.val ? `scale-[1.02] shadow-[6px_6px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)]'}`}
-                    style={difficulty === d.val ? { backgroundColor: d.color, color: d.text } : {}}
-                  >
-                    {d.label}
+                {!isRestrictedMode && (
+                  <button type="button" onClick={() => setPlayersConfig([...playersConfig, { name: `متسابق ${playersConfig.length + 1}`, color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') }])} className="vintage-button w-full flex items-center justify-center gap-3 bg-[var(--color-primary-blue)] text-[var(--color-off-white)]">
+                    <CartoonPlus className="w-6 h-6" /> إضافة منافس
                   </button>
-                ))}
+                )}
               </div>
-            </div>
+            </motion.div>
 
+            <AnimatePresence>
             {mode === GameMode.BUZZER && (
-              <div className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group border-4 border-dashed border-[var(--color-primary-gold)]">
+              <motion.div 
+                layout 
+                initial={{ opacity: 0, scale: 0.95 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group border-4 border-dashed border-[var(--color-primary-gold)] w-full max-w-2xl"
+              >
                 <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-gold)]"></div>
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-14 h-14 rounded-xl bg-[var(--color-primary-gold)]/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-primary-gold)] font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">6</div>
@@ -1214,16 +1215,17 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                     <span>وقت كافٍ 🐢</span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
 
-          <button type="submit" className="vintage-button w-full py-8 md:py-10 rounded-[2.5rem] text-3xl md:text-5xl font-bold mt-12 relative overflow-hidden group">
+          <motion.button layout type="submit" className="vintage-button w-full py-8 md:py-10 rounded-[2.5rem] text-3xl md:text-5xl font-bold mt-12 relative overflow-hidden group">
             <span className="relative z-10 flex items-center justify-center gap-6">
               انطلاق المسابقة <CartoonRocket className="w-10 h-10 group-hover:translate-x-[-10px] group-hover:translate-y-[-10px] transition-transform duration-300" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-cyan-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[length:200%_auto] animate-gradient"></div>
-          </button>
+          </motion.button>
         </form>
       </div>
     </div>

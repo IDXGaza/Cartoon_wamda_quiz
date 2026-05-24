@@ -121,8 +121,9 @@ async function startServer() {
     // Serve static files
     app.use(express.static(distPath));
 
-    // Fallback index.html for all other request
-    app.use((req, res) => {
+    // Fallback index.html for all other requests
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
       res.sendFile(path.resolve(distPath, "index.html"));
     });
   }

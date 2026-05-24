@@ -1,8 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useCallback } from 'react';
+import { motion } from 'motion/react';
 import { playSound } from '../utils/sound';
-import { CartoonSnowflake, CartoonShield } from './CartoonIcons';
-import { Question, Player, PowerType } from '../types';
+import { Question, Player } from '../types';
+import HexCell from './HexCell';
 
 interface HexGridProps {
   grid: Question[][];
@@ -15,14 +15,6 @@ interface HexGridProps {
   stolenCells: Record<string, boolean>;
   handleHexClick: (q: Question) => void;
 }
-
-const LETTERS = [
-  'أ', 'ب', 'ت', 'ث', 'ج', 'ح',
-  'خ', 'د', 'ذ', 'ر', 'ز',
-  'س', 'ش', 'ص', 'ض', 'ط', 'ظ',
-  'ع', 'غ', 'ف', 'ق', 'ك',
-  'ل', 'م', 'ن', 'ه', 'و', 'ي'
-];
 
 const HexGrid: React.FC<HexGridProps> = ({
   grid,
@@ -50,6 +42,11 @@ const HexGrid: React.FC<HexGridProps> = ({
   const viewBoxHeight = (rowSizes.length + 1) * hexVerticalSpacing + (40 * scale);
 
   const points = `${hexHalfWidth},0 ${hexWidth},${hexHeight * 0.25} ${hexWidth},${hexHeight * 0.75} ${hexHalfWidth},${hexHeight} 0,${hexHeight * 0.75} 0,${hexHeight * 0.25}`;
+
+  const memoizedHandleClick = useCallback((q: Question) => {
+    playSound('click');
+    handleHexClick(q);
+  }, [handleHexClick]);
 
   return (
     <div className="relative w-full max-w-[min(95vw,900px)] mx-auto overflow-visible">
@@ -135,7 +132,7 @@ const HexGrid: React.FC<HexGridProps> = ({
             </g>
           );
         })}
-
+        
         {/* --- Main Grid --- */}
         {grid.map((row, rIdx) => {
           const isOddRow = rIdx % 2 === 1;
@@ -149,88 +146,27 @@ const HexGrid: React.FC<HexGridProps> = ({
             const isPlayer0 = color?.toLowerCase() === players[0]?.color.toLowerCase();
             const isPlayer1 = color?.toLowerCase() === players[1]?.color.toLowerCase();
             const isSkipped = color === '#475569';
-            const activeClass = isSkipped ? 'opacity-40 grayscale' : '';
             const isWinning = winningPath.includes(q.id);
-            
-            let polygonStyle: React.CSSProperties = { 
-              fill: color || '#FFFFFF', 
-              stroke: '#000000', 
-              strokeWidth: 5 * scale 
-            };
 
             return (
               <g key={q.id} transform={`translate(${x}, ${y})`}>
-                <motion.g 
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: (rIdx * 0.05) + (cIdx * 0.03), type: 'spring' }}
-                  className={`hex-group ${activeClass} ${isWinning ? 'animate-win-pulse' : ''} cursor-pointer transition-all duration-300`}
-                  onClick={() => {
-                    playSound('click');
-                    handleHexClick(q);
-                  }}
-                  style={{ transformOrigin: `${hexHalfWidth}px ${hexHalfHeight}px` }}
-                >
-                  <polygon 
-                    points={points} 
-                    className={`hex-polygon transition-all duration-300 ${frozenCells[q.id] > 0 ? 'stroke-blue-400' : ''} ${shieldedCells[q.id] ? 'stroke-emerald-400' : ''}`} 
-                    style={{
-                      ...polygonStyle,
-                      strokeWidth: (frozenCells[q.id] > 0 || shieldedCells[q.id]) ? 15 * scale : 5 * scale,
-                      fill: frozenCells[q.id] > 0 ? `${polygonStyle.fill}88` : polygonStyle.fill,
-                      filter: (frozenCells[q.id] > 0 || shieldedCells[q.id]) ? `drop-shadow(0 0 ${15 * scale}px currentColor)` : 'none'
-                    }} 
-                  />
-                  
-                  {/* Bubbly Letter Styling */}
-                  <g transform={`translate(${hexHalfWidth}, ${hexHalfHeight})`}>
-                    <text 
-                      className="font-display text-6xl select-none"
-                      style={{ 
-                        fill: '#000000', 
-                        opacity: 0.3,
-                        transform: `translate(${4 * scale}px, ${4 * scale}px)`
-                      }} 
-                      dominantBaseline="middle" 
-                      textAnchor="middle"
-                    >
-                      {q.letter}
-                    </text>
-                    <text 
-                      className="font-display text-6xl select-none"
-                      style={{ 
-                        fill: isPlayer0 || isPlayer1 ? '#FFFFFF' : '#6B46C1',
-                        stroke: '#FFFFFF',
-                        strokeWidth: 3 * scale,
-                        paintOrder: 'stroke'
-                      }} 
-                      dominantBaseline="middle" 
-                      textAnchor="middle"
-                    >
-                      {q.letter}
-                    </text>
-                  </g>
-                  
-                  {frozenCells[q.id] > 0 && (
-                    <motion.g animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: `${hexHalfWidth}px ${hexHalfHeight}px` }}>
-                      <foreignObject x={15 * scale} y={25 * scale} width={100 * scale} height={100 * scale}>
-                        <div className="flex items-center justify-center w-full h-full">
-                          <CartoonSnowflake className="w-full h-full text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.9)]" style={{ width: 70 * scale, height: 70 * scale }} />
-                        </div>
-                      </foreignObject>
-                    </motion.g>
-                  )}
-                  {shieldedCells[q.id] && (
-                    <motion.g animate={{ y: [0, -10 * scale, 0], scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ transformOrigin: `${hexHalfWidth}px ${hexHalfHeight}px` }}>
-                      <foreignObject x={15 * scale} y={25 * scale} width={100 * scale} height={100 * scale}>
-                        <div className="flex items-center justify-center w-full h-full">
-                          <CartoonShield className="w-full h-full text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.9)]" style={{ width: 70 * scale, height: 70 * scale }} />
-                        </div>
-                      </foreignObject>
-                    </motion.g>
-                  )}
-                  {/* Cell is now just colored by polygonStyle.fill */}
-                </motion.g>
+                <HexCell
+                  question={q}
+                  color={color}
+                  isPlayer0={isPlayer0}
+                  isPlayer1={isPlayer1}
+                  isSkipped={isSkipped}
+                  isWinning={isWinning}
+                  points={points}
+                  hexHalfWidth={hexHalfWidth}
+                  hexHalfHeight={hexHalfHeight}
+                  scale={scale}
+                  frozen={frozenCells[q.id] || 0}
+                  shielded={!!shieldedCells[q.id]}
+                  handleHexClick={memoizedHandleClick}
+                  rIdx={rIdx}
+                  cIdx={cIdx}
+                />
               </g>
             );
           });

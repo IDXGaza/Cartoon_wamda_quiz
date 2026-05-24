@@ -7,16 +7,18 @@ import {
   saveToVault,
   getRandomQuestionsFromVault
 } from "./vaultService";
+import { addPlayedQuestionHashes } from "../utils/playedQuestions";
 
 /**
  * 🎯 الروابط والموجهات الصارمة لكل نمط لعبة (Prompts & Rules)
  */
 const MODE_RULES = {
   [GameMode.HEX_GRID]: {
-    system: "أنت خبير في صياغة مسابقات 'شبكة الحروف' باللغة العربية حصراً. مهمتك هي ضمان تطابق الإجابة مع الحرف المعطى بنسبة 100%.",
+    system: "أنت خبير في صياغة مسابقات 'شبكة الحروف' باللغة العربية حصراً. مهمتك هي ضمان تطابق الإجابة مع الحرف المعطى بنسبة 100%. قاعدة ذهبية: يجب تجاهل 'ال' التعريف عند التحقق من حرف البداية. إذا كانت الإجابة 'المحيط'، فهي تبدأ بحرف 'م' (حرف الميم)، وليس 'ا'.",
     rules: [
       "اللغة: يجب أن يكون السؤال والإجابة باللغة العربية الفصحى.",
-      "يجب أن تبدأ الإجابة بالحرف المطلوب بالضبط (أ، ب، ت...).",
+      "يجب أن تبدأ الإجابة (بدون 'ال' التعريف) بالحرف المطلوب بالضبط (أ، ب، ت...).",
+      "قاعدة ذهبية: تجاهل 'ال' التعريف عند التحقق من حرف البداية.",
       "يمنع ذكر الإجابة أو أي تلميح مباشر لها في نص السؤال.",
       "يمنع الهلوسة ببيانات خاطئة لمجرد مطابقة الحرف.",
       "الأسئلة قصيرة ومباشرة (أقل من 10 كلمات)."
@@ -224,13 +226,14 @@ export const getQuestionsFromBank = async (
     allQuestions.push(...adaptedLocal);
   }
 
+  addPlayedQuestionHashes(allQuestions);
   return allQuestions.slice(0, count);
 };
 
 let useGeminiOnly = true;
 const ARABIC_ALPHABET = "أبتثجحخدذرزسشصضطظعغفقكلمنهوي".split("");
 
-const shuffleArray = <T>(array: T[]): T[] => {
+export const shuffleArray = <T>(array: T[]): T[] => {
   const newArr = [...array];
   for (let i = newArr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -582,6 +585,8 @@ export const generateQuestions = async (
     }
     
     if (allQuestions.length === 0) return getQuestionsFromBank(topic, numQuestions, mode, difficulty);
+    
+    addPlayedQuestionHashes(allQuestions);
     return allQuestions.slice(0, numQuestions);
   } catch (e) {
     return getQuestionsFromBank(topic, numQuestions, mode, difficulty);
@@ -972,7 +977,7 @@ export const fetchSingleQuestion = async (
 3. أمثلة: "اللغة الأكثر انتشاراً.."، "العالم الذي صاغ..".
 
 معايير الجودة (إلزامية):
-1. الدقة الحرفية: الإجابة تبدأ بالحرف "${letter}" (تجاهل ال التعريف).
+1. الدقة الحرفية: الإجابة يجب أن تبدأ حرفياً بالحرف "${letter}"، بما في ذلك 'ال' التعريف إذا كانت جزءاً من الإجابة.
 2. عدم الذكر: لا تذكر الإجابة أو الحرف في نص السؤال.${exclusionText}`;
 
   const systemInstructionBase = `أنت صانع محتوى إبداعي ومصمم مسابقات محترف.
@@ -980,7 +985,7 @@ export const fetchSingleQuestion = async (
 مهمتك هي إرسال جمل تعريفية مباشرة (بدون علامات استفهام، بدون "ما هو").
 يجب عليك إرجاع كائن JSON واحد فقط يحتوي على:
 - text: نص التعريف المباشر.
-- answer: الإجابة الصحيحة (يجب أن تبدأ بحرف ${letter} بشكل طبيعي دون إجبار).
+- answer: الإجابة الصحيحة (يجب أن تبدأ حرفياً بالحرف ${letter} بما في ذلك 'ال' التعريف).
 - hint: تلميح ذكي وبسيط يساعد في الوصول للإجابة دون ذكرها صراحة.
 
 تنبيه للحساسية الدينية (سيرة الأئمة/أهل البيت): إذا كان الموضوع مرتبطاً بالأئمة المعصومين أو أهل البيت، يجب الالتزام بالروايات المعتمدة عند الشيعة (مثلاً: علي عليه السلام هو أول من أسلم).

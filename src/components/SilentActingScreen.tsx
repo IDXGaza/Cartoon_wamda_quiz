@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Question, Player, GameConfig, GameMode } from '../types';
 import { playSound } from '../utils/sound';
 import { CartoonTimer, CartoonEye, CartoonSkip, CartoonRocket } from './CartoonIcons';

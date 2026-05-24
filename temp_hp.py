@@ -313,7 +313,7 @@ q_text = ''
 
 id_counter = 1
 
-category = "دارك سولز"
+category = "هاري بوتر"
 
 for line in lines:
     line = line.strip()
@@ -344,8 +344,9 @@ for line in lines:
             ans = parts[0].strip()
             ans_alt = parts[1].strip()
         elif '(' in ans_text and ')' in ans_text:
-            ans = ans_text.split('(')[0].strip()
-            ans_alt = ans_text.split('(')[1].replace(')', '').strip()
+            parts = ans_text.split('(')
+            ans = parts[0].strip()
+            ans_alt = parts[1].replace(')', '').strip()
 
         questions.append({
             'id': f'hp_{id_counter}',
@@ -358,8 +359,8 @@ for line in lines:
         })
         id_counter += 1
 
-out = "import { BankQuestion } from './localBank';\n\nexport const HARRY_POTTER_QUESTIONS_FOR_DS: BankQuestion[] = "
+out = "import { BankQuestion } from './localBank';\n\nexport const HARRY_POTTER_QUESTIONS: BankQuestion[] = "
 out += json.dumps(questions, ensure_ascii=False, indent=2)
 out += ";\n"
-with open('src/data/harryPotterAsDarkSouls.ts', 'w', encoding='utf-8') as f:
+with open('src/data/harryPotterData.ts', 'w', encoding='utf-8') as f:
     f.write(out)

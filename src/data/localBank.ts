@@ -10,6 +10,27 @@ import { HUMAN_BODY_QUESTIONS } from './humanBodyData';
 import { ONE_PIECE_QUESTIONS } from './onePieceData';
 import { SPORTS_QUESTIONS } from './sportsData';
 import { WRESTLING_QUESTIONS } from './wrestlingData';
+import { HARRY_POTTER_QUESTIONS } from './harryPotterData';
+import { HISTORY_GEOGRAPHY_QUESTIONS } from './historyGeographyData';
+import { ELDEN_RING_QUESTIONS } from './newEldenRingData';
+import { SISTANI_QUESTIONS } from './sistaniData';
+import { AOT_QUESTIONS } from './aotData';
+import { QURAN_QUESTIONS } from './quranData';
+import { SPACE_QUESTIONS } from './spaceData';
+import { SPACE_SCIENCE_QUESTIONS } from './spaceScienceData';
+import { CARTOON_QUESTIONS } from './cartoonData';
+import { ANIMAL_QUESTIONS } from './animalData';
+import { NEW_HISTORY_QUESTIONS } from './newHistoryData';
+import { CAPITAL_CITIES_QUESTIONS } from './capitalCitiesData';
+import { getDeduplicatedGeographyQuestions } from './geographyData';
+import { CARS_QUESTIONS } from './carsData';
+import { GOT_QUESTIONS } from './gotData';
+import { BREAKING_BAD_QUESTIONS } from './breakingBadData';
+import { DEXTER_QUESTIONS } from './dexterData';
+import { CURRENCIES_QUESTIONS } from './currenciesData';
+import { WORLD_WAR_QUESTIONS } from './worldWarData';
+import { TECHNOLOGY_QUESTIONS } from './technologyData';
+
 
 export interface BankQuestion {
 
@@ -27,30 +48,16 @@ export interface BankQuestion {
   choices?: string[]; // For specific grid patterns if needed
 }
 
-// ... imports
 
-export const GEOGRAPHY_QUESTIONS: BankQuestion[] = [
-    { id: 'bz2', category: 'جغرافيا', text: 'ما هي عاصمة دولة فرنسا؟', answer: 'باريس', tabooWords: ['برج إيفل', 'عاصمة', 'أوروبا', 'كرواسون'], difficulty: 'beginner', points: 100 },
-    { id: 'bz4', category: 'جغرافيا', text: 'ما هي العملة الرسمية في اليابان؟', answer: 'ين', tabooWords: ['عملة', 'ياباني', 'طوكيو', 'مال'], difficulty: 'beginner', points: 100 },
-    { id: 'bz5', category: 'جغرافيا', text: 'ما هو البحر الذي يحده من الشمال قارة أوروبا؟', answer: 'البحر المتوسط', tabooWords: ['بحر', 'شمال', 'أوروبا', 'موج'], difficulty: 'easy', points: 200 },
-    { id: 'bz9', category: 'جغرافيا', text: 'ما هي عاصمة اليابان؟', answer: 'طوكيو', tabooWords: ['اليابان', 'عاصمة', 'نينجا', 'برج'], difficulty: 'beginner', points: 100 },
-    { id: 'bz11', category: 'جغرافيا', text: 'ما هو أطول نهر في العالم؟', answer: 'نهر النيل', tabooWords: ['طويل', 'نهر', 'مصر', 'أفريقيا', 'ماء'], difficulty: 'beginner', points: 100 },
-    { id: 'bz12', category: 'جغرافيا', text: 'كم عدد قارات العالم؟', answer: '7', tabooWords: ['قارة', 'أرض', 'عالم', 'عدد', 'أفريقيا'], difficulty: 'beginner', points: 100 },
-    { id: 'bz13', category: 'جغرافيا', text: 'ما هي أكبر دولة في العالم من حيث المساحة؟', answer: 'روسيا', tabooWords: ['دولة', 'مساحة', 'كبير', 'موسكو', 'ثلج'], difficulty: 'beginner', points: 100 },
-    { id: 'bz14', category: 'جغرافيا', text: 'ما هي عاصمة دولة البرازيل؟', answer: 'برازيليا', tabooWords: ['عاصمة', 'البرازيل', 'مدينة', 'أمريكا الجنوبية', 'كرة قدم'], difficulty: 'medium', points: 300 },
-    { id: 'bz15', category: 'جغرافيا', text: 'في أي قارة تقع دولة مصر؟', answer: 'أفريقيا', tabooWords: ['قارة', 'مصر', 'نيل', 'أهرام'], difficulty: 'beginner', points: 100 },
-    { id: 'bz16', category: 'جغرافيا', text: 'كم عدد دول مجلس التعاون الخليجي؟', answer: '6', tabooWords: ['دول', 'خليج', 'سعودية', 'كويت', 'عمان'], difficulty: 'easy', points: 200 },
-    { id: 'bz17', category: 'جغرافيا', text: 'ما هي عاصمة دولة كندا؟', answer: 'أوتاوا', tabooWords: ['عاصمة', 'كندا', 'شمال', 'ثلج'], difficulty: 'medium', points: 300 },
-    { id: 'bz18', category: 'جغرافيا', text: 'ما هي أعمق بحيرة في العالم؟', answer: 'بايكال', tabooWords: ['بحيرة', 'ماء', 'عميق', 'روسيا'], difficulty: 'hard', points: 400 }
-];
+export const GEOGRAPHY_QUESTIONS: BankQuestion[] = getDeduplicatedGeographyQuestions(HISTORY_GEOGRAPHY_QUESTIONS);
+
 
 export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
-  [GameMode.GRID]: [...DARK_SOULS_QUESTIONS, ...OVERWATCH_QUESTIONS, ...SCIENCE_QUESTIONS, ...ISLAMIC_QUESTIONS, ...DUA_QUESTIONS, ...HUMAN_BODY_QUESTIONS, ...ONE_PIECE_QUESTIONS, ...SPORTS_QUESTIONS, ...GEOGRAPHY_QUESTIONS, ...WRESTLING_QUESTIONS],
-// ...
+  [GameMode.GRID]: [...DARK_SOULS_QUESTIONS, ...OVERWATCH_QUESTIONS, ...SCIENCE_QUESTIONS, ...ISLAMIC_QUESTIONS, ...DUA_QUESTIONS, ...HUMAN_BODY_QUESTIONS, ...ONE_PIECE_QUESTIONS, ...SPORTS_QUESTIONS, ...GEOGRAPHY_QUESTIONS, ...WRESTLING_QUESTIONS, ...HARRY_POTTER_QUESTIONS, ...HISTORY_GEOGRAPHY_QUESTIONS, ...NEW_HISTORY_QUESTIONS, ...CAPITAL_CITIES_QUESTIONS, ...ELDEN_RING_QUESTIONS, ...SISTANI_QUESTIONS, ...AOT_QUESTIONS, ...QURAN_QUESTIONS, ...SPACE_QUESTIONS, ...SPACE_SCIENCE_QUESTIONS, ...CARTOON_QUESTIONS, ...ANIMAL_QUESTIONS, ...CARS_QUESTIONS, ...GOT_QUESTIONS, ...BREAKING_BAD_QUESTIONS, ...DEXTER_QUESTIONS, ...CURRENCIES_QUESTIONS, ...WORLD_WAR_QUESTIONS, ...TECHNOLOGY_QUESTIONS],
   [GameMode.POINTS]: [],
   [GameMode.TRUE_FALSE]: TRUE_FALSE_QUESTIONS,
   [GameMode.SILENT_GUESS]: SHUFFLED_SILENT_GUESS_QUESTIONS,
-  [GameMode.TABOO]: SHUFFLED_SILENT_GUESS_QUESTIONS,
+  [GameMode.LISTING]: [], 
   [GameMode.BUZZER]: [
     { id: 'bz1', category: 'معلومات عامة', text: 'ما هو اللون الذي يرمز للسلام؟', answer: 'أبيض', tabooWords: ['سلام', 'لون', 'حمامة', 'نقي'], difficulty: 'beginner', points: 100 },
     { id: 'bz2', category: 'جغرافيا', text: 'ما هي عاصمة دولة فرنسا؟', answer: 'باريس', tabooWords: ['برج إيفل', 'عاصمة', 'أوروبا', 'كرواسون'], difficulty: 'beginner', points: 100 },
@@ -633,7 +640,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ص_ext_ijmbc', category: 'ثقافة عامة', text: 'جزء في القلب يمنع رجوع الدم للخلف', answer: 'صمام', letter: 'ص', tabooWords: ['جزء', 'القلب', 'يمنع', 'رجوع', 'الدم'], difficulty: 'medium' },
     { id: 'h_ص_ext_exw2i', category: 'ثقافة عامة', text: 'محافظة على القيم', answer: 'صون', letter: 'ص', tabooWords: ['محافظة', 'القيم', 'صون'], difficulty: 'medium' },
     { id: 'h_ص_ext_793w1', category: 'ثقافة عامة', text: 'من يعمل بيديه في الحرف', answer: 'صانع', letter: 'ص', tabooWords: ['يعمل', 'بيديه', 'الحرف', 'صانع'], difficulty: 'medium' },
-    { id: 'h_ص_ext_ea2yh', category: 'ثقافة عامة', text: 'بطل خارق يتميز بجسم صخري وقوة هائلة', answer: 'صخر', letter: 'ص', tabooWords: ['بطل', 'خارق', 'يتميز', 'بجسم', 'صخري'], difficulty: 'medium' },
+    { id: 'h_ص_ext_ea2yh', category: 'ثقافة عامة', text: 'بطل خارق في عالم مارفل يتميز بجسم صخري وقوة هائلة', answer: 'الشيء (The Thing)', letter: 'ص', tabooWords: ['بطل', 'خارق', 'يتميز', 'بجسم', 'صخري'], difficulty: 'medium' },
     { id: 'h_ص_ext_y9g8p', category: 'ثقافة عامة', text: 'تجمد بخار الماء على الأجسام', answer: 'صقيع', letter: 'ص', tabooWords: ['تجمد', 'بخار', 'الماء', 'الأجسام', 'صقيع'], difficulty: 'medium' },
     { id: 'h_ص_ext_dwplh', category: 'ثقافة عامة', text: 'وقت طلوع الشمس وما بعده', answer: 'صباح', letter: 'ص', tabooWords: ['وقت', 'طلوع', 'الشمس', 'وما', 'بعده'], difficulty: 'medium' },
     { id: 'h_ص_ext_p8v6j', category: 'ثقافة عامة', text: 'أكبر جزيرة في البحر المتوسط وتابعة لإيطاليا', answer: 'صقلية', letter: 'ص', tabooWords: ['جزيرة', 'البحر', 'المتوسط', 'وتابعة', 'لإيطاليا'], difficulty: 'medium' },
@@ -2085,7 +2092,57 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'tm_geo_19', category: 'جغرافيا', text: 'ما هي عاصمة الأردن؟', answer: 'عمان', tabooWords: ['الأردن', 'عمان'], difficulty: 'easy' },
     { id: 'tm_geo_20', category: 'جغرافيا', text: 'ما هي أكبر جزيرة في العالم؟', answer: 'جرينلاند', tabooWords: ['جزيرة', 'جرينلاند'], difficulty: 'medium' },
     
-    // تاريخ
+    // أسئلة إضافية منوعة لتقليل التكرار
+    { id: 'tm_gen_30', category: 'علوم', text: 'ما هو الكوكب الذي يمتلك حلقات واضحة جداً حوله؟', answer: 'زحل', tabooWords: ['كوكب', 'حلقات', 'زحل'], difficulty: 'easy' },
+    { id: 'tm_gen_31', category: 'تاريخ', text: 'من هو مكتشف الجاذبية؟', answer: 'إسحاق نيوتن', tabooWords: ['مكتشف', 'الجاذبية', 'نيوتن'], difficulty: 'easy' },
+    { id: 'tm_gen_32', category: 'جغرافيا', text: 'ما هي أصغر قارة في العالم؟', answer: 'أستراليا', tabooWords: ['قارة', 'أصغر', 'أستراليا'], difficulty: 'easy' },
+    { id: 'tm_gen_33', category: 'منوعات', text: 'ما اسم صغير الأسد؟', answer: 'شبل', tabooWords: ['صغير', 'الأسد', 'شبل'], difficulty: 'easy' },
+    { id: 'tm_gen_34', category: 'منوعات', text: 'ما هو الحيوان الذي يُسمى سفينة الصحراء؟', answer: 'الجمل', tabooWords: ['حيوان', 'سفينة', 'الصحراء', 'الجمل'], difficulty: 'easy' },
+    { id: 'tm_gen_35', category: 'علوم', text: 'أين يتم هضم الكربوهيدرات أولاً؟', answer: 'الفم', tabooWords: ['هضم', 'الكربوهيدرات', 'الفم'], difficulty: 'medium' },
+    { id: 'tm_gen_36', category: 'تاريخ', text: 'من بنى تمثال أبو الهول؟', answer: 'خفرع', tabooWords: ['بنى', 'تمثال', 'أبو الهول', 'خفرع'], difficulty: 'medium' },
+    { id: 'tm_gen_37', category: 'جغرافيا', text: 'ما هو أعمق منخفض في العالم؟', answer: 'البحر الميت', tabooWords: ['أعمق', 'منخفض', 'البحر الميت'], difficulty: 'medium' },
+    { id: 'tm_gen_38', category: 'رياضة', text: 'كم عدد لاعبي فريق كرة السلة داخل الملعب؟', answer: '5', tabooWords: ['لاعبين', 'فريق', 'كرة السلة', '5'], difficulty: 'easy' },
+    { id: 'tm_gen_39', category: 'علوم', text: 'ما هو العضو الذي ينقي الدم من السموم؟', answer: 'الكبد', tabooWords: ['عضو', 'ينقي', 'الدم', 'الكبد'], difficulty: 'medium' },
+    { id: 'tm_gen_40', category: 'منوعات', text: 'ما هي عاصمة اليابان؟', answer: 'طوكيو', tabooWords: ['عاصمة', 'اليابان', 'طوكيو'], difficulty: 'easy' },
+    { id: 'tm_gen_41', category: 'تاريخ', text: 'في أي دولة ظهرت الألعاب الأولمبية لأول مرة؟', answer: 'اليونان', tabooWords: ['دولة', 'ظهرت', 'الأولمبية', 'اليونان'], difficulty: 'medium' },
+    { id: 'tm_gen_42', category: 'جغرافيا', text: 'ما هو أكبر بحر مغلق في العالم؟', answer: 'بحر قزوين', tabooWords: ['أكبر', 'بحر', 'مغلق', 'قزوين'], difficulty: 'medium' },
+    { id: 'tm_gen_43', category: 'علوم', text: 'ما هو أصلب مادة في جسم الإنسان؟', answer: 'مينا الأسنان', tabooWords: ['أصلب', 'مادة', 'جسم', 'مينا الأسنان'], difficulty: 'hard' },
+    { id: 'tm_gen_44', category: 'أدب', text: 'من هو صاحب لقب "أمير الشعراء"؟', answer: 'أحمد شوقي', tabooWords: ['صاحب', 'لقب', 'أمير الشعراء', 'شوقي'], difficulty: 'medium' },
+    { id: 'tm_gen_45', category: 'منوعات', text: 'ما هي الدولة التي تشتهر ببرج بيزا المائل؟', answer: 'إيطاليا', tabooWords: ['دولة', 'تشتهر', 'برج بيزا', 'إيطاليا'], difficulty: 'easy' },
+    { id: 'tm_gen_46', category: 'فضاء', text: 'ما هو الكوكب الملقب بالكوكب الأزرق؟', answer: 'الأرض', tabooWords: ['كوكب', 'ملقب', 'الأزرق', 'الأرض'], difficulty: 'easy' },
+    { id: 'tm_gen_47', category: 'تاريخ', text: 'ما هي المدينة التي أُسست فيها جامعة القرويين؟', answer: 'فاس', tabooWords: ['مدينة', 'جامعة القرويين', 'فاس'], difficulty: 'medium' },
+    { id: 'tm_gen_48', category: 'جغرافيا', text: 'أين يقع جسر البوابة الذهبية؟', answer: 'سان فرانسيسكو', tabooWords: ['يقع', 'جسر البوابة الذهبية', 'سان فرانسيسكو'], difficulty: 'medium' },
+    { id: 'tm_gen_49', category: 'رياضة', text: 'من هو الهداف التاريخي لكأس العالم لكرة القدم؟', answer: 'ميروسلاف كلوزه', tabooWords: ['الهداف', 'التاريخي', 'كأس العالم', 'كلوزه'], difficulty: 'hard' },
+    { id: 'tm_gen_50', category: 'علوم', text: 'ما هو الغاز الذي تطلبه النباتات في عملية البناء الضوئي؟', answer: 'ثاني أكسيد الكربون', tabooWords: ['الغاز', 'النباتات', 'البناء الضوئي', 'ثاني أكسيد الكربون'], difficulty: 'easy' },
+    { id: 'tm_gen_51', category: 'تاريخ', text: 'من هو القائد الذي فتح بلاد السند؟', answer: 'محمد بن القاسم', tabooWords: ['القائد', 'فتح', 'بلاد السند', 'محمد بن القاسم'], difficulty: 'hard' },
+    { id: 'tm_gen_52', category: 'جغرافيا', text: 'ما هي الدولة التي تمتلك أكبر عدد من الجزر في العالم؟', answer: 'السويد', tabooWords: ['الدولة', 'تمتلك', 'أكبر عدد', 'الجزر', 'السويد'], difficulty: 'hard' },
+    { id: 'tm_gen_53', category: 'منوعات', text: 'ما هو الحيوان الذي لا ينام أبداً؟', answer: 'القرش', tabooWords: ['حيوان', 'لا ينام', 'القرش'], difficulty: 'medium' },
+    { id: 'tm_gen_54', category: 'علوم', text: 'كم عدد قلوب الأخطبوط؟', answer: '3', tabooWords: ['قلوب', 'الأخطبوط', '3'], difficulty: 'medium' },
+    { id: 'tm_gen_55', category: 'تاريخ', text: 'ما هي أول عاصمة للدولة الإسلامية؟', answer: 'المدينة المنورة', tabooWords: ['أول', 'عاصمة', 'الدولة الإسلامية', 'المدينة'], difficulty: 'easy' },
+    { id: 'tm_gen_56', category: 'منوعات', text: 'ما هو أذكى الحيوانات البحرية؟', answer: 'الدلفين', tabooWords: ['أذكى', 'الحيوانات', 'البحرية', 'الدلفين'], difficulty: 'easy' },
+    { id: 'tm_gen_57', category: 'جغرافيا', text: 'ما هي عاصمة أيسلندا؟', answer: 'ريكيافيك', tabooWords: ['عاصمة', 'أيسلندا', 'ريكيافيك'], difficulty: 'hard' },
+    { id: 'tm_gen_58', category: 'تاريخ', text: 'من هو أول إنسان صعد إلى الفضاء؟', answer: 'يوري غاغارين', tabooWords: ['أول', 'إنسان', 'صعد', 'الفضاء', 'يوري'], difficulty: 'medium' },
+    { id: 'tm_gen_59', category: 'علوم', text: 'ما هو العنصر الكيميائي الذي يمثله الرمز Fe؟', answer: 'الحديد', tabooWords: ['العنصر', 'الكيميائي', 'الرمز', 'Fe', 'الحديد'], difficulty: 'easy' },
+    { id: 'tm_gen_60', category: 'جغرافيا', text: 'ما هي عاصمة كندا؟', answer: 'أوتاوا', tabooWords: ['عاصمة', 'كندا', 'أوتاوا'], difficulty: 'medium' },
+    { id: 'tm_gen_61', category: 'تاريخ', text: 'ما هو الاسم القديم لمدينة إسطنبول؟', answer: 'القسطنطينية', tabooWords: ['الاسم القديم', 'إسطنبول', 'القسطنطينية'], difficulty: 'medium' },
+    { id: 'tm_gen_62', category: 'علوم', text: 'ما هو أبطأ كوكب يدور حول نفسه؟', answer: 'الزهرة', tabooWords: ['أبطأ', 'كوكب', 'يدور', 'الزهرة'], difficulty: 'hard' },
+    { id: 'tm_gen_63', category: 'منوعات', text: 'كم عدد ألوان العلم الكويتي؟', answer: '4', tabooWords: ['ألوان', 'العلم الكويتي', '4'], difficulty: 'easy' },
+    { id: 'tm_gen_64', category: 'أدب', text: 'من ألف كتاب "مقدمة ابن خلدون"؟', answer: 'ابن خلدون', tabooWords: ['ألف', 'كتاب', 'مقدمة', 'ابن خلدون'], difficulty: 'easy' },
+    { id: 'tm_gen_65', category: 'فضاء', text: 'ما هي المجرة التي نعيش فيها؟', answer: 'درب التبانة', tabooWords: ['المجرة', 'نعيش', 'فيها', 'درب التبانة'], difficulty: 'easy' },
+    { id: 'tm_gen_66', category: 'جغرافيا', text: 'ما هو النهر الذي يمر في مدينة لندن؟', answer: 'نهر التمز', tabooWords: ['نهر', 'يمر', 'مدينة لندن', 'التمز'], difficulty: 'medium' },
+    { id: 'tm_gen_67', category: 'علوم', text: 'ما هو لون دم سرطان البحر؟', answer: 'أزرق', tabooWords: ['لون', 'دم', 'سرطان البحر', 'أزرق'], difficulty: 'hard' },
+    { id: 'tm_gen_68', category: 'تاريخ', text: 'في أي قارة تقع أهرامات المايا؟', answer: 'أمريكا الشمالية', tabooWords: ['قارة', 'تقع', 'أهرامات المايا', 'أمريكا الشمالية'], difficulty: 'medium' },
+    { id: 'tm_gen_69', category: 'رياضة', text: 'ما هو الوقت الأصلي لمباراة كرة القدم؟', answer: '90 دقيقة', tabooWords: ['الوقت الأصلي', 'مباراة', 'كرة القدم', '90'], difficulty: 'easy' },
+    { id: 'tm_gen_70', category: 'علوم', text: 'ما هو الغاز الذي يستخدمه الغواصون تحت الماء؟', answer: 'الأكسجين والنيتروجين', tabooWords: ['الغاز', 'الغواصون', 'تحت الماء'], difficulty: 'medium' },
+    { id: 'tm_gen_71', category: 'تاريخ', text: 'من هو القائد الذي هزم الصليبيين في حطين؟', answer: 'صلاح الدين الأيوبي', tabooWords: ['القائد', 'هزم', 'الصليبيين', 'حطين', 'صلاح الدين'], difficulty: 'easy' },
+    { id: 'tm_gen_72', category: 'جغرافيا', text: 'ما هو أسرع طريق مائي يصل بين الشرق والغرب؟', answer: 'قناة السويس', tabooWords: ['أسرع', 'طريق مائي', 'الشرق والغرب', 'قناة السويس'], difficulty: 'easy' },
+    { id: 'tm_gen_73', category: 'علوم', text: 'ما هو الفيتامين الذي يتم الحصول عليه من أشعة الشمس؟', answer: 'فيتامين د', tabooWords: ['فيتامين', 'الحصول عليه', 'أشعة الشمس', 'د'], difficulty: 'easy' },
+    { id: 'tm_gen_74', category: 'تاريخ', text: 'من هو مخترع المصباح الكهربائي؟', answer: 'توماس إديسون', tabooWords: ['مخترع', 'المصباح الكهربائي', 'إديسون'], difficulty: 'easy' },
+    { id: 'tm_gen_75', category: 'منوعات', text: 'ما هي العملة الرسمية في الصين؟', answer: 'اليوان', tabooWords: ['العملة الرسمية', 'الصين', 'اليوان'], difficulty: 'medium' },
+    { id: 'tm_gen_76', category: 'رياضة', text: 'ما هي الرياضة التي تُعرف "بلعبة الملوك"؟', answer: 'التنس', tabooWords: ['الرياضة', 'لعبة الملوك', 'التنس'], difficulty: 'medium' },
+    { id: 'tm_gen_77', category: 'جغرافيا', text: 'ما هي الدولة التي يطلق عليها اسم "أرض الفيروز"؟', answer: 'مصر (سيناء)', tabooWords: ['الدولة', 'أرض الفيروز', 'مصر', 'سيناء'], difficulty: 'easy' },
+    { id: 'tm_gen_78', category: 'علوم', text: 'ما هو الحيوان الذي يتنفس من مؤخرته؟', answer: 'السلحفاة (بعض الأنواع)', tabooWords: ['حيوان', 'يتنفس', 'مؤخرته', 'السلحفاة'], difficulty: 'hard' },
+    { id: 'tm_gen_79', category: 'تاريخ', text: 'ما هي الدولة التي بنى أهلها سور الصين العظيم؟', answer: 'الصين', tabooWords: ['الدولة', 'بنى', 'سور الصين العظيم', 'الصين'], difficulty: 'easy' },
     { id: 'tm_his_1', category: 'تاريخ', text: 'من هو فاتح الأندلس؟', answer: 'طارق بن زياد', tabooWords: ['فاتح', 'الأندلس', 'طارق', 'زياد'], difficulty: 'medium' },
     { id: 'tm_his_2', category: 'تاريخ', text: 'في أي عام وقعت الحرب العالمية الثانية؟', answer: '1939', tabooWords: ['عام', 'وقعت', 'الحرب', 'العالمية', 'الثانية'], difficulty: 'hard' },
     { id: 'tm_his_3', category: 'تاريخ', text: 'من هو القائد الذي وحد المغول؟', answer: 'جنكيز خان', tabooWords: ['القائد', 'وحد', 'المغول', 'جنكيز', 'خان'], difficulty: 'medium' },

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameConfig, Player, Question, GameMode } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
-import { generateQuestions } from '../services/geminiService';
+import { generateQuestions, getQuestionsFromBank, shuffleArray } from '../services/geminiService';
 import { updateQuestionStats } from '../services/vaultService';
 import { playSound } from '../utils/sound';
 import { 
@@ -24,7 +24,7 @@ interface Props {
 const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuestions, players: initialPlayers, onFinish }) => {
   const { settings } = useSettings();
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
-  const [localQuestions, setLocalQuestions] = useState<Question[]>(initialQuestions);
+  const [localQuestions, setLocalQuestions] = useState<Question[]>(() => shuffleArray(initialQuestions));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(config.timerDuration || settings.timedDuration);
@@ -51,20 +51,66 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
       fetchingRef.current = true;
       setIsFetching(true);
       try {
-        const excludeAnswers = localQuestions.map(q => q.answer);
-        const newQuestions = await generateQuestions(
+        // Load history for better exclusion
+        let historyExclusions: string[] = [];
+        try {
+          const historyData = localStorage.getItem('gemini_quiz_question_history');
+          if (historyData) {
+            const history: string[][] = JSON.parse(historyData);
+            historyExclusions = history.flat().map(i => i.trim());
+          }
+        } catch (e) {
+          console.error("Failed to load history in TimedChallengeScreen", e);
+        }
+
+        const excludeAnswers = [
+          ...localQuestions.map(q => q.answer),
+          ...historyExclusions
+        ];
+
+        // Try bank first
+        let newQuestions = await getQuestionsFromBank(
           config.topic || 'عام',
           5,
-          config.questionTypes,
           GameMode.TIMED,
           config.difficulty,
-          settings.aiModel,
-          config.categories,
-          excludeAnswers
+          excludeAnswers,
+          config.categories
         );
+
+        // If not enough from bank, try AI
+        if (newQuestions.length < 5) {
+          const aiQuestions = await generateQuestions(
+            config.topic || 'عام',
+            5 - newQuestions.length,
+            config.questionTypes,
+            GameMode.TIMED,
+            config.difficulty,
+            settings.aiModel,
+            config.categories,
+            excludeAnswers
+          );
+          if (aiQuestions && aiQuestions.length > 0) {
+            newQuestions.push(...aiQuestions);
+          }
+        }
         
         if (newQuestions && newQuestions.length > 0) {
-          setLocalQuestions(prev => [...prev, ...newQuestions]);
+          setLocalQuestions(prev => [...prev, ...shuffleArray(newQuestions)]);
+          
+          // Persistence: Save new questions to history
+          try {
+            const data = localStorage.getItem('gemini_quiz_question_history');
+            let history: string[][] = data ? JSON.parse(data) : [];
+            const newTags = newQuestions.flatMap(q => [q.text, q.answer, q.id]).filter(Boolean);
+            if (newTags.length > 0) {
+              history.unshift(newTags);
+              if (history.length > 50) history = history.slice(0, 50); 
+              localStorage.setItem('gemini_quiz_question_history', JSON.stringify(history));
+            }
+          } catch (e) {
+            console.error("Failed to save history in TimedChallengeScreen", e);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch more questions for timed mode", error);

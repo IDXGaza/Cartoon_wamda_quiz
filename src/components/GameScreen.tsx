@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from 'react';
 import { Type } from "@google/genai";
 import { GameConfig, GameMode, Question, Player, Difficulty, QuestionType, PowerType } from '../types';
+import ListingScreen from './ListingScreen';
 import BuzzerScreen from './BuzzerScreen';
 import TimedChallengeScreen from './TimedChallengeScreen';
 import SilentActingScreen from './SilentActingScreen';
 import TrueFalseScreen from './TrueFalseScreen';
-import TabooScreen from './TabooScreen';
 const HexGrid = lazy(() => import('./HexGrid'));
 import { QUESTION_BANK } from '../data/localBank';
+import { getMainCategory } from '../data/categoryStructure';
+import { filterPlayedQuestions, addPlayedQuestionHashes, getPlayedQuestionHashes, getQuestionHash } from '../utils/playedQuestions';
 import { useSettings } from '../contexts/SettingsContext';
 import { extractJson, getAI, generateQuestions, fetchSingleQuestion } from '../services/geminiService';
 import { updateQuestionStats } from '../services/vaultService';
@@ -30,7 +32,7 @@ import {
   CartoonEye,
   CartoonSearch
 } from './CartoonIcons';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
   config: GameConfig;
@@ -68,6 +70,10 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   const [editedQuestion, setEditedQuestion] = useState<Partial<Question>>({});
   const [isEditingCell, setIsEditingCell] = useState<Question | null>(null);
   
+  // Steel/Pass state
+  const [isStealTurn, setIsStealTurn] = useState(false);
+  const [timerDuration, setTimerDuration] = useState(TIMER_DURATION);
+  
   // Question history to avoid repeats
   const [questionHistory, setQuestionHistory] = useState<string[]>([]);
   const [finalAnswers, setFinalAnswers] = useState<Record<string, string>>({});
@@ -79,6 +85,18 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   const [stolenCells, setStolenCells] = useState<Record<string, boolean>>({}); // cellId -> wasStolen
   const [activePower, setActivePower] = useState<{type: PowerType, playerId: string} | null>(null);
   const [powerInUse, setPowerInUse] = useState<PowerType | null>(null);
+  
+  const handlePass = () => {
+    if (isStealTurn) {
+        //Already passed once, time ran out on 2nd team too
+        handleAnswer(null, false);
+    } else {
+        setIsStealTurn(true);
+        setCurrentPlayerIndex(prev => (prev + 1) % players.length);
+        setTimerDuration(10);
+        setTimeLeft(10);
+    }
+  };
 
   const normalizeLetter = (l: string) => {
     if (!l) return '';
@@ -274,8 +292,6 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     return false;
   }, [grid, answeredMap, config.mode, players]);
 
-  const [showHint, setShowHint] = useState(false);
-  
   const handleAnswer = useCallback((playerId: string | null, isCorrect: boolean) => {
     if (!activeQuestion) return;
     
@@ -285,7 +301,6 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       updateQuestionStats(activeQuestion, isCorrect, timeSpentMs).catch(err => console.error("Vault update failed", err));
     }
 
-    setShowHint(false);
     let newPlayers = [...players];
     let updatedAnsweredMap = { ...answeredMap };
     
@@ -433,7 +448,11 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
-            handleAnswer(null, false);
+            if (!isStealTurn) {
+              handlePass();
+            } else {
+              handleAnswer(null, false);
+            }
             return 0;
           }
           return prev - 1;
@@ -441,11 +460,13 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [activeQuestion, revealed, isLoadingQuestion, handleAnswer]);
+  }, [activeQuestion, revealed, isLoadingQuestion, handleAnswer, isStealTurn]);
 
   useEffect(() => {
     if (activeQuestion) {
+      setTimerDuration(TIMER_DURATION);
       setTimeLeft(TIMER_DURATION);
+      setIsStealTurn(false);
       setRevealed(false);
     }
   }, [activeQuestion]);
@@ -557,23 +578,44 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
 
       // Try to find matches based on category or letter
       const matches = bank.filter(bq => {
-        const catMatch = bq.category === q.category;
-        const diffMatch = bq.difficulty === targetDifficulty;
-        if (catMatch && diffMatch) {
-            console.log("DEBUG: Found Potential Match:", bq);
+        // In Jeopardy mode (GRID), we want strict matches for the column
+        const catMatch = config.mode === GameMode.GRID 
+            ? bq.category === q.category 
+            : getMainCategory(bq.category) === getMainCategory(q.category);
+        
+        // Looser difficulty matching
+        const diffMatch = bq.difficulty.toLowerCase().includes(targetDifficulty.toLowerCase()) || 
+                          (targetDifficulty === 'beginner' && bq.difficulty.toLowerCase() === 'easy') ||
+                          (targetDifficulty === 'expert' && bq.difficulty.toLowerCase() === 'hard');
+        
+        // Filter out played questions
+        const playedHashes = new Set(getPlayedQuestionHashes());
+        const alreadyPlayed = playedHashes.has(getQuestionHash(bq));
+
+        if (catMatch && diffMatch && !alreadyPlayed) {
             return true;
         }
         return false;
       });
-      console.log("DEBUG: fetchAndSetQuestion matches length:", matches.length);
+      console.log("DEBUG: fetchAndSetQuestion matches length (excluding played):", matches.length);
       
-      if (matches.length > 0) {
-        const randomQ = matches[Math.floor(Math.random() * matches.length)];
+      let finalMatches = matches;
+      if (finalMatches.length === 0) {
+        // Fallback to all matches if no unplayed
+        const fallbackMatches = bank.filter(bq => bq.category === q.category && bq.difficulty.toLowerCase() === targetDifficulty.toLowerCase());
+        finalMatches = fallbackMatches;
+        console.log("DEBUG: fetchAndSetQuestion fallback found:", finalMatches.length);
+      }
+
+      if (finalMatches.length > 0) {
+        const randomQ = finalMatches[Math.floor(Math.random() * finalMatches.length)];
+        addPlayedQuestionHashes([randomQ]);
         const finalQ = { 
           ...q,
           text: randomQ.text, 
           answer: randomQ.answer, 
-          id: q.id
+          id: q.id,
+          explanation: randomQ.explanation
         };
         setActiveQuestion(finalQ);
         setEditedQuestion(finalQ);
@@ -588,9 +630,12 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   };
 
   const renderJeopardyBoard = () => {
-    const categoriesFromGrid = Object.keys(jeopardyGrid);
+    // Determine which categories to show and in what order
+    const displayCategories = config.categories && config.categories.length > 0 
+      ? config.categories 
+      : Object.keys(jeopardyGrid);
     
-    if (categoriesFromGrid.length === 0) {
+    if (displayCategories.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-24 vintage-panel w-full max-w-4xl mx-auto relative overflow-hidden">
           <div className="text-8xl mb-8 animate-pulse-glow text-indigo-400 relative z-10">
@@ -602,59 +647,60 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       );
     }
 
-    // Determine which categories to show and in what order
-    const displayCategories = config.categories && config.categories.length > 0 
-      ? config.categories.filter(c => categoriesFromGrid.includes(c))
-      : categoriesFromGrid;
-
-    // Final fallback: if filtering made it empty, show all available ones
-    const finalCategories = displayCategories.length > 0 ? displayCategories : categoriesFromGrid;
-
     return (
       <div className="w-full max-w-5xl mx-auto vintage-panel p-1 md:p-3 overflow-x-auto relative shadow-2xl">
         <div 
           className="grid gap-1 md:gap-2 min-w-max md:min-w-0 relative z-10 justify-center mx-auto" 
-          style={{ gridTemplateColumns: `repeat(${finalCategories.length}, minmax(100px, 1fr))` }}
+          style={{ gridTemplateColumns: `repeat(${displayCategories.length}, minmax(100px, 1fr))` }}
         >
-          {finalCategories.map((cat, i) => (
+          {displayCategories.map((cat, i) => (
             <div key={i} className="flex flex-col gap-1 md:gap-2 min-w-[100px] md:min-w-0">
               <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-1 md:p-2 rounded-xl text-center h-14 md:h-16 flex items-center justify-center backdrop-blur-md shadow-lg transition-all duration-300 hover:border-white/40">
                 <h3 className="font-bold text-xs md:text-base xl:text-lg leading-tight text-white drop-shadow-md">{cat}</h3>
               </div>
-              {jeopardyGrid[cat].map((q) => {
+              {(jeopardyGrid[cat] || Array(5).fill(null)).map((q, qIdx) => {
+                if (!q) {
+                  return (
+                    <div key={qIdx} className="w-full aspect-[4/3] bg-black/20 rounded-lg border-2 border-dashed border-white/10 flex items-center justify-center">
+                      <span className="text-white/20 text-xs">لا أسئلة</span>
+                    </div>
+                  );
+                }
                 const isAnswered = !!answeredMap[q.id];
-
                 return (
                   <button
                     key={q.id}
-                    disabled={isAnswered}
-                    onClick={async () => {
-                      const shouldForceFetch = (q.points === 300 || q.points === 500);
-                      if (q.id.startsWith('missing') || skippedIds.has(q.id) || shouldForceFetch) {
-                        await fetchAndSetQuestion(q);
+                    disabled={isAnswered && config.mode !== GameMode.GRID}
+                    onClick={() => {
+                      if (isAnswered) {
+                        setIsEditingCell(q);
+                        return;
+                      }
+                      if (q.id.startsWith('missing') || skippedIds.has(q.id)) {
+                        fetchAndSetQuestion(q);
                       } else {
                         setActiveQuestion(q);
                         setEditedQuestion(q);
                       }
                       setIsEditing(false);
                     }}
-                    className={`w-full aspect-[4/3] vintage-card transition-all duration-300 flex items-center justify-center relative overflow-hidden group ${
+                    className={`w-full aspect-[4/3] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-[2px] ${
                       isAnswered 
-                        ? 'opacity-60 cursor-not-allowed scale-95 grayscale-[0.5]' 
-                        : 'hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(255,215,0,0.4)] active:scale-95'
+                        ? 'opacity-80' 
+                        : 'hover:-translate-y-[2px] hover:shadow-[6px_6px_0px_var(--color-ink-black)]'
                     }`}
-                    style={isAnswered ? { backgroundColor: answeredMap[q.id], borderColor: 'transparent' } : {}}
+                    style={isAnswered ? { backgroundColor: answeredMap[q.id], borderColor: 'var(--color-ink-black)', opacity: 0.8, transform: 'scale(0.95)' } : {}}
                   >
                     {!isAnswered && (
-                      <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150"></div>
                     )}
                     {isAnswered ? (
                       <div className="flex flex-col items-center justify-center animate-pop-in">
-                        <CartoonCheck size={36} className="mb-1 text-white opacity-80" />
+                        <CartoonCheck size={36} className="mb-1 text-white opacity-80 animate-bounce" />
                         <span className="text-[10px] md:text-xs bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
                       </div>
                     ) : (
-                      <span className="vintage-text text-2xl md:text-4xl text-[var(--color-primary-gold)] drop-shadow-[2px_2px_0px_var(--color-ink-black)]">
+                      <span className="vintage-text text-2xl md:text-4xl text-[var(--color-primary-gold)] drop-shadow-[2px_2px_0px_var(--color-ink-black)] font-black">
                         {q.points}
                       </span>
                     )}
@@ -681,8 +727,24 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       const bank = QUESTION_BANK[GameMode.HEX_GRID] || [];
       // Try to find by specific letter
       const normTarget = normalizeLetter(letter);
-      const matches = bank.filter(q => normalizeLetter(q.letter || '') === normTarget);
       
+      const playedHashes = new Set(getPlayedQuestionHashes());
+      
+      // Filter by letter AND difficulty AND not played
+      let matches = bank.filter(q => 
+        normalizeLetter(q.letter || '') === normTarget && 
+        q.difficulty.toLowerCase() === diff.toLowerCase() &&
+        !playedHashes.has(getQuestionHash(q))
+      );
+      
+      // Fallback: ignore play status
+      if (matches.length === 0) {
+        matches = bank.filter(q => 
+          normalizeLetter(q.letter || '') === normTarget && 
+          q.difficulty.toLowerCase() === diff.toLowerCase()
+        );
+      }
+
       if (matches.length > 0) {
         const randomQ = matches[Math.floor(Math.random() * matches.length)];
         const q: Question = {
@@ -695,6 +757,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
           type: QuestionType.OPEN,
           difficulty: (randomQ.difficulty?.toUpperCase() as Difficulty) || Difficulty.MEDIUM
         };
+        addPlayedQuestionHashes([randomQ]);
         if (!forceDifficulty) {
           questionCache.current[cacheKey] = q;
         }
@@ -915,14 +978,14 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       ]);
 
       let matches = bank.filter(bq => 
-        (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : bq.category === activeQuestion.category) && 
+        (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : getMainCategory(bq.category) === getMainCategory(activeQuestion.category)) && 
         !usedTexts.has(bq.text) &&
         bq.difficulty === targetDifficulty
       );
       
       if (matches.length === 0) {
         matches = bank.filter(bq => 
-          (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : bq.category === activeQuestion.category) && 
+          (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : getMainCategory(bq.category) === getMainCategory(activeQuestion.category)) && 
           !usedTexts.has(bq.text)
         );
       }
@@ -934,11 +997,13 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       
       if (matches.length > 0) {
         const randomQ = matches[Math.floor(Math.random() * matches.length)];
+        addPlayedQuestionHashes([randomQ]);
         const finalQ = { 
           ...activeQuestion, 
           text: randomQ.text, 
           answer: randomQ.answer, 
-          id: `bank-refreshed-${randomQ.id}-${Date.now()}` 
+          id: `bank-refreshed-${randomQ.id}-${Date.now()}`,
+          explanation: randomQ.explanation
         };
         setActiveQuestion(finalQ);
         setEditedQuestion(finalQ);
@@ -981,6 +1046,43 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     }
   };
 
+  const handleCorrection = (newPlayerColor: string | null, playerName?: string) => {
+    if (!isEditingCell) return;
+    
+    const oldColor = answeredMap[isEditingCell.id];
+    const pts = isEditingCell.points || 100;
+    
+    setPlayers(prevPlayers => prevPlayers.map(p => {
+      let nextScore = p.score;
+      if (p.color === oldColor && oldColor !== '#475569') {
+        nextScore = Math.max(0, nextScore - pts);
+      }
+      if (p.color === newPlayerColor) {
+        nextScore += pts;
+      }
+      return { ...p, score: nextScore };
+    }));
+
+    setAnsweredMap(prev => {
+      const next = { ...prev };
+      if (!newPlayerColor) {
+        // Just mark as skipped so it remains a dead cell but not points-giving.
+        // Or we can delete it so it becomes clickable again. Since user might want to re-open it, delete is better.
+        delete next[isEditingCell.id];
+      } else {
+        next[isEditingCell.id] = newPlayerColor;
+      }
+      return next;
+    });
+
+    setIsEditingCell(null);
+    if (newPlayerColor) {
+      showToast(`تم تغيير الفريق إلى ${playerName}`, "success");
+    } else {
+      showToast("تمت إعادة فتح الخلية", "info");
+    }
+  };
+
   const renderCorrectionModal = () => {
     if (!isEditingCell) return null;
 
@@ -992,11 +1094,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
             {players.map(p => (
               <button 
                 key={p.id}
-                onClick={() => {
-                  setAnsweredMap(prev => ({ ...prev, [isEditingCell.id]: p.color }));
-                  setIsEditingCell(null);
-                  showToast(`تم تغيير الفريق إلى ${p.name}`, "success");
-                }}
+                onClick={() => handleCorrection(p.color, p.name)}
                 className="w-full py-3 rounded-xl border-2 border-[var(--color-ink-black)] font-bold text-lg"
                 style={{ backgroundColor: p.color }}
               >
@@ -1004,18 +1102,10 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
               </button>
             ))}
             <button 
-              onClick={() => {
-                setAnsweredMap(prev => {
-                  const next = { ...prev };
-                  delete next[isEditingCell.id];
-                  return next;
-                });
-                setIsEditingCell(null);
-                showToast("تم مسح النتيجة", "info");
-              }}
+              onClick={() => handleCorrection(null)}
               className="w-full py-3 rounded-xl border-2 border-[var(--color-ink-black)] font-bold text-lg bg-slate-200"
             >
-              مسح النتيجة
+              مسح النتيجة (إعادة فتح)
             </button>
             <button 
               onClick={() => setIsEditingCell(null)}
@@ -1143,33 +1233,44 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                           activeQuestion.difficulty === Difficulty.EASY ? 'bg-[var(--color-primary-green)] text-white' :
                           activeQuestion.difficulty === Difficulty.MEDIUM ? 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)]' :
                           activeQuestion.difficulty === Difficulty.HARD ? 'bg-[var(--color-primary-red)] text-white' :
-                          'bg-purple-600 text-white'
+                          'bg-[var(--color-accent-purple)] text-white'
                         }`}>
                           {activeQuestion.difficulty === Difficulty.BEGINNER ? 'مبتدئ' :
-                           activeQuestion.difficulty === Difficulty.EASY ? 'سهل' : 
-                           activeQuestion.difficulty === Difficulty.MEDIUM ? 'متوسط' : 
-                           activeQuestion.difficulty === Difficulty.HARD ? 'صعب' : 'خبير'}
+                           activeQuestion.difficulty === Difficulty.EASY ? 'سهل' :
+                           activeQuestion.difficulty === Difficulty.MEDIUM ? 'متوسط' :
+                           activeQuestion.difficulty === Difficulty.HARD ? 'صعب' : 'خارق'}
                         </span>
                       </div>
 
                       <div className="flex flex-col gap-6 pt-6">
                         {!revealed ? (
                           <div className="flex flex-col gap-4">
-                            <button 
+                            <motion.button 
                               onClick={() => setRevealed(true)}
-                              className="vintage-button w-full py-6 rounded-2xl text-3xl font-black flex items-center justify-center gap-4 bg-[var(--color-primary-gold)]"
+                              whileTap={{ scale: 0.98 }}
+                              className="vintage-button w-full py-6 rounded-2xl text-3xl font-black flex items-center justify-center gap-4 bg-[var(--color-primary-gold)] touch-manipulation cursor-pointer"
                             >
                               إظهار الإجابة <CartoonEye size={32} />
-                            </button>
+                            </motion.button>
                             
                             
                             {(config.mode === GameMode.GRID || config.mode === GameMode.HEX_GRID) && (
-                              <button 
+                              <motion.button 
+                                onClick={handlePass}
+                                whileTap={{ scale: 0.98 }}
+                                className="w-full py-4 mb-2 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] rounded-2xl font-black text-xl border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] touch-manipulation cursor-pointer"
+                              >
+                                {isStealTurn ? "الفريق الثاني، اجب!" : "نقل السؤال للفريق الآخر"}
+                              </motion.button>
+                            )}
+                            {(config.mode === GameMode.GRID || config.mode === GameMode.HEX_GRID) && (
+                              <motion.button 
                                 onClick={() => handleAnswer(null, false)}
-                                className="w-full py-4 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-2xl font-black text-xl border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none"
+                                whileTap={{ scale: 0.98 }}
+                                className="w-full py-4 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-2xl font-black text-xl border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] touch-manipulation cursor-pointer"
                               >
                                 تخطي السؤال
-                              </button>
+                              </motion.button>
                             )}
                           </div>
                         ) : (
@@ -1180,29 +1281,30 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                             </div>
 
                             {!showScoring ? (
-                              <button 
+                              <motion.button 
                                 onClick={() => setShowScoring(true)}
-                                className="vintage-button w-full py-6 rounded-2xl text-3xl font-black flex items-center justify-center gap-4 bg-[var(--color-primary-green)] text-white"
+                                whileTap={{ scale: 0.98 }}
+                                className="vintage-button w-full py-6 rounded-2xl text-3xl font-black flex items-center justify-center gap-4 bg-[var(--color-primary-green)] text-white touch-manipulation cursor-pointer"
                               >
                                 رصد الدرجات <CartoonCheck className="w-10 h-10" />
-                              </button>
+                              </motion.button>
                             ) : (
                               <div className="w-full space-y-4">
                                 {(config.mode === GameMode.GRID || config.mode === GameMode.HEX_GRID) ? (
                                   <div className="flex flex-col gap-4">
                                     {players.map((p) => (
-                                        <button 
-                                          key={p.id}
-                                          onClick={() => handleAnswer(p.id, true)}
-                                          className={`w-full py-6 rounded-2xl font-black text-2xl transition-all border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none ${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`}
-                                          style={{ backgroundColor: p.color }}
-                                        >
-                                          {p.name} أجاب بشكل صحيح
-                                        </button>
+                                      <button 
+                                        key={p.id}
+                                        onClick={() => handleAnswer(p.id, true)}
+                                        className={`w-full py-6 rounded-2xl font-black text-2xl border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] active:translate-y-[2px] active:shadow-[2px_2px_0px_var(--color-ink-black)] transition-all duration-75 select-none touch-manipulation cursor-pointer ${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`}
+                                        style={{ backgroundColor: p.color }}
+                                      >
+                                        {p.name} أجاب بشكل صحيح
+                                      </button>
                                     ))}
                                     <button 
                                       onClick={() => handleAnswer(null, false)}
-                                      className="w-full py-6 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-2xl font-black text-2xl border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none"
+                                      className="w-full py-6 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-2xl font-black text-2xl border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] active:translate-y-[2px] active:shadow-[2px_2px_0px_var(--color-ink-black)] transition-all duration-75 select-none touch-manipulation cursor-pointer"
                                     >
                                       لم يجب أحد
                                     </button>
@@ -1307,8 +1409,8 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     return <TrueFalseScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
   }
 
-  if (config.mode === GameMode.TABOO) {
-    return <TabooScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
+  if (config.mode === GameMode.LISTING) {
+    return <ListingScreen questions={questions} onFinish={() => onFinish(players)} />;
   }
 
   return (

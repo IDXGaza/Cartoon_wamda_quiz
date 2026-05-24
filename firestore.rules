@@ -93,7 +93,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isOwner(userId) && (
         (isValidUser(incoming()) && incoming().role == 'user') ||
-        incoming().keys().hasOnly(['customCategories'])
+        (incoming().keys().hasAll(['customCategories']) && incoming().keys().size() == 1)
       );
       allow update: if (isOwner(userId) && (
         (isValidUser(incoming()) && incoming().role == existing().role && incoming().createdAt == existing().createdAt)

@@ -16,13 +16,11 @@ import {
   CartoonSparkles,
   CartoonEye
 } from './components/CartoonIcons';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import ConfigScreen from './components/ConfigScreen';
-import StartScreen from './components/StartScreen';
 import GameScreen from './components/GameScreen';
 import SummaryScreen from './components/SummaryScreen';
 import RemoteBuzzer from './components/RemoteBuzzer';
-import TabooScreen from './components/TabooScreen';
 import SettingsModal from './components/SettingsModal';
 import LibraryScreen from './components/LibraryScreen';
 import BankManager from './components/BankManager';
@@ -34,7 +32,7 @@ import { auth, db } from './firebase';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 const App: React.FC = () => {
-  const [gameState, setGameState] = useState<'start' | 'config' | 'loading' | 'playing' | 'summary' | 'remote' | 'remote-taboo' | 'error' | 'library' | 'bank'>('start');
+  const [gameState, setGameState] = useState<'config' | 'loading' | 'playing' | 'summary' | 'remote' | 'remote-taboo' | 'error' | 'library' | 'bank'>('config');
   const [config, setConfig] = useState<GameConfig | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -516,15 +514,6 @@ const App: React.FC = () => {
                   <button 
                     onClick={() => {
                       playSound('click');
-                      setGameState('bank');
-                    }} 
-                    className="vintage-button px-3 py-2 md:px-5 md:py-2.5 text-xs md:text-sm flex items-center gap-1 md:gap-2"
-                  >
-                    <CartoonBook size={16} /> <span className="hidden md:inline">البنك</span>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      playSound('click');
                       setGameState('library');
                     }} 
                     className="vintage-button px-3 py-2 md:px-5 md:py-2.5 text-xs md:text-sm flex items-center gap-1 md:gap-2"
@@ -611,11 +600,7 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              {!authError && isAuthReady && gameState === 'start' && <StartScreen onStart={() => setGameState('config')} />}
-
               {!authError && isAuthReady && gameState === 'remote' && <RemoteBuzzer />}
-              
-              {!authError && isAuthReady && gameState === 'remote-taboo' && <TabooScreen />}
               
               {!authError && isAuthReady && gameState === 'config' && <ConfigScreen onStart={handleStartGame} />}
               
