@@ -197,10 +197,10 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
               </span>
             </div>
 
-            <h2 className="text-2xl md:text-5xl font-black text-[var(--color-ink-black)] leading-tight mb-8 md:mb-12 vintage-text flex items-center justify-between gap-4">
+            <h2 className="text-2xl md:text-5xl font-black text-[var(--color-ink-black)] leading-tight mb-8 md:mb-12 vintage-text text-center w-full">
               <span>{currentQuestion.text}</span>
-              <ReportButton question={currentQuestion} onReport={onOpenReport} />
             </h2>
+            <ReportButton question={currentQuestion} onReport={onOpenReport} />
 
             {gameState === 'question' ? (
               <div className="grid grid-cols-2 gap-4 md:gap-6">

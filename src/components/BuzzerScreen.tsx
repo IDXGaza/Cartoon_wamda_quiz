@@ -303,10 +303,10 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenRepo
         </div>
 
         <div className="text-center py-6 md:py-10">
-          <h2 className="text-2xl md:text-5xl font-display text-[var(--color-ink-black)] leading-relaxed flex items-center justify-between gap-4">
+          <h2 className="text-2xl md:text-5xl font-display text-[var(--color-ink-black)] leading-relaxed text-center w-full">
             <span>{currentQuestion.text}</span>
-            <ReportButton question={currentQuestion} onReport={onOpenReport} />
           </h2>
+          <ReportButton question={currentQuestion} onReport={onOpenReport} />
         </div>
 
         {buzzedPlayer && (

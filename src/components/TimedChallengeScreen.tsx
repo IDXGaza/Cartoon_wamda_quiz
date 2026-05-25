@@ -334,10 +334,10 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
                 </p>
               </div>
               
-              <h3 className="text-3xl md:text-6xl font-display text-[var(--color-ink-black)] leading-tight drop-shadow-[1px_1px_0_rgba(0,0,0,0.1)] md:drop-shadow-[2px_2px_0_rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
+              <h3 className="text-3xl md:text-6xl font-display text-[var(--color-ink-black)] leading-tight drop-shadow-[1px_1px_0_rgba(0,0,0,0.1)] md:drop-shadow-[2px_2px_0_rgba(0,0,0,0.1)] text-center w-full">
                 <span>{activeQuestion.text}</span>
-                <ReportButton question={activeQuestion} onReport={onOpenReport} />
               </h3>
+              <ReportButton question={activeQuestion} onReport={onOpenReport} />
 
               {isFetching && localQuestions.length - currentQuestionIndex < 2 && (
                 <div className="flex items-center justify-center gap-2 text-[var(--color-bg-dark)] font-bold animate-pulse">

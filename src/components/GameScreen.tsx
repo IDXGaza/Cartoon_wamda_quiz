@@ -1218,10 +1218,10 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                       </div>
 
                       <div className="p-6 md:p-12 rounded-3xl bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)]">
-                        <h3 className="text-2xl md:text-5xl font-black leading-tight text-[var(--color-ink-black)] vintage-text flex items-center justify-between gap-4">
+                        <h3 className="text-2xl md:text-5xl font-black leading-tight text-[var(--color-ink-black)] vintage-text text-center w-full">
                           <span>{activeQuestion.text}</span>
-                          <ReportButton question={activeQuestion} onReport={onOpenReport} />
                         </h3>
+                        <ReportButton question={activeQuestion} onReport={onOpenReport} />
                         {/* تلميح عدد الكلمات */}
                         {activeQuestion.text.includes('____') && (
                           <div className="mt-4 text-center font-bold text-[var(--color-bg-dark)]">
