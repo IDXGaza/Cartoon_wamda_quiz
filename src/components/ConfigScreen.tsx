@@ -102,6 +102,9 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
     if (mode !== GameMode.GRID && inputMethod === 'ai') {
       setInputMethod('bank');
     }
+    if (mode === GameMode.BUZZER || mode === GameMode.TIMED) {
+      setTopic('عام');
+    }
   }, [mode, inputMethod]);
 
   const randomizeTopic = React.useCallback(() => {
@@ -762,9 +765,49 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                   ))}
                 </div>
               )
+            ) : [GameMode.BUZZER, GameMode.TIMED].includes(mode) ? (
+              <div className="space-y-6 w-full">
+                <div className="p-8 bg-cyan-500/10 rounded-[2rem] border-4 border-dashed border-cyan-500 text-center">
+                  <p className="text-2xl font-bold text-[var(--color-ink-black)]">موضوع المسابقة:</p>
+                  <p className="text-4xl font-bold text-cyan-600 mt-2 vintage-text">عشوائي 🎲</p>
+                  <p className="text-sm text-gray-600 mt-3 font-bold leading-relaxed">
+                    تم اختيار وضبط موضوع المسابقة على عشوائي تلقائياً لهذه اللعبة، لتنعموا بمنافسة ممتعة وغير متوقعة تشمل جميع مجالات المعرفة!
+                  </p>
+                </div>
+                
+                <div className="flex justify-center mt-6 col-span-full">
+                  {mode === GameMode.BUZZER && (
+                    <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                      <label className="text-xl font-bold text-[var(--color-ink-black)]">عدد الأسئلة</label>
+                      <input 
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={numQuestionsState}
+                        onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 10)}
+                        className="vintage-input p-4 w-40 text-center text-2xl font-bold"
+                        required
+                      />
+                    </div>
+                  )}
+                  {mode === GameMode.TIMED && (
+                    <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                      <label className="text-xl font-bold text-[var(--color-ink-black)]">المدة (بالثواني)</label>
+                      <input 
+                        type="number"
+                        min="10"
+                        value={timedDuration}
+                        onChange={(e) => setTimedDuration(parseInt(e.target.value) || 60)}
+                        className="vintage-input p-4 w-48 text-center text-2xl font-bold"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             ) : inputMethod === 'bank' ? (
-              <div className="space-y-6">
-                {mode !== GameMode.HEX_GRID && mode !== GameMode.TIMED && (
+              <div className="space-y-6 animate-fade-in w-full">
+                {mode !== GameMode.HEX_GRID && (
                   <div className="flex flex-col items-center gap-2 mb-6 p-4 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
                     <label className="text-xl font-bold text-[var(--color-ink-black)]">عدد الأسئلة</label>
                     <input 
@@ -778,47 +821,11 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                     />
                   </div>
                 )}
-                {mode === GameMode.TIMED && (
-                  <div className="flex flex-col items-center gap-2 mb-6 p-4 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
-                    <label className="text-xl font-bold text-[var(--color-ink-black)]">المدة (بالثواني)</label>
-                    <input 
-                      type="number"
-                      min="10"
-                      value={timedDuration}
-                      onChange={(e) => setTimedDuration(parseInt(e.target.value) || 60)}
-                      className="vintage-input p-4 w-48 text-center text-2xl font-bold"
-                      required
-                    />
-                  </div>
-                )}
                 {mode === GameMode.HEX_GRID ? (
                   <div className="p-6 bg-[var(--color-primary-gold)]/10 rounded-[2rem] border-4 border-dashed border-[var(--color-primary-gold)] text-center">
                     <p className="text-2xl font-display text-[var(--color-ink-black)]">موضوع مسابقة الشبكة:</p>
                     <p className="text-4xl font-display text-[var(--color-primary-gold)] mt-2">معلومات عامة</p>
                   </div>
-                ) : [GameMode.GRID, GameMode.BUZZER, GameMode.TIMED].includes(mode) ? (
-                  <>                
-                    <p className="text-xl md:text-2xl font-display text-[var(--color-ink-black)] mb-6">اختر مجال المسابقة من البنك:</p>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                      {['معلومات عامة', 'جغرافيا', 'علوم', 'رياضة', 'أحياء', 'اختراعات', 'ون بيس'].map((t) => (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => {
-                            playSound('click');
-                            setTopic(t);
-                          }}
-                          className={`p-6 rounded-[2rem] border-4 border-[var(--color-ink-black)] font-display text-xl md:text-2xl transition-all shadow-[6px_6px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none ${
-                            topic === t 
-                              ? 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] scale-105' 
-                              : 'bg-white text-[var(--color-ink-black)] hover:bg-[var(--color-bg-cream)]'
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </>
                 ) : (
                   <div className="p-8 bg-blue-50 rounded-[2rem] border-4 border-blue-200 text-center">
                     <p className="text-2xl font-display text-blue-900">
@@ -851,7 +858,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       </button>
                     </div>
                   </div>
-                  {mode !== GameMode.HEX_GRID && mode !== GameMode.TIMED && (
+                  {mode !== GameMode.HEX_GRID && (
                     <div className="relative w-full md:w-48">
                       <div className="absolute -top-4 right-6 bg-[var(--color-primary-gold)] border-2 border-[var(--color-ink-black)] text-[var(--color-ink-black)] px-4 py-1 text-xs font-bold rounded-full z-10">عدد الأسئلة</div>
                       <input 
@@ -865,22 +872,9 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       />
                     </div>
                   )}
-                  {mode === GameMode.TIMED && (
-                    <div className="relative w-full md:w-48">
-                      <div className="absolute -top-4 right-6 bg-[var(--color-primary-gold)] border-2 border-[var(--color-ink-black)] text-[var(--color-ink-black)] px-4 py-1 text-xs font-bold rounded-full z-10">المدة (بالثواني)</div>
-                      <input 
-                        type="number"
-                        min="10"
-                        value={timedDuration}
-                        onChange={(e) => setTimedDuration(parseInt(e.target.value) || 60)}
-                        className="vintage-input w-full h-full p-4 md:p-10 text-2xl md:text-5xl font-bold text-center"
-                        required
-                      />
-                    </div>
-                  )}
                 </div>
                 
-                <div className="flex flex-wrap gap-3 mt-6">
+                <div className="flex flex-wrap gap-3 mt-6 animate-fade-in">
                   {(mode === GameMode.SILENT_GUESS ? SILENT_GUESS_TOPICS : QUICK_TOPICS).map(t => (
                     <button
                       key={t.name}

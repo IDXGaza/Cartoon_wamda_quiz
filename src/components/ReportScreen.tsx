@@ -77,13 +77,24 @@ export const ReportScreen: React.FC<Props> = ({ question, onClose }) => {
             />
           </div>
           
-          <button 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="w-full py-4 rounded-xl bg-[var(--color-primary-green)] text-white font-bold text-lg disabled:opacity-50"
-          >
-            {isSubmitting ? 'جاري الإرسال...' : 'إرسال البلاغ'}
-          </button>
+          <div className="flex gap-4">
+            <button 
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="flex-1 py-4 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold text-lg border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-0.5 transition-all text-center"
+            >
+              إلغاء
+            </button>
+            <button 
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex-1 py-4 rounded-xl bg-[var(--color-primary-green)] text-white font-bold text-lg border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] disabled:opacity-50 active:translate-y-0.5 transition-all text-center"
+            >
+              {isSubmitting ? 'جاري الإرسال...' : 'إرسال البلاغ'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

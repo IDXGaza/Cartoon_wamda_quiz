@@ -137,6 +137,7 @@ service cloud.firestore {
 
     match /reports/{reportId} {
       allow create: if isSignedIn();
+      allow read, delete: if isSignedIn();
     }
 
     match /_connectivity_test_/{testId} {

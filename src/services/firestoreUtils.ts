@@ -29,8 +29,10 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errMsg = error instanceof Error ? error.message : String(error);
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMsg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -47,6 +49,20 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
+  
   console.error('Firestore Error: ', JSON.stringify(errInfo));
+
+  // Determine if this is an offline or network error
+  const isNetworkOrOffline = 
+    errMsg.toLowerCase().includes('offline') || 
+    errMsg.toLowerCase().includes('network') || 
+    errMsg.toLowerCase().includes('unavailable') ||
+    errMsg.toLowerCase().includes('internet');
+
+  if (isNetworkOrOffline) {
+    console.warn(`[Offline Mode] Firestore operation '${operationType}' deferred/bypassed on path '${path}' due to offline or connection failure:`, errMsg);
+    return; // return/exit gracefully instead of throwing a fatal error
+  }
+
   throw new Error(JSON.stringify(errInfo));
 }

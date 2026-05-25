@@ -583,13 +583,6 @@ const App: React.FC = () => {
               
               {!authError && isAuthReady && gameState === 'config' && <ConfigScreen onStart={handleStartGame} />}
               
-              {!authError && isAuthReady && gameState === 'report' && reportedQuestion && (
-                <ReportScreen 
-                  question={reportedQuestion} 
-                  onClose={() => setGameState('playing')} 
-                />
-              )}
-              
               {!authError && isAuthReady && gameState === 'bank' && <BankManager onClose={() => setGameState('config')} />}
               
               {gameState === 'loading' && config && (
@@ -676,7 +669,7 @@ const App: React.FC = () => {
               )}
 
               {gameState === 'playing' && config && (
-                <GameScreen config={config} questions={questions} players={players} onFinish={handleFinishGame} onOpenReport={(q) => { setReportedQuestion(q); setGameState('report'); }} setGameState={setGameState} />
+                <GameScreen config={config} questions={questions} players={players} onFinish={handleFinishGame} onOpenReport={(q) => setReportedQuestion(q)} setGameState={setGameState} />
               )}
               
               {gameState === 'summary' && config && <SummaryScreen config={config} questions={questions} players={players} onRestart={handleReset} />}
@@ -685,6 +678,13 @@ const App: React.FC = () => {
         </AnimatePresence>
       </main>
         </>
+      )}
+
+      {reportedQuestion && (
+        <ReportScreen 
+          question={reportedQuestion} 
+          onClose={() => setReportedQuestion(null)} 
+        />
       )}
     </div>
   );
