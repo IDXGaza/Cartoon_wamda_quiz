@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Player, GameConfig, Question, SavedSet, GameMode, Difficulty } from '../types';
+import { Player, GameConfig, Question, GameMode, Difficulty } from '../types';
 import confetti from 'canvas-confetti';
 import { playSound } from '../utils/sound';
 import { auth, db } from '../firebase';
@@ -47,33 +47,6 @@ const SummaryScreen: React.FC<Props> = ({ config, questions, players, onRestart 
     frame();
   }, []);
 
-  const handleSaveToLibrary = async () => {
-    if (isSaved || !auth.currentUser) return;
-    playSound('click');
-    
-    const setId = `set-${Date.now()}`;
-    const newSet: SavedSet = {
-      id: setId,
-      userId: auth.currentUser.uid,
-      name: `${config.topic || 'مسابقة'} - ${new Date().toLocaleDateString('ar-EG')}`,
-      topic: config.topic || 'مسابقة مخصصة',
-      numQuestions: questions.length,
-      mode: config.mode || GameMode.GRID,
-      difficulty: config.difficulty || Difficulty.MEDIUM,
-      questions: questions,
-      createdAt: Date.now()
-    };
-    
-    try {
-      // Remove any undefined values to avoid Firestore issues
-      const cleanedSet = JSON.parse(JSON.stringify(newSet));
-      await setDoc(doc(db, 'saved_sets', setId), cleanedSet);
-      setIsSaved(true);
-    } catch (err) {
-      console.error("Error saving set to Firestore", err);
-    }
-  };
-
   return (
     <div className="vintage-panel p-12 md:p-20 max-w-2xl mx-auto text-center animate-fade-up relative overflow-hidden rounded-[3rem]">
       <div className="mb-14 relative z-10">
@@ -102,23 +75,6 @@ const SummaryScreen: React.FC<Props> = ({ config, questions, players, onRestart 
       </div>
 
       <div className="flex flex-col gap-6 relative z-10">
-        <button 
-          onClick={handleSaveToLibrary} 
-          disabled={isSaved}
-          className={`w-full py-6 rounded-[2.5rem] font-display text-3xl transition-all flex items-center justify-center gap-4 border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none ${isSaved ? 'bg-[var(--color-primary-green)] text-[var(--color-off-white)]' : 'bg-[var(--color-accent-sky)] text-[var(--color-ink-black)]'}`}
-        >
-          {isSaved ? (
-            <>
-              <CartoonCheck size={40} />
-              <span>تم الحفظ بنجاح!</span>
-            </>
-          ) : (
-            <>
-              <CartoonBook size={40} />
-              <span>حفظ في المكتبة</span>
-            </>
-          )}
-        </button>
         <button 
           onClick={() => {
             playSound('click');

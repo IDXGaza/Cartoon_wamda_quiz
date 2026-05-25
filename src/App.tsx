@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { GameConfig, Player, Question, GameMode, QuestionType, SavedSet, Difficulty } from './types';
+import { GameConfig, Player, Question, GameMode, QuestionType, Difficulty } from './types';
 import { generateQuestions, parseCustomJson } from './services/geminiService';
 import { 
   CartoonStar, 
@@ -22,7 +22,8 @@ import GameScreen from './components/GameScreen';
 import SummaryScreen from './components/SummaryScreen';
 import RemoteBuzzer from './components/RemoteBuzzer';
 import SettingsModal from './components/SettingsModal';
-import LibraryScreen from './components/LibraryScreen';
+import ReportScreen from './components/ReportScreen';
+import ReportsViewer from './components/ReportsViewer';
 import BankManager from './components/BankManager';
 import { useSettings } from './contexts/SettingsContext';
 import { useToast } from './contexts/ToastContext';
@@ -32,10 +33,12 @@ import { auth, db } from './firebase';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 const App: React.FC = () => {
-  const [gameState, setGameState] = useState<'config' | 'loading' | 'playing' | 'summary' | 'remote' | 'remote-taboo' | 'error' | 'library' | 'bank'>('config');
+  const [currentPath] = useState(window.location.pathname);
+  const [gameState, setGameState] = useState<'config' | 'loading' | 'playing' | 'summary' | 'remote' | 'remote-taboo' | 'error' | 'bank' | 'report'>('config');
   const [config, setConfig] = useState<GameConfig | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [reportedQuestion, setReportedQuestion] = useState<Question | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [loadingTime, setLoadingTime] = useState(0);
   const [loadingStatus, setLoadingStatus] = useState("جاري تجهيز اللعبة...");
@@ -405,32 +408,17 @@ const App: React.FC = () => {
     setErrorMessage('');
   };
 
-  const handlePlaySavedSet = (set: SavedSet, selectedPlayers: Player[]) => {
-    const newConfig: GameConfig = {
-      topic: set.topic,
-      numQuestions: set.numQuestions,
-      mode: set.mode,
-      questionTypes: [QuestionType.OPEN],
-      difficulty: set.difficulty,
-      players: selectedPlayers,
-      manualQuestions: set.questions,
-      sessionId
-    };
-    setConfig(newConfig);
-    setPlayers(newConfig.players);
-    setQuestions(set.questions);
-    setGameState('playing');
-  };
-
   return (
     <div className="min-h-screen text-[var(--color-ink-black)] font-[var(--font-arabic)] overflow-x-hidden relative">
-      {/* Debug Trigger */}
-      <button 
-        onClick={() => setShowDebug(!showDebug)}
-        className="fixed bottom-2 left-2 z-[100] opacity-20 hover:opacity-100 text-[8px] bg-black text-white p-1 rounded"
-      >
-        DEBUG
-      </button>
+      {currentPath === '/reports' ? <ReportsViewer /> : (
+        <>
+          {/* Debug Trigger */}
+          <button 
+            onClick={() => setShowDebug(!showDebug)}
+            className="fixed bottom-2 left-2 z-[100] opacity-20 hover:opacity-100 text-[8px] bg-black text-white p-1 rounded"
+          >
+            DEBUG
+          </button>
 
       {showDebug && (
         <div className="fixed inset-0 z-[100] bg-black/90 p-6 overflow-auto text-xs font-mono text-green-400 flex items-center justify-center">
@@ -511,15 +499,6 @@ const App: React.FC = () => {
               )}
               {gameState === 'config' && (
                 <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => {
-                      playSound('click');
-                      setGameState('library');
-                    }} 
-                    className="vintage-button px-3 py-2 md:px-5 md:py-2.5 text-xs md:text-sm flex items-center gap-1 md:gap-2"
-                  >
-                    <CartoonStar size={16} /> <span className="hidden md:inline">مجموعاتي</span>
-                  </button>
                 </div>
               )}
               <button 
@@ -604,7 +583,12 @@ const App: React.FC = () => {
               
               {!authError && isAuthReady && gameState === 'config' && <ConfigScreen onStart={handleStartGame} />}
               
-              {!authError && isAuthReady && gameState === 'library' && <LibraryScreen onPlaySet={handlePlaySavedSet} onClose={() => setGameState('config')} />}
+              {!authError && isAuthReady && gameState === 'report' && reportedQuestion && (
+                <ReportScreen 
+                  question={reportedQuestion} 
+                  onClose={() => setGameState('playing')} 
+                />
+              )}
               
               {!authError && isAuthReady && gameState === 'bank' && <BankManager onClose={() => setGameState('config')} />}
               
@@ -692,7 +676,7 @@ const App: React.FC = () => {
               )}
 
               {gameState === 'playing' && config && (
-                <GameScreen config={config} questions={questions} players={players} onFinish={handleFinishGame} />
+                <GameScreen config={config} questions={questions} players={players} onFinish={handleFinishGame} onOpenReport={(q) => { setReportedQuestion(q); setGameState('report'); }} setGameState={setGameState} />
               )}
               
               {gameState === 'summary' && config && <SummaryScreen config={config} questions={questions} players={players} onRestart={handleReset} />}
@@ -700,6 +684,8 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
+        </>
+      )}
     </div>
   );
 };

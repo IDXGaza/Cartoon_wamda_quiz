@@ -3,15 +3,17 @@ import { motion } from 'motion/react';
 import { Question, Player, GameConfig, GameMode } from '../types';
 import { playSound } from '../utils/sound';
 import { CartoonTimer, CartoonEye, CartoonSkip, CartoonRocket } from './CartoonIcons';
+import { ReportButton } from './ReportButton';
 
 interface SilentActingScreenProps {
   config: GameConfig;
   questions: Question[];
   players: Player[];
   onFinish: (players: Player[]) => void;
+  onOpenReport: (q: Question) => void;
 }
 
-const SilentActingScreen: React.FC<SilentActingScreenProps> = ({ config, questions, players, onFinish }) => {
+const SilentActingScreen: React.FC<SilentActingScreenProps> = ({ config, questions, players, onFinish, onOpenReport }) => {
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [showWordToActor, setShowWordToActor] = useState(false);
   const initialTime = config.timerDuration || 60;
@@ -56,7 +58,10 @@ const SilentActingScreen: React.FC<SilentActingScreenProps> = ({ config, questio
               {activeQuestion.category && (
                 <p className="text-lg md:text-2xl font-display text-[var(--color-bg-dark)]/60 mb-2 md:mb-4">الفئة: {activeQuestion.category}</p>
               )}
-              <p className="text-4xl md:text-8xl font-display text-[var(--color-primary-blue)] drop-shadow-[1px_1px_0_var(--color-ink-black)] md:drop-shadow-[2px_2px_0_var(--color-ink-black)] mb-8">{activeQuestion.answer}</p>
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <p className="text-4xl md:text-8xl font-display text-[var(--color-primary-blue)] drop-shadow-[1px_1px_0_var(--color-ink-black)] md:drop-shadow-[2px_2px_0_var(--color-ink-black)]">{activeQuestion.answer}</p>
+                <ReportButton question={activeQuestion} onReport={onOpenReport} />
+              </div>
             </>
           ) : (
             <p className="text-4xl md:text-8xl font-display text-[var(--color-bg-dark)]/30">******</p>

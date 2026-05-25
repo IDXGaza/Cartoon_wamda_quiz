@@ -10,6 +10,7 @@ import {
   CartoonRocket,
   CartoonEye
 } from './CartoonIcons';
+import { ReportButton } from './ReportButton';
 import { playSound } from '../utils/sound';
 import { isColorDark } from '../utils/color';
 
@@ -18,9 +19,10 @@ interface Props {
   questions: Question[];
   players: Player[];
   onFinish: (players: Player[]) => void;
+  onOpenReport: (q: Question) => void;
 }
 
-const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: initialPlayers, onFinish }) => {
+const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: initialPlayers, onFinish, onOpenReport }) => {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [gameState, setGameState] = useState<'question' | 'result' | 'finished'>('question');
@@ -195,8 +197,9 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
               </span>
             </div>
 
-            <h2 className="text-2xl md:text-5xl font-black text-[var(--color-ink-black)] leading-tight mb-8 md:mb-12 vintage-text">
-              {currentQuestion.text}
+            <h2 className="text-2xl md:text-5xl font-black text-[var(--color-ink-black)] leading-tight mb-8 md:mb-12 vintage-text flex items-center justify-between gap-4">
+              <span>{currentQuestion.text}</span>
+              <ReportButton question={currentQuestion} onReport={onOpenReport} />
             </h2>
 
             {gameState === 'question' ? (

@@ -33,12 +33,15 @@ import {
   CartoonSearch
 } from './CartoonIcons';
 import { motion, AnimatePresence } from 'motion/react';
+import { ReportButton } from './ReportButton';
 
 interface Props {
   config: GameConfig;
   questions: Question[];
   players: Player[];
   onFinish: (players: Player[]) => void;
+  onOpenReport: (q: Question) => void;
+  setGameState: (s: any) => void;
 }
 
 const TIMER_DURATION = 20;
@@ -52,7 +55,7 @@ const LETTERS_FLAT = [
   'ل', 'م', 'ن', 'ه', 'و', 'ي'
 ];
 
-const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayers, onFinish }) => {
+const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayers, onFinish, onOpenReport, setGameState }) => {
   const { settings } = useSettings();
   const { showToast } = useToast();
 
@@ -375,13 +378,15 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
           setFinalAnswers(prev => ({ ...prev, [activeQuestion.id + '_skipped']: activeQuestion.text }));
           
           // CRITICAL: Update the grid state to remove the text/answer from this cell
-          // so next click triggers fetchQuestion
-          setGrid(prevGrid => prevGrid.map(row => row.map(q => {
-            if (q.id === activeQuestion.id) {
-              return { ...q, text: '', answer: '', category: '' };
-            }
-            return q;
-          })));
+          // so next click triggers fetchQuestion, only if not using saved sets where questions are fixed.
+          if (config.questionSource !== 'saved') {
+            setGrid(prevGrid => prevGrid.map(row => row.map(q => {
+              if (q.id === activeQuestion.id) {
+                return { ...q, text: '', answer: '', category: '' };
+              }
+              return q;
+            })));
+          }
         }
       } else if (config.mode === GameMode.GRID) {
         // For GRID mode, if no one answers, lock the cell (mark it as skipped).
@@ -906,6 +911,10 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     try {
       // For HEX_GRID, always fetchQuestion if text is missing (covers both AI and Manual cache)
       if (config.mode === GameMode.HEX_GRID && !q.text) {
+        if (config.questionSource === 'saved') {
+          setIsLoadingQuestion(false);
+          return;
+        }
         let finalQ = q;
         const diff = q.difficulty;
         
@@ -958,7 +967,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   };
 
   const refreshActiveQuestion = async () => {
-    if (!activeQuestion) return;
+    if (!activeQuestion || config.questionSource === 'saved') return;
     
     // Track current question to avoid repeating it immediately
     const currentText = activeQuestion.text;
@@ -1209,8 +1218,9 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                       </div>
 
                       <div className="p-6 md:p-12 rounded-3xl bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)]">
-                        <h3 className="text-2xl md:text-5xl font-black leading-tight text-[var(--color-ink-black)] vintage-text">
-                          {activeQuestion.text}
+                        <h3 className="text-2xl md:text-5xl font-black leading-tight text-[var(--color-ink-black)] vintage-text flex items-center justify-between gap-4">
+                          <span>{activeQuestion.text}</span>
+                          <ReportButton question={activeQuestion} onReport={onOpenReport} />
                         </h3>
                         {/* تلميح عدد الكلمات */}
                         {activeQuestion.text.includes('____') && (
@@ -1393,20 +1403,20 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   };
 
   if (config.mode === GameMode.BUZZER) {
-    return <BuzzerScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
+    return <BuzzerScreen config={config} questions={questions} players={players} onFinish={onFinish} onOpenReport={onOpenReport} />;
   }
 
   if (config.mode === GameMode.TIMED) {
-    return <TimedChallengeScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
+    return <TimedChallengeScreen config={config} questions={questions} players={players} onFinish={onFinish} onOpenReport={onOpenReport} />;
   }
 
   if (config.mode === GameMode.SILENT_GUESS) {
-    return <SilentActingScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
+    return <SilentActingScreen config={config} questions={questions} players={players} onFinish={onFinish} onOpenReport={onOpenReport} />;
   }
 
 
   if (config.mode === GameMode.TRUE_FALSE) {
-    return <TrueFalseScreen config={config} questions={questions} players={players} onFinish={onFinish} />;
+    return <TrueFalseScreen config={config} questions={questions} players={players} onFinish={onFinish} onOpenReport={onOpenReport} />;
   }
 
   if (config.mode === GameMode.LISTING) {

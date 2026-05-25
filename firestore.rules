@@ -135,6 +135,10 @@ service cloud.firestore {
       allow delete: if isSignedIn() && existing().userId == request.auth.uid;
     }
 
+    match /reports/{reportId} {
+      allow create: if isSignedIn();
+    }
+
     match /_connectivity_test_/{testId} {
       allow get: if true;
     }

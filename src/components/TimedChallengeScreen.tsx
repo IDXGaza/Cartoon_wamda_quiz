@@ -13,15 +13,17 @@ import {
   CartoonEye,
   CartoonBot
 } from './CartoonIcons';
+import { ReportButton } from './ReportButton';
 
 interface Props {
   config: GameConfig;
   questions: Question[];
   players: Player[];
   onFinish: (players: Player[]) => void;
+  onOpenReport: (q: Question) => void;
 }
 
-const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuestions, players: initialPlayers, onFinish }) => {
+const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuestions, players: initialPlayers, onFinish, onOpenReport }) => {
   const { settings } = useSettings();
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [localQuestions, setLocalQuestions] = useState<Question[]>(() => shuffleArray(initialQuestions));
@@ -332,8 +334,9 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
                 </p>
               </div>
               
-              <h3 className="text-3xl md:text-6xl font-display text-[var(--color-ink-black)] leading-tight drop-shadow-[1px_1px_0_rgba(0,0,0,0.1)] md:drop-shadow-[2px_2px_0_rgba(0,0,0,0.1)]">
-                {activeQuestion.text}
+              <h3 className="text-3xl md:text-6xl font-display text-[var(--color-ink-black)] leading-tight drop-shadow-[1px_1px_0_rgba(0,0,0,0.1)] md:drop-shadow-[2px_2px_0_rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
+                <span>{activeQuestion.text}</span>
+                <ReportButton question={activeQuestion} onReport={onOpenReport} />
               </h3>
 
               {isFetching && localQuestions.length - currentQuestionIndex < 2 && (

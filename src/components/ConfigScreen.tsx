@@ -585,25 +585,39 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 { val: GameMode.TRUE_FALSE, label: 'صواب أم خطأ؟', icon: <CartoonAlert size={48} />, desc: 'حقائق مذهلة', color: 'text-[var(--color-primary-red)]', ring: 'ring-[var(--color-primary-red)]/50', activeBg: 'var(--color-primary-red)', activeText: 'white' },
                 { val: GameMode.SILENT_GUESS, label: 'تخمين صامت', icon: <CartoonSilent size={48} />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' },
                 { val: GameMode.LISTING, label: 'تحدي القائمة', icon: <CartoonSparkles size={48} />, desc: 'كم تقدر تعدد؟', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
-              ].map(m => (
-                <motion.button
-                  layout
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  key={m.val}
-                  type="button"
-                  onClick={() => {
-                    playSound('click');
-                    setMode(m.val);
-                  }}
-                  className={`vintage-button rounded-3xl p-8 flex flex-col items-center gap-4 text-center transition-all duration-300 ${mode === m.val ? `ring-4 ${m.ring} shadow-[8px_8px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)]'}`}
-                  style={mode === m.val ? { backgroundColor: m.activeBg, color: m.activeText } : {}}
-                >
-                  <motion.div layout className={`mb-2 transition-colors ${mode === m.val ? 'text-inherit' : m.color}`}>{m.icon}</motion.div>
-                  <motion.h3 layout className="font-bold text-xl vintage-text">{m.label}</motion.h3>
-                  <motion.p layout className="text-xs opacity-70">{m.desc}</motion.p>
-                </motion.button>
-              ))}
+              ].map(m => {
+                if (m.val === GameMode.LISTING) {
+                  return (
+                    <div
+                      key={m.val}
+                      className="vintage-button rounded-3xl p-8 flex flex-col items-center gap-4 text-center transition-all duration-300 bg-gray-200 border-4 border-gray-300 cursor-not-allowed opacity-60"
+                    >
+                      <div className="mb-2 text-gray-400">{m.icon}</div>
+                      <h3 className="font-bold text-xl text-gray-500">تحت الإصلاح</h3>
+                      <p className="text-xs text-gray-400">سيعود قريباً</p>
+                    </div>
+                  );
+                }
+                return (
+                  <motion.button
+                    layout
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    key={m.val}
+                    type="button"
+                    onClick={() => {
+                      playSound('click');
+                      setMode(m.val);
+                    }}
+                    className={`vintage-button rounded-3xl p-8 flex flex-col items-center gap-4 text-center transition-all duration-300 ${mode === m.val ? `ring-4 ${m.ring} shadow-[8px_8px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)]'}`}
+                    style={mode === m.val ? { backgroundColor: m.activeBg, color: m.activeText } : {}}
+                  >
+                    <motion.div layout className={`mb-2 transition-colors ${mode === m.val ? 'text-inherit' : m.color}`}>{m.icon}</motion.div>
+                    <motion.h3 layout className="font-bold text-xl vintage-text">{m.label}</motion.h3>
+                    <motion.p layout className="text-xs opacity-70">{m.desc}</motion.p>
+                  </motion.button>
+                );
+              })}
             </div>
           </motion.div>
 

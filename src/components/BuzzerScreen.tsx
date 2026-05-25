@@ -6,6 +6,7 @@ import { GameConfig, Question, Player } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { updateQuestionStats } from '../services/vaultService';
 import { useToast } from '../contexts/ToastContext';
+import { ReportButton } from './ReportButton';
 import { 
   CartoonLightning, 
   CartoonRocket, 
@@ -26,9 +27,10 @@ interface Props {
   questions: Question[];
   players: Player[];
   onFinish: (players: Player[]) => void;
+  onOpenReport: (q: Question) => void;
 }
 
-const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish }) => {
+const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenReport }) => {
   const [roomId] = useState(() => Math.random().toString(36).substring(2, 8).toUpperCase());
   const [roomState, setRoomState] = useState<any>(null);
   const [remotePlayers, setRemotePlayers] = useState<Player[]>([]);
@@ -301,8 +303,9 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish }) => {
         </div>
 
         <div className="text-center py-6 md:py-10">
-          <h2 className="text-2xl md:text-5xl font-display text-[var(--color-ink-black)] leading-relaxed">
-            {currentQuestion.text}
+          <h2 className="text-2xl md:text-5xl font-display text-[var(--color-ink-black)] leading-relaxed flex items-center justify-between gap-4">
+            <span>{currentQuestion.text}</span>
+            <ReportButton question={currentQuestion} onReport={onOpenReport} />
           </h2>
         </div>
 

@@ -88,15 +88,3 @@ export interface GameConfig {
   aiModel?: string;
 }
 
-export interface SavedSet {
-  id: string;
-  userId: string;
-  name: string;
-  topic: string;
-  numQuestions: number;
-  mode: GameMode;
-  difficulty: Difficulty;
-  questions: Question[];
-  manualQuestions?: Question[];
-  createdAt: number;
-}
