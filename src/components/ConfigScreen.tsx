@@ -581,13 +581,13 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { val: GameMode.HEX_GRID, label: 'شبكة الحروف', icon: <CartoonHexagon size={48} />, desc: 'تحدي الحروف', color: 'text-[var(--color-primary-blue)]', ring: 'ring-[var(--color-primary-blue)]/50', activeBg: 'var(--color-primary-blue)', activeText: 'white' },
-                { val: GameMode.GRID, label: 'شبكة النقاط', icon: <CartoonGrid size={48} />, desc: 'فئات ونقاط متدرجة', color: 'text-[var(--color-accent-sky)]', ring: 'ring-[var(--color-accent-sky)]/50', activeBg: 'var(--color-accent-sky)', activeText: 'var(--color-ink-black)' },
-                { val: GameMode.BUZZER, label: 'تحدي السرعة', icon: <CartoonLightning size={48} />, desc: 'أسرع إجابة تفوز', color: 'text-[var(--color-primary-green)]', ring: 'ring-[var(--color-primary-green)]/50', activeBg: 'var(--color-primary-green)', activeText: 'white' },
-                { val: GameMode.TIMED, label: 'سباق الوقت', icon: <CartoonTimer size={48} />, desc: 'أكبر عدد إجابات', color: 'text-[var(--color-primary-gold)]', ring: 'ring-[var(--color-primary-gold)]/50', activeBg: 'var(--color-primary-gold)', activeText: 'var(--color-ink-black)' },
-                { val: GameMode.TRUE_FALSE, label: 'صواب أم خطأ؟', icon: <CartoonAlert size={48} />, desc: 'حقائق مذهلة', color: 'text-[var(--color-primary-red)]', ring: 'ring-[var(--color-primary-red)]/50', activeBg: 'var(--color-primary-red)', activeText: 'white' },
-                { val: GameMode.SILENT_GUESS, label: 'تخمين صامت', icon: <CartoonSilent size={48} />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' },
-                { val: GameMode.LISTING, label: 'تحدي القائمة', icon: <CartoonSparkles size={48} />, desc: 'كم تقدر تعدد؟', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
+                { val: GameMode.HEX_GRID, label: 'شبكة الحروف', icon: <CartoonHexagon size={32} className="sm:size-12" />, desc: 'تحدي الحروف', color: 'text-[var(--color-primary-blue)]', ring: 'ring-[var(--color-primary-blue)]/50', activeBg: 'var(--color-primary-blue)', activeText: 'white' },
+                { val: GameMode.GRID, label: 'شبكة النقاط', icon: <CartoonGrid size={32} className="sm:size-12" />, desc: 'فئات ونقاط متدرجة', color: 'text-[var(--color-accent-sky)]', ring: 'ring-[var(--color-accent-sky)]/50', activeBg: 'var(--color-accent-sky)', activeText: 'var(--color-ink-black)' },
+                { val: GameMode.BUZZER, label: 'تحدي السرعة', icon: <CartoonLightning size={32} className="sm:size-12" />, desc: 'أسرع إجابة تفوز', color: 'text-[var(--color-primary-green)]', ring: 'ring-[var(--color-primary-green)]/50', activeBg: 'var(--color-primary-green)', activeText: 'white' },
+                { val: GameMode.TIMED, label: 'سباق الوقت', icon: <CartoonTimer size={32} className="sm:size-12" />, desc: 'أكبر عدد إجابات', color: 'text-[var(--color-primary-gold)]', ring: 'ring-[var(--color-primary-gold)]/50', activeBg: 'var(--color-primary-gold)', activeText: 'var(--color-ink-black)' },
+                { val: GameMode.TRUE_FALSE, label: 'صواب أم خطأ؟', icon: <CartoonAlert size={32} className="sm:size-12" />, desc: 'حقائق مذهلة', color: 'text-[var(--color-primary-red)]', ring: 'ring-[var(--color-primary-red)]/50', activeBg: 'var(--color-primary-red)', activeText: 'white' },
+                { val: GameMode.SILENT_GUESS, label: 'تخمين صامت', icon: <CartoonSilent size={32} className="sm:size-12" />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' },
+                { val: GameMode.LISTING, label: 'تحدي القائمة', icon: <CartoonSparkles size={32} className="sm:size-12" />, desc: 'كم تقدر تعدد؟', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
               ].map(m => {
                 if (m.val === GameMode.LISTING) {
                   return (

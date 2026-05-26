@@ -1164,14 +1164,14 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                 </div>
               )}
 
-              <div className={`absolute top-4 md:top-8 left-4 md:left-8 font-black text-2xl md:text-3xl w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-xl md:rounded-2xl z-20 border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] ${
+              <div className={`absolute top-2 md:top-8 left-2 md:left-8 font-black text-xl md:text-3xl w-10 h-10 md:w-16 md:h-16 flex items-center justify-center rounded-xl md:rounded-2xl z-20 border-4 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)] ${
                 timeLeft <= 5 ? 'bg-[var(--color-primary-red)] text-white animate-bounce' : 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)]'
               }`}>
                 {timeLeft}
               </div>
               
               {isLoadingQuestion ? (
-                <div className="flex flex-col items-center gap-8 py-20 relative z-10">
+                <div className="flex flex-col items-center gap-4 py-8 md:py-20 relative z-10">
                   <div className="w-32 h-32 rounded-3xl bg-[var(--color-primary-gold)] flex items-center justify-center border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] animate-wobble">
                     <CartoonBot size={64} />
                   </div>
@@ -1320,19 +1320,19 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="grid grid-cols-2 md:grid-cols-2 gap-2 sm:gap-4 max-h-[30vh] overflow-y-auto p-2 sm:p-4 custom-scrollbar">
+                                  <div className="grid grid-cols-2 gap-1.5 sm:gap-4 max-h-[35vh] overflow-y-auto p-1.5 sm:p-4 custom-scrollbar">
                                     {players.map((p) => (
-                                        <div key={p.id} className="flex flex-col gap-3 p-4 bg-[var(--color-off-white)] rounded-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                                        <div key={p.id} className="flex flex-col gap-2 p-2 sm:p-4 bg-[var(--color-off-white)] rounded-xl sm:rounded-2xl border-2 sm:border-4 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[4px_4px_0px_var(--color-ink-black)]">
                                           <button 
                                             onClick={() => handleAnswer(p.id, true)}
-                                            className={`w-full py-4 rounded-xl font-black text-xl transition-all border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none ${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`}
+                                            className={`w-full py-2.5 sm:py-4 rounded-lg sm:rounded-xl font-black text-sm sm:text-xl transition-all border-2 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none ${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`}
                                             style={{ backgroundColor: p.color }}
                                           >
-                                            صح ({p.name})
+                                            صح
                                           </button>
                                           <button 
                                             onClick={() => handleAnswer(p.id, false)}
-                                            className="w-full py-2 bg-[var(--color-bg-cream)] text-[var(--color-bg-dark)] rounded-xl font-bold text-sm border-2 border-[var(--color-ink-black)] hover:bg-[var(--color-primary-red)] hover:text-white transition-colors"
+                                            className="w-full py-1.5 sm:py-2 bg-[var(--color-bg-cream)] text-[var(--color-bg-dark)] rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm border-2 border-[var(--color-ink-black)] hover:bg-[var(--color-primary-red)] hover:text-white transition-colors"
                                           >
                                             خطأ
                                           </button>

@@ -87,20 +87,20 @@ const StartScreen: React.FC<Props> = ({ onStart }) => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="mt-8 sm:mt-16"
+        className="mt-6 sm:mt-12 w-full px-4"
       >
         <button
           onClick={() => {
             playSound('click');
             onStart();
           }}
-          className="group relative inline-flex items-center gap-3 sm:gap-6 bg-[var(--color-primary-green)] text-white px-6 py-3 sm:px-12 sm:py-6 rounded-xl sm:rounded-[2.5rem] text-xl sm:text-4xl font-black border-4 border-[var(--color-ink-black)] shadow-[0px_6px_0px_#1a3a2a] sm:shadow-[0px_10px_0px_#1a3a2a] hover:translate-y-1 hover:shadow-[0px_6px_0px_#1a3a2a] active:translate-y-2 active:shadow-none transition-all"
+          className="group relative inline-flex items-center justify-center gap-2 sm:gap-6 bg-[var(--color-primary-green)] text-white w-full sm:w-auto px-6 py-4 sm:px-12 sm:py-6 rounded-xl sm:rounded-[2.5rem] text-2xl sm:text-4xl font-black border-4 border-[var(--color-ink-black)] shadow-[0px_4px_0px_#1a3a2a] sm:shadow-[0px_10px_0px_#1a3a2a] hover:translate-y-1 hover:shadow-[0px_4px_0px_#1a3a2a] active:translate-y-2 active:shadow-none transition-all"
         >
           <span>ابدأ الآن</span>
-          <CartoonBot size={28} className="sm:w-12 sm:h-12 group-hover:rotate-12 transition-transform" />
+          <CartoonBot size={24} className="sm:w-12 sm:h-12 group-hover:rotate-12 transition-transform" />
           
           {/* Shine effect */}
-          <div className="absolute inset-x-0 top-0 h-1/2 bg-white/20 rounded-t-[1.5rem] sm:rounded-t-[2rem]"></div>
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-white/20 rounded-t-lg sm:rounded-t-[2rem]"></div>
         </button>
       </motion.div>
 
