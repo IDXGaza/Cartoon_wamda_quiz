@@ -27,7 +27,24 @@ const HexGrid: React.FC<HexGridProps> = ({
   stolenCells,
   handleHexClick,
 }) => {
-  const scale = 0.7;
+  const [scale, setScale] = React.useState(0.7);
+
+  React.useLayoutEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setScale(0.5);
+      } else if (width < 1024) {
+        setScale(0.6);
+      } else {
+        setScale(0.7);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const hexWidth = 130 * scale;
   const hexHeight = 150 * scale;
   const hexHorizontalSpacing = 128 * scale; 

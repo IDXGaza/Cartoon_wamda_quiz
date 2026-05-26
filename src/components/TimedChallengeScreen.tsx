@@ -4,6 +4,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { generateQuestions, getQuestionsFromBank, shuffleArray } from '../services/geminiService';
 import { updateQuestionStats } from '../services/vaultService';
 import { playSound } from '../utils/sound';
+import { getPlayedQuestionHashes, getQuestionHash } from '../utils/playedQuestions';
 import { 
   CartoonTrophy, 
   CartoonTimer, 
@@ -70,6 +71,8 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
           ...historyExclusions
         ];
 
+        const playedHashes = new Set(getPlayedQuestionHashes());
+
         // Try bank first
         let newQuestions = await getQuestionsFromBank(
           config.topic || 'عام',
@@ -79,6 +82,8 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
           excludeAnswers,
           config.categories
         );
+
+        newQuestions = newQuestions.filter(q => !playedHashes.has(getQuestionHash(q)));
 
         // If not enough from bank, try AI
         if (newQuestions.length < 5) {

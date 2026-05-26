@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { GameConfig, Player, Question, GameMode, QuestionType, Difficulty } from './types';
-import { generateQuestions, parseCustomJson } from './services/geminiService';
 import { 
   CartoonStar, 
   CartoonGear, 
@@ -40,9 +39,6 @@ const App: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [reportedQuestion, setReportedQuestion] = useState<Question | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [loadingTime, setLoadingTime] = useState(0);
-  const [loadingStatus, setLoadingStatus] = useState("جاري تجهيز اللعبة...");
-  const loadingTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const [sessionId] = useState(() => Math.random().toString(36).substr(2, 9));
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -188,27 +184,11 @@ const App: React.FC = () => {
     setConfig({ ...newConfig, sessionId });
     setPlayers(newConfig.players);
     setGameState('loading');
-    setLoadingTime(0);
-    setLoadingStatus("تنشيط الذكاء الاصطناعي...");
     setErrorMessage('');
-
-    if (loadingTimerRef.current) clearInterval(loadingTimerRef.current);
-    loadingTimerRef.current = setInterval(() => {
-      setLoadingTime(prev => {
-        const next = prev + 0.1;
-        if (next < 3) setLoadingStatus("جاري الاتصال بالخوادم...");
-        else if (next < 7) setLoadingStatus("توليد الفئات وتحليل الموضوع...");
-        else if (next < 12) setLoadingStatus("صياغة الأسئلة بالتوازي (دقة عالية)...");
-        else if (next < 16) setLoadingStatus("ضبط مستويات الصعوبة والمراجعة...");
-        else if (next < 19) setLoadingStatus("المسات النهائية وتجهيز الشبكة...");
-        else setLoadingStatus("يتم إنهاء التوليد الآن...");
-        return next;
-      });
-    }, 100);
     
     try {
       if (!auth.currentUser) {
-        showToast("يجب تسجيل الدخول أولاً للبدء. جاري المحاولة...", "info");
+        showToast("يجب تسجيل الدخول أولاً للبدء.", "info");
         await signInAnonymously(auth);
       }
       
@@ -236,163 +216,41 @@ const App: React.FC = () => {
         return;
       }
 
-      // Determine required count for start
-      const isHexAI = newConfig.mode === GameMode.HEX_GRID && newConfig.questionSource === 'ai';
-      const requiredCount = isHexAI ? 0 : (newConfig.mode === GameMode.GRID ? 25 : newConfig.numQuestions);
+      // Use bank source
+      const requiredCount = newConfig.mode === GameMode.HEX_GRID ? 28 : (newConfig.mode === GameMode.GRID ? 25 : newConfig.numQuestions);
       const topicToUse = newConfig.topic || 'عام';
-
+      
       let generated: Question[] = [];
-      let lastError: any = null;
-
-      // Force bank source if offline
-      const finalQuestionSource = !isOnline ? 'bank' : newConfig.questionSource;
-
-      if (finalQuestionSource === 'bank') {
-        const requiredCount = newConfig.mode === GameMode.HEX_GRID ? 28 : (newConfig.mode === GameMode.GRID ? 25 : newConfig.numQuestions);
-        // Use the new getQuestionsFromBank helper
+      if (newConfig.manualQuestions && newConfig.manualQuestions.length > 0) {
+        generated = newConfig.manualQuestions;
+      } else {
         const { getQuestionsFromBank } = await import('./services/geminiService');
         generated = await getQuestionsFromBank(topicToUse, requiredCount, newConfig.mode, newConfig.difficulty, Array.from(excludedItemsSet), newConfig.categories);
-        
-        // Final shuffle ONLY if not in GRID mode to preserve category/point ordering
-        if (newConfig.mode !== GameMode.GRID) {
-          generated = [...generated].sort(() => Math.random() - 0.5);
-        }
-        
-        setQuestions(generated);
-        setGameState('playing');
-        
-        // Save to persistent history
-        try {
-          // Save both text and answer to history to catch repetitions effectively
-          const newTags = generated.flatMap(q => [q.text, q.answer, q.id]).filter(Boolean);
-          if (newTags.length > 0) {
-            const data = localStorage.getItem('gemini_quiz_question_history');
-            let history: string[][] = data ? JSON.parse(data) : [];
-            history.unshift(newTags);
-            if (history.length > 50) history = history.slice(0, 50); 
-            localStorage.setItem('gemini_quiz_question_history', JSON.stringify(history));
-          }
-        } catch (e) {}
-        
-        return;
-      }
-
-      if (newConfig.customJson) {
-        generated = parseCustomJson(newConfig.customJson, topicToUse, newConfig.mode, newConfig.difficulty);
-      } else {
-        let attempts = 0;
-        const maxStartAttempts = 10;
-        while (generated.length < requiredCount && attempts < maxStartAttempts) {
-          const needed = requiredCount - generated.length;
-          console.log(`Attempt ${attempts + 1}: Generating ${needed} questions for topic: ${topicToUse}`);
-          
-          try {
-            // Relax constraints after 5 failed attempts
-            const activeExclusions = attempts > 5 ? [] : Array.from(excludedItemsSet);
-            
-            const batch = await generateQuestions(
-              topicToUse,
-              needed,
-              newConfig.questionTypes,
-              newConfig.mode,
-              newConfig.difficulty,
-              settings.aiModel === 'custom' ? (settings.customModel || 'gemini-1.5-flash') : settings.aiModel,
-              newConfig.categories,
-              activeExclusions
-            );
-            
-            console.log(`Batch received: ${batch?.length || 0} questions`);
-            
-            if (batch && batch.length > 0) {
-              const newQuestions = batch.filter(bq => {
-                const bqAns = bq.answer.trim().toLowerCase();
-                const bqText = bq.text.trim().toLowerCase();
-                return !generated.some(gq => gq.answer === bq.answer || gq.text === bq.text) && 
-                  (attempts > 7 || (!excludedItemsSet.has(bqAns) && !excludedItemsSet.has(bqText)));
-              });
-              
-              console.log(`New unique questions after filtering: ${newQuestions.length}`);
-              
-              // Check if these are fallback questions
-              const isFallback = newQuestions.some(q => q.id.startsWith('static-') || q.text.includes('(حدث خطأ'));
-              if (isFallback) {
-                showToast("تم استخدام أسئلة احتياطية بسبب مشكلة في الاتصال بالذكاء الاصطناعي.", "warning");
-              }
-              
-              if (newQuestions.length === 0 && batch.length > 0) {
-                console.warn("All generated questions were filtered out as duplicates.");
-              }
-              
-              generated.push(...newQuestions);
-            }
-          } catch (batchError: any) {
-            console.error(`Error in batch generation attempt ${attempts + 1}:`, batchError);
-            lastError = batchError;
-            
-            // If it's a safety error, don't keep retrying as it will likely fail again
-            if (batchError.message?.includes('فلاتر الأمان') || batchError.message?.includes('SAFETY')) {
-              break;
-            }
-          }
-          
-          attempts++;
-        }
-        
-        if (generated.length === 0 && lastError) {
-          throw lastError;
-        }
       }
       
-      if (!isHexAI && (!generated || generated.length === 0)) {
-        if (lastError) {
-          throw lastError;
-        }
-        throw new Error("عذراً، لم نتمكن من الحصول على أسئلة جديدة. يرجى محاولة تغيير الموضوع.");
-      }
-      
-      if (generated.length < requiredCount && generated.length > 0) {
-        showToast(`تم توليد ${generated.length} سؤالاً فقط من أصل ${requiredCount}.`, 'warning');
+      // Final shuffle ONLY if not in GRID mode to preserve category/point ordering
+      if (newConfig.mode !== GameMode.GRID) {
+        generated = [...generated].sort(() => Math.random() - 0.5);
       }
       
       setQuestions(generated);
-      
-      // Shuffle questions for non-GRID modes to ensure a fresh experience Each time
-      if (newConfig.mode !== GameMode.GRID) {
-        const shuffled = [...generated].sort(() => Math.random() - 0.5);
-        setQuestions(shuffled);
-        generated = shuffled;
-      } else {
-        setQuestions(generated);
-      }
+      setGameState('playing');
       
       // Save to persistent history
       try {
-        // Save both text and answer to history to catch repetitions effectively
         const newTags = generated.flatMap(q => [q.text, q.answer, q.id]).filter(Boolean);
         if (newTags.length > 0) {
           const data = localStorage.getItem('gemini_quiz_question_history');
           let history: string[][] = data ? JSON.parse(data) : [];
           history.unshift(newTags);
-          // Keep up to 50 rounds of history to prevent repetition across rounds
           if (history.length > 50) history = history.slice(0, 50); 
           localStorage.setItem('gemini_quiz_question_history', JSON.stringify(history));
         }
-      } catch (e) {
-        console.error("Failed to save history", e);
-      }
-
-      setGameState('playing');
-      if (loadingTimerRef.current) {
-        clearInterval(loadingTimerRef.current);
-        loadingTimerRef.current = null;
-      }
+      } catch (e) {}
+      
     } catch (error: any) {
-      if (loadingTimerRef.current) {
-        clearInterval(loadingTimerRef.current);
-        loadingTimerRef.current = null;
-      }
       console.error("Game Start Error:", error);
-      showToast(error.message || "حدث خطأ غير متوقع أثناء توليد الأسئلة.", 'error');
+      showToast(error.message || "حدث خطأ غير متوقع أثناء تجهيز الأسئلة.", 'error');
       setGameState('config');
     }
   };
@@ -585,73 +443,11 @@ const App: React.FC = () => {
               
               {!authError && isAuthReady && gameState === 'bank' && <BankManager onClose={() => setGameState('config')} />}
               
-              {gameState === 'loading' && config && (
-                <div className="flex flex-col items-center justify-center py-32 space-y-12">
-                  <div className="relative">
-                    <motion.div 
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                      className="w-40 h-40 border-4 border-dashed border-[var(--color-primary-blue)] rounded-full absolute -inset-4"
-                    />
-                    <div className="w-32 h-32 bg-[var(--color-off-white)] rounded-full flex items-center justify-center border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_rgba(0,0,0,0.1)] relative">
-                      <CartoonRocket size={64} className="animate-bounce" />
-                      <div className="absolute -bottom-6 bg-[var(--color-primary-gold)] px-4 py-1 rounded-full border-2 border-black font-black shadow-[2px_2px_0px_black] text-sm animate-pulse whitespace-nowrap">
-                        00:{loadingTime.toString().padStart(2, '0')} ث
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <h2 className="text-4xl font-bold text-[var(--color-ink-black)] mb-4 vintage-text">جاري تحضير التحدي...</h2>
-                    <p className="text-[var(--color-bg-dark)] text-xl font-bold">جاري تأليف الأسئلة وتجهيز اللعبة</p>
-                    <div className="mt-8 bg-black/5 p-6 rounded-2xl border-2 border-dashed border-black/20 max-w-sm mx-auto">
-                      {(() => {
-                        // Dynamic estimation based on mode and expected parallel speed
-                        const estimated = config.mode === GameMode.GRID 
-                          ? 60 
-                          : (config.mode === GameMode.HEX_GRID ? 90 : 40);
-                        
-                        let progress = 0;
-                        if (loadingTime < estimated * 0.7) {
-                          progress = Math.floor((loadingTime / estimated) * 100);
-                        } else {
-                          // Slow down progress after 70% to avoid stalling at 99%
-                          const overflow = loadingTime - (estimated * 0.7);
-                          progress = Math.min(99, 70 + Math.floor(overflow * 0.5));
-                        }
-
-                        return (
-                          <>
-                            <div className="w-full h-3 bg-black/10 rounded-full mb-4 overflow-hidden border border-black/10">
-                              <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: `${progress}%` }}
-                                className="h-full bg-[var(--color-primary-gold)]"
-                                transition={{ duration: 0.5 }}
-                              />
-                            </div>
-                            <div className="flex justify-between text-xs font-black opacity-60 mb-2">
-                              <span>المرحلة: {loadingStatus}</span>
-                              <span>{progress}%</span>
-                            </div>
-                            <div className="flex justify-between text-xs font-black opacity-60 mb-2">
-                              <span>الوقت المنقضي: {Math.floor(loadingTime)}ث</span>
-                              <span>المتبقي التقريبي: {Math.max(1, Math.ceil(estimated - loadingTime))}ث</span>
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    {[0, 1, 2].map(i => (
-                      <motion.div 
-                        key={i}
-                        animate={{ scale: [1, 1.5, 1], rotate: [0, 15, -15, 0] }}
-                        transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
-                        className="w-6 h-6 bg-[var(--color-primary-gold)] border-2 border-[var(--color-ink-black)] rounded-lg shadow-[2px_2px_0px_var(--color-ink-black)]"
-                      />
-                    ))}
-                  </div>
+              {gameState === 'loading' && (
+                <div className="flex flex-col items-center justify-center py-32 space-y-6">
+                  <div className="w-24 h-24 border-8 border-[var(--color-bg-dark)]/10 rounded-full animate-spin border-t-[var(--color-primary-blue)]" />
+                  <h2 className="text-3xl font-bold text-[var(--color-ink-black)] vintage-text">جاري تحضير التحدي...</h2>
+                  <p className="text-[var(--color-bg-dark)] text-lg font-bold">يرجى الانتظار بينما نجهز اللعبة لك.</p>
                 </div>
               )}
 

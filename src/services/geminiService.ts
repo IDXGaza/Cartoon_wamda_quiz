@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Question, QuestionType, GameMode, Difficulty } from "../types";
 import { QUESTION_BANK } from "../data/localBank";
+import { getPlayedQuestionHashes, getQuestionHash } from '../utils/playedQuestions';
 
 import { 
   getQuestionsFromVault, 
@@ -98,12 +99,14 @@ export const getQuestionsFromBank = async (
     
     // تصفية الأسئلة حسب الموضوع والمستبعد سابقاً
     const normalizedExclusions = new Set((excludedAnswers || []).map(item => item.trim().toLowerCase()));
+    const playedHashes = new Set(getPlayedQuestionHashes());
     const topicTokens = topic.split('،').map(t => t.trim()).filter(Boolean);
 
     let filtered = rawLocalBank.filter((q: any) => 
       !normalizedExclusions.has(q.id?.toLowerCase()) && 
       !normalizedExclusions.has(q.text?.trim().toLowerCase()) &&
-      !normalizedExclusions.has(q.answer?.trim().toLowerCase())
+      !normalizedExclusions.has(q.answer?.trim().toLowerCase()) &&
+      !playedHashes.has(getQuestionHash(q))
     );
 
     if (mode !== GameMode.GRID || !categories || categories.length === 0) {

@@ -18,6 +18,7 @@ const RemoteBuzzer: React.FC = () => {
   const [isJoined, setIsJoined] = useState(false);
   const [roomState, setRoomState] = useState<any>(null);
   const [isBuzzed, setIsBuzzed] = useState(false);
+  const [buzzerLocked, setBuzzerLocked] = useState(false);
   const [playerScore, setPlayerScore] = useState(0);
   const [error, setError] = useState('');
 
@@ -63,6 +64,7 @@ const RemoteBuzzer: React.FC = () => {
         // Reset local buzz state if room buzz is cleared
         if (data.buzzedPlayerId === null) {
           setIsBuzzed(false);
+          setBuzzerLocked(false);
         }
       } else {
         setError('الغرفة غير موجودة أو تم إغلاقها');
@@ -96,6 +98,8 @@ const RemoteBuzzer: React.FC = () => {
   };
 
   const handleBuzz = async () => {
+    if (buzzerLocked) return;
+    setBuzzerLocked(true);
     if (!isJoined || !roomId || !auth.currentUser || roomState?.gameState !== 'question' || roomState?.buzzedPlayerId || isBuzzed) return;
 
     // Optimistic lock to prevent multiple clicks locally
@@ -199,7 +203,7 @@ const RemoteBuzzer: React.FC = () => {
     );
   }
 
-  const canBuzz = roomState?.gameState === 'question' && !roomState?.buzzedPlayerId && !isBuzzed;
+  const canBuzz = roomState?.gameState === 'question' && !roomState?.buzzedPlayerId && !isBuzzed && !buzzerLocked;
   const someoneElseBuzzed = roomState?.buzzedPlayerId && roomState?.buzzedPlayerId !== auth.currentUser?.uid;
   const iBuzzed = roomState?.buzzedPlayerId === auth.currentUser?.uid;
   const isOnline = navigator.onLine;

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
+import { Share2 } from 'lucide-react';
 import { toggleFullScreen } from '../utils/fullscreen';
 import { 
   CartoonRocket, 
@@ -16,20 +17,53 @@ interface Props {
 }
 
 const StartScreen: React.FC<Props> = ({ onStart }) => {
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'لعبة ومضة',
+          text: 'جرب لعبة ومضة الذكية!',
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+      } catch (error) {
+        console.error('Error copying:', error);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4 relative">
-      {/* Fullscreen Toggle Button */}
-      <button 
-        onClick={() => {
-          playSound('click');
-          toggleFullScreen();
-        }}
-        className="absolute top-4 right-4 bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] p-3 rounded-2xl shadow-[4px_4px_0px_var(--color-ink-black)] z-50 hover:scale-110 transition-transform active:translate-y-1 active:shadow-none flex items-center gap-2"
-        title="ملء الشاشة"
-      >
-        <CartoonEye size={24} className="text-[var(--color-primary-blue)]" />
-        <span className="font-bold hidden sm:inline">ملء الشاشة</span>
-      </button>
+      {/* Buttons */}
+      <div className="absolute top-4 right-4 flex gap-2 z-50">
+        <button 
+          onClick={() => {
+            playSound('click');
+            handleShare();
+          }}
+          className="bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] p-3 rounded-2xl shadow-[4px_4px_0px_var(--color-ink-black)] hover:scale-110 transition-transform active:translate-y-1 active:shadow-none flex items-center gap-2"
+          title="مشاركة"
+        >
+          <Share2 size={24} className="text-[var(--color-primary-green)] ml-2" />
+          <span className="font-bold hidden sm:inline">مشاركة</span>
+        </button>
+        <button 
+          onClick={() => {
+            playSound('click');
+            toggleFullScreen();
+          }}
+          className="bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] p-3 rounded-2xl shadow-[4px_4px_0px_var(--color-ink-black)] hover:scale-110 transition-transform active:translate-y-1 active:shadow-none flex items-center gap-2"
+          title="ملء الشاشة"
+        >
+          <CartoonEye size={24} className="text-[var(--color-primary-blue)]" />
+          <span className="font-bold hidden sm:inline">ملء الشاشة</span>
+        </button>
+      </div>
       {/* Playful background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 

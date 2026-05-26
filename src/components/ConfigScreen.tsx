@@ -3,12 +3,11 @@ import { Dices } from 'lucide-react';
 import { GameConfig, GameMode, QuestionType, Player, Difficulty } from '../types';
 import { QUESTION_BANK } from '../data/localBank';
 import { filterPlayedQuestions, addPlayedQuestionHashes } from '../utils/playedQuestions';
-import { Type } from "@google/genai";
-import { getAI, extractJson, generateQuestions } from '../services/geminiService';
+
 import { useToast } from '../contexts/ToastContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { playSound } from '../utils/sound';
-import { CartoonHexagon, CartoonGrid, CartoonLightning, CartoonTimer, CartoonSilent, CartoonBot, CartoonPencil, CartoonPlus, CartoonTrash, CartoonRefresh, CartoonStar, CartoonGear, CartoonBook, CartoonAlert, CartoonRocket, CartoonX, CartoonSparkles } from './CartoonIcons';
+import { CartoonHexagon, CartoonGrid, CartoonLightning, CartoonTimer, CartoonSilent, CartoonPencil, CartoonPlus, CartoonTrash, CartoonRefresh, CartoonStar, CartoonGear, CartoonBook, CartoonAlert, CartoonRocket, CartoonX, CartoonSparkles } from './CartoonIcons';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
@@ -77,9 +76,9 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
     { name: 'الفريق الأخضر', color: '#22c55e' }
   ]);
 
-  const [inputMethod, setInputMethod] = useState<'ai' | 'manual' | 'bank'>('ai');
   const [buzzerTimeout, setBuzzerTimeout] = useState<number>(20);
   const [isRestrictedMode, setIsRestrictedMode] = useState<boolean>(true);
+  const [inputMethod, setInputMethod] = useState<'manual' | 'bank'>('bank');
 
   React.useEffect(() => {
     setIsRestrictedMode(mode === GameMode.GRID || mode === GameMode.HEX_GRID || mode === GameMode.LISTING);
@@ -99,13 +98,10 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 
   React.useEffect(() => {
-    if (mode !== GameMode.GRID && inputMethod === 'ai') {
-      setInputMethod('bank');
-    }
     if (mode === GameMode.BUZZER || mode === GameMode.TIMED) {
       setTopic('عام');
     }
-  }, [mode, inputMethod]);
+  }, [mode]);
 
   const randomizeTopic = React.useCallback(() => {
     playSound('click');
@@ -902,49 +898,20 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">طريقة الإدخال</label>
             </div>
             
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ${!isOnline ? 'opacity-70' : ''}`}>
-              {mode === GameMode.GRID && (
-                <button 
-                  type="button"
-                  disabled={!isOnline}
-                  onClick={() => {
-                    playSound('click');
-                    if (!isOnline) {
-                      showToast("هذا الخيار يتطلب اتصالاً بالإنترنت", "warning");
-                      return;
-                    }
-                    setInputMethod('ai');
-                  }}
-                  className={`relative p-6 md:p-8 rounded-[2rem] transition-all duration-300 text-right overflow-hidden group/btn border-4 border-[var(--color-ink-black)] ${inputMethod === 'ai' ? 'shadow-[6px_6px_0px_var(--color-ink-black)]' : 'bg-[var(--color-off-white)] hover:bg-[var(--color-bg-cream)]'} ${!isOnline ? 'grayscale cursor-not-allowed' : ''}`}
-                  style={inputMethod === 'ai' ? { backgroundColor: 'var(--color-primary-green)', color: 'white' } : {}}
-                >
-                   {!isOnline && (
-                    <div className="absolute top-4 right-4 bg-red-500 text-white p-1 rounded-full border-2 border-black z-20">
-                      <CartoonX size={12} />
-                    </div>
-                  )}
-                  <div className="flex justify-between items-start mb-6 relative z-10">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12 border-4 border-[var(--color-ink-black)] ${inputMethod === 'ai' ? 'bg-white text-[var(--color-ink-black)]' : 'bg-[var(--color-primary-green)] text-white'}`}>
-                      <CartoonBot className="w-10 h-10" />
-                    </div>
-                    {inputMethod === 'ai' && <div className="bg-white text-[var(--color-ink-black)] border-2 border-[var(--color-ink-black)] text-xs px-3 py-1 rounded-full font-bold">مختار</div>}
-                  </div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-2 relative z-10 vintage-text">توليد بالذكاء الاصطناعي</h3>
-                  <p className="text-xs opacity-80">توليد تلقائي فوري للمسابقة. سريع وذكي.</p>
-                </button>
-              )}
-              
-              <button 
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-8`}>
+              <button
                 type="button"
                 onClick={() => {
                   playSound('click');
                   setInputMethod('manual');
                 }}
-                className={`relative p-6 md:p-8 rounded-[2rem] transition-all duration-300 text-right overflow-hidden group/btn border-4 border-[var(--color-ink-black)] ${inputMethod === 'manual' ? 'shadow-[6px_6px_0px_var(--color-ink-black)]' : 'bg-[var(--color-off-white)] hover:bg-[var(--color-bg-cream)]'}`}
+                className={`relative p-6 md:p-8 rounded-[2rem] transition-all duration-300 text-right overflow-hidden group/btn border-4 border-[var(--color-ink-black)] ${
+                  inputMethod === 'manual' ? 'shadow-[6px_6px_0px_var(--color-ink-black)]' : 'bg-[var(--color-off-white)] hover:bg-[var(--color-bg-cream)]'
+                }`}
                 style={inputMethod === 'manual' ? { backgroundColor: 'var(--color-primary-gold)', color: 'var(--color-ink-black)' } : {}}
               >
                 <div className="flex justify-between items-start mb-6 relative z-10">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12 border-4 border-[var(--color-ink-black)] ${inputMethod === 'manual' ? 'bg-white text-[var(--color-ink-black)]' : 'bg-var(--color-primary-gold) text-[var(--color-ink-black)]'}`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12 border-4 border-[var(--color-ink-black)] ${inputMethod === 'manual' ? 'bg-white text-[var(--color-ink-black)]' : 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)]'}`}>
                     <CartoonPencil className="w-10 h-10" />
                   </div>
                   {inputMethod === 'manual' && <div className="bg-white text-[var(--color-ink-black)] border-2 border-[var(--color-ink-black)] text-xs px-3 py-1 rounded-full font-bold">مختار</div>}
@@ -953,17 +920,19 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 <p className="text-xs opacity-80">أدخل أسئلتك الخاصة يدوياً لتتحكم في التفاصيل.</p>
               </button>
 
-              <button 
+              <button
                 type="button"
                 onClick={() => {
                   playSound('click');
                   setInputMethod('bank');
                 }}
-                className={`relative p-6 md:p-8 rounded-[2rem] transition-all duration-300 text-right overflow-hidden group/btn border-4 border-[var(--color-ink-black)] ${inputMethod === 'bank' ? 'shadow-[6px_6px_0px_var(--color-ink-black)]' : 'bg-[var(--color-off-white)] hover:bg-[var(--color-bg-cream)]'}`}
+                className={`relative p-6 md:p-8 rounded-[2rem] transition-all duration-300 text-right overflow-hidden group/btn border-4 border-[var(--color-ink-black)] ${
+                  inputMethod === 'bank' ? 'shadow-[6px_6px_0px_var(--color-ink-black)]' : 'bg-[var(--color-off-white)] hover:bg-[var(--color-bg-cream)]'
+                }`}
                 style={inputMethod === 'bank' ? { backgroundColor: 'var(--color-primary-blue)', color: 'white' } : {}}
               >
                 <div className="flex justify-between items-start mb-6 relative z-10">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12 border-4 border-[var(--color-ink-black)] ${inputMethod === 'bank' ? 'bg-white text-[var(--color-ink-black)]' : 'bg-var(--color-primary-blue) text-white'}`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12 border-4 border-[var(--color-ink-black)] ${inputMethod === 'bank' ? 'bg-white text-[var(--color-ink-black)]' : 'bg-[var(--color-primary-blue)] text-white'}`}>
                     <CartoonBook className="w-10 h-10" />
                   </div>
                   {inputMethod === 'bank' && <div className="bg-white text-[var(--color-ink-black)] border-2 border-[var(--color-ink-black)] text-xs px-3 py-1 rounded-full font-bold">مختار</div>}
@@ -1000,18 +969,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                     : 'أدخل العدد المطلوب من الأسئلة المتنوعة للمسابقة.'}
                 </p>
                 <div className="flex gap-2 w-full md:w-auto">
-                  <button 
-                    type="button"
-                    onClick={generateAISamples}
-                    disabled={isGeneratingSamples}
-                    className="vintage-button bg-[var(--color-accent-sky)] flex-1 md:flex-none"
-                  >
-                    {isGeneratingSamples ? (
-                      <><CartoonRefresh className="w-5 h-5 animate-spin" /> جاري التوليد...</>
-                    ) : (
-                      <><CartoonStar className="w-5 h-5" /> تعبئة بأسئلة عشوائية (AI)</>
-                    )}
-                  </button>
                   <button 
                     type="button"
                     onClick={clearManualQuestions}
