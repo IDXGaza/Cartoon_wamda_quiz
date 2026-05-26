@@ -9,6 +9,12 @@ import {
 } from "./vaultService";
 import { addPlayedQuestionHashes } from "../utils/playedQuestions";
 
+const normalizeArabicLetter = (l: string | undefined | null) => {
+  if (!l) return '';
+  // Normalize letters to match the standardized bank and strip Arabic Tatweel/Kashida (ـ)
+  return l.replace(/[\u0640]/g, '').replace(/[أإآا]/g, 'أ').replace(/[ةه]/g, 'ه').replace(/[ىي]/g, 'ي').trim();
+};
+
 /**
  * 🎯 الروابط والموجهات الصارمة لكل نمط لعبة (Prompts & Rules)
  */
@@ -143,7 +149,7 @@ export const getQuestionsFromBank = async (
       
       for (const char of lettersToFill) {
         const found = shuffledFiltered.find((q: any) => 
-          q.letter === char && 
+          normalizeArabicLetter(q.letter) === normalizeArabicLetter(char) && 
           !selectedQuestions.some((sq: any) => (sq.id && sq.id === q.id) || sq.text === q.text)
         );
         if (found) {
@@ -884,15 +890,6 @@ export const testAI = async (model: string): Promise<{ success: boolean, message
     }
     return { success: false, message: msg };
   }
-};
-
-const normalizeArabicLetter = (l: string | undefined | null) => {
-  if (!l) return '';
-  // Normalize letters to match the standardized bank
-  // [أإآا] -> أ
-  // [ةه] -> ه
-  // [ىي] -> ي
-  return l.replace(/[أإآا]/g, 'أ').replace(/[ةه]/g, 'ه').replace(/[ىي]/g, 'ي').trim();
 };
 
 export const fetchSingleQuestion = async (

@@ -208,14 +208,14 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenRepo
 
   if (!isGameStarted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-fade-in">
-        <div className="vintage-panel p-10 rounded-[3rem] text-center border-4 border-[var(--color-ink-black)] shadow-[12px_12px_0px_var(--color-ink-black)] bg-[var(--color-bg-cream)] max-w-2xl w-full">
-          <div className="bg-[var(--color-primary-gold)] p-6 rounded-[2rem] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] mb-8">
-            <h2 className="text-4xl font-display text-[var(--color-ink-black)]">تحدي البازر عن بُعد</h2>
-            <p className="text-xl font-bold mt-2 opacity-80">امسح الكود للانضمام من هاتفك</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 sm:gap-8 animate-fade-in px-2">
+        <div className="vintage-panel p-4 sm:p-10 rounded-2xl sm:rounded-[3rem] text-center border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] sm:shadow-[12px_12px_0px_var(--color-ink-black)] bg-[var(--color-bg-cream)] max-w-2xl w-full">
+          <div className="bg-[var(--color-primary-gold)] p-4 sm:p-6 rounded-xl sm:rounded-[2rem] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-4xl font-display text-[var(--color-ink-black)]">تحدي البازر عن بُعد</h2>
+            <p className="text-base sm:text-xl font-bold mt-2 opacity-80">امسح الكود للانضمام من هاتفك</p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-10 items-center justify-center">
+          <div className="flex flex-col md:flex-row gap-6 sm:gap-10 items-center justify-center z-10 relative">
             <div className="bg-white p-6 rounded-[2rem] border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)]">
               <QRCodeSVG value={joinUrl} size={200} />
             </div>
@@ -265,10 +265,10 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenRepo
               handleStart();
             }}
             disabled={remotePlayers.length === 0}
-            className={`vintage-button w-full py-6 rounded-2xl text-3xl font-display mt-10 flex items-center justify-center gap-4 ${remotePlayers.length === 0 ? 'opacity-50 grayscale cursor-not-allowed' : 'bg-[var(--color-primary-green)]'}`}
+            className={`vintage-button w-full py-3 sm:py-6 rounded-2xl text-lg sm:text-3xl font-display mt-6 sm:mt-10 flex items-center justify-center gap-2 sm:gap-4 ${remotePlayers.length === 0 ? 'opacity-50 grayscale cursor-not-allowed' : 'bg-[var(--color-primary-green)]'}`}
           >
             <span>ابدأ التحدي</span>
-            <CartoonRocket size={40} />
+            <CartoonRocket size={24} className="sm:w-10 sm:h-10" />
           </button>
         </div>
       </div>
@@ -280,8 +280,9 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenRepo
       {/* Question Card */}
       <div className="vintage-panel p-4 md:p-10 rounded-3xl md:rounded-[3rem] border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] bg-[var(--color-bg-cream)] relative overflow-hidden">
         <div className="absolute top-0 right-0 left-0 h-4 bg-[var(--color-primary-blue)] border-b-4 border-[var(--color-ink-black)]" />
+        <ReportButton question={currentQuestion} onReport={onOpenReport} />
         
-        <div className="flex justify-between items-center mb-8 mt-4 flex-wrap gap-4">
+        <div className="flex justify-between items-center mb-8 mt-4 flex-wrap gap-4 pt-4">
           <div className="flex gap-4">
             <span className="bg-[var(--color-primary-gold)] px-6 py-2 rounded-xl border-4 border-[var(--color-ink-black)] font-display text-xl shadow-[4px_4px_0px_var(--color-ink-black)]">
               سؤال {currentQuestionIndex + 1} / {questions.length}
@@ -303,10 +304,9 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenRepo
         </div>
 
         <div className="text-center py-6 md:py-10">
-          <h2 className="text-2xl md:text-5xl font-display text-[var(--color-ink-black)] leading-relaxed text-center w-full">
+          <h2 className="text-2xl md:text-5xl font-display text-[var(--color-ink-black)] leading-relaxed text-center w-full px-4">
             <span>{currentQuestion.text}</span>
           </h2>
-          <ReportButton question={currentQuestion} onReport={onOpenReport} />
         </div>
 
         {buzzedPlayer && (

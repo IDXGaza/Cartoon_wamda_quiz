@@ -573,7 +573,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
 
         <form onSubmit={handleSubmit} className="space-y-12 relative z-10">
           {/* Game Mode Selection */}
-          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-8 vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-8 vintage-panel p-4 sm:p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-indigo-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
               <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-primary-gold)] border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-ink-black)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">1</div>
@@ -593,7 +593,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                   return (
                     <div
                       key={m.val}
-                      className="vintage-button rounded-3xl p-8 flex flex-col items-center gap-4 text-center transition-all duration-300 bg-gray-200 border-4 border-gray-300 cursor-not-allowed opacity-60"
+                      className="vintage-button rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col items-center gap-2 sm:gap-4 text-center transition-all duration-300 bg-gray-200 border-4 border-gray-300 cursor-not-allowed opacity-60"
                     >
                       <div className="mb-2 text-gray-400">{m.icon}</div>
                       <h3 className="font-bold text-xl text-gray-500">تحت الإصلاح</h3>
@@ -612,7 +612,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       playSound('click');
                       setMode(m.val);
                     }}
-                    className={`vintage-button rounded-3xl p-8 flex flex-col items-center gap-4 text-center transition-all duration-300 ${mode === m.val ? `ring-4 ${m.ring} shadow-[8px_8px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)]'}`}
+                    className={`vintage-button rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col items-center gap-2 sm:gap-4 text-center transition-all duration-300 ${mode === m.val ? `ring-4 ${m.ring} shadow-[8px_8px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)]'}`}
                     style={mode === m.val ? { backgroundColor: m.activeBg, color: m.activeText } : {}}
                   >
                     <motion.div layout className={`mb-2 transition-colors ${mode === m.val ? 'text-inherit' : m.color}`}>{m.icon}</motion.div>
@@ -625,7 +625,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           </motion.div>
 
           {/* Topic Selection */}
-          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-8 vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-8 vintage-panel p-4 sm:p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6">
               <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-accent-sky)] border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-ink-black)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">2</div>
@@ -895,7 +895,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
 
 
           {/* Input Method Selection */}
-          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-8 vintage-panel p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-8 vintage-panel p-4 sm:p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-green)]"></div>
             <div className="flex items-center gap-4 mb-6">
               <div className="w-14 h-14 rounded-xl bg-[var(--color-primary-green)] border-4 border-[var(--color-ink-black)] flex items-center justify-center text-white font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">3</div>
@@ -1131,9 +1131,9 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           </AnimatePresence>
         </motion.div>
 
-          <div className="mt-12 flex justify-center">
+          <div className="mt-12 flex flex-col lg:flex-row justify-center gap-6 items-start w-full max-w-5xl mx-auto">
             {/* Players and Difficulty */}
-            <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group">
+            <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-8 vintage-panel p-6 md:p-10 rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl">
               <div className="absolute top-0 right-0 w-2 h-full bg-violet-500"></div>
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 rounded-xl bg-violet-500/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-violet-600 font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">4</div>

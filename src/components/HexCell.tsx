@@ -81,7 +81,7 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
           dominantBaseline="middle" 
           textAnchor="middle"
         >
-          {question.letter}
+          {question.letter?.replace(/[\u0640]/g, '')}
         </text>
         <text 
           className="font-display text-6xl select-none"
@@ -94,26 +94,22 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
           dominantBaseline="middle" 
           textAnchor="middle"
         >
-          {question.letter}
+          {question.letter?.replace(/[\u0640]/g, '')}
         </text>
       </g>
       
       {frozen > 0 && (
         <motion.g animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: `${hexHalfWidth}px ${hexHalfHeight}px` }}>
-          <foreignObject x={15 * scale} y={25 * scale} width={100 * scale} height={100 * scale}>
-            <div className="flex items-center justify-center w-full h-full">
-              <CartoonSnowflake className="w-full h-full text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.9)]" style={{ width: 70 * scale, height: 70 * scale }} />
-            </div>
-          </foreignObject>
+          <g transform={`translate(${hexHalfWidth - 35 * scale}, ${hexHalfHeight - 35 * scale})`}>
+            <CartoonSnowflake className="text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.9)]" size={70 * scale} />
+          </g>
         </motion.g>
       )}
       {shielded && (
         <motion.g animate={{ y: [0, -10 * scale, 0], scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ transformOrigin: `${hexHalfWidth}px ${hexHalfHeight}px` }}>
-          <foreignObject x={15 * scale} y={25 * scale} width={100 * scale} height={100 * scale}>
-            <div className="flex items-center justify-center w-full h-full">
-              <CartoonShield className="w-full h-full text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.9)]" style={{ width: 70 * scale, height: 70 * scale }} />
-            </div>
-          </foreignObject>
+          <g transform={`translate(${hexHalfWidth - 35 * scale}, ${hexHalfHeight - 35 * scale})`}>
+            <CartoonShield className="text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.9)]" size={70 * scale} />
+          </g>
         </motion.g>
       )}
     </motion.g>

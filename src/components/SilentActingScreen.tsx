@@ -51,7 +51,8 @@ const SilentActingScreen: React.FC<SilentActingScreenProps> = ({ config, questio
           )}
         </div>
         
-        <div className="bg-[var(--color-off-white)] p-6 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] border-4 border-[var(--color-ink-black)] mb-6 md:mb-10 shadow-[inner_4px_4px_0_rgba(0,0,0,0.1)]">
+        <div className="relative bg-[var(--color-off-white)] p-6 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] border-4 border-[var(--color-ink-black)] mb-6 md:mb-10 shadow-[inner_4px_4px_0_rgba(0,0,0,0.1)]">
+          {showWordToActor && <ReportButton question={activeQuestion} onReport={onOpenReport} />}
           <p className="text-xl md:text-3xl font-display mb-4 md:mb-6 text-[var(--color-bg-dark)]">الكلمة الحالية:</p>
           {showWordToActor ? (
             <>
@@ -60,7 +61,6 @@ const SilentActingScreen: React.FC<SilentActingScreenProps> = ({ config, questio
               )}
               <div className="flex items-center justify-center gap-4 mb-8">
                 <p className="text-4xl md:text-8xl font-display text-[var(--color-primary-blue)] drop-shadow-[1px_1px_0_var(--color-ink-black)] md:drop-shadow-[2px_2px_0_var(--color-ink-black)]">{activeQuestion.answer}</p>
-                <ReportButton question={activeQuestion} onReport={onOpenReport} />
               </div>
             </>
           ) : (

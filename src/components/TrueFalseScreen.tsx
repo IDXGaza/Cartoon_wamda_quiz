@@ -106,26 +106,26 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
     const winner = [...players].sort((a, b) => b.score - a.score)[0];
     return (
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[var(--color-ink-black)]/80 backdrop-blur-md animate-fade-in">
-        <div className="w-full max-w-lg rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 vintage-panel text-center relative overflow-hidden border-4 md:border-8 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] md:shadow-[15px_15px_0px_var(--color-ink-black)]">
+        <div className="w-full max-w-lg rounded-3xl md:rounded-[3rem] p-6 md:p-12 vintage-panel text-center relative overflow-hidden border-4 md:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[15px_15px_0px_var(--color-ink-black)]">
           <div className="relative z-10">
-            <div className="w-20 h-20 md:w-32 md:h-32 bg-[var(--color-primary-gold)] rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-6 md:mb-10 border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)] animate-bounce">
-              <CartoonStar className="w-12 h-12 md:w-20 md:h-20" />
+            <div className="w-16 h-16 md:w-32 md:h-32 bg-[var(--color-primary-gold)] rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-4 md:mb-10 border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)] animate-bounce">
+              <CartoonStar className="w-10 h-10 md:w-20 md:h-20" />
             </div>
-            <h2 className="text-3xl md:text-5xl font-black text-[var(--color-ink-black)] mb-4 md:mb-6 vintage-text">انتهت الجولة!</h2>
+            <h2 className="text-2xl md:text-5xl font-black text-[var(--color-ink-black)] mb-3 md:mb-6 vintage-text">انتهت الجولة!</h2>
             {(() => {
               const isWinnerDark = isColorDark(winner.color);
               return (
-                <div className={`inline-block px-6 md:px-10 py-4 md:py-6 rounded-2xl md:rounded-3xl text-2xl md:text-4xl font-black mb-6 md:mb-10 border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)] ${isWinnerDark ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`} style={{backgroundColor: winner.color}}>
+                <div className={`inline-block px-4 md:px-10 py-3 md:py-6 rounded-xl md:rounded-3xl text-xl md:text-4xl font-black mb-4 md:mb-10 border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)] ${isWinnerDark ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`} style={{backgroundColor: winner.color}}>
                   {winner.name} هو الفائز!
                 </div>
               );
             })()}
-            <p className="text-[var(--color-bg-dark)] font-bold text-lg md:text-xl mb-8 md:mb-12 bg-[var(--color-off-white)] p-6 md:p-8 rounded-2xl md:rounded-3xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+            <p className="text-[var(--color-bg-dark)] font-bold text-base md:text-xl mb-6 md:mb-12 bg-[var(--color-off-white)] p-4 md:p-8 rounded-xl md:rounded-3xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
               لقد جمعت {winner.score} نقطة من كشف الحقائق المذهلة!
             </p>
             <button 
               onClick={() => onFinish(players)}
-              className="vintage-button w-full py-4 md:py-6 rounded-2xl text-2xl md:text-3xl font-black bg-[var(--color-primary-gold)]"
+              className="vintage-button w-full py-3 md:py-6 rounded-xl md:rounded-2xl text-lg md:text-3xl font-black bg-[var(--color-primary-gold)]"
             >
               عرض النتائج النهائية
             </button>
@@ -138,23 +138,23 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
   return (
     <div className="flex flex-col items-center gap-4 md:gap-8 min-h-screen p-2 md:p-8 relative">
       {/* Scoreboard */}
-      <div className="w-full max-w-4xl grid grid-cols-2 gap-4 md:gap-6">
+      <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
             {players.map((p, idx) => {
               const isDark = isColorDark(p.color);
               return (
                 <div 
                   key={p.id}
-                  className={`p-4 md:p-6 rounded-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)] transition-all ${
+                  className={`p-2 sm:p-4 md:p-6 rounded-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)] transition-all ${
                     currentPlayerIndex === idx ? 'bg-[var(--color-primary-gold)] scale-[1.02] md:scale-105 z-10' : 'bg-[var(--color-off-white)] opacity-80'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2 md:gap-4">
-                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-lg md:text-xl border-2 border-[var(--color-ink-black)] shrink-0 ${isDark ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`} style={{backgroundColor: p.color}}>
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-sm sm:text-lg md:text-xl border-2 border-[var(--color-ink-black)] shrink-0 ${isDark ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`} style={{backgroundColor: p.color}}>
                       {p.score}
                     </div>
                     <div className="text-right flex-1 min-w-0">
-                      <p className="text-[10px] font-black text-[var(--color-bg-dark)] uppercase">لاعب {idx + 1}</p>
-                      <h3 className="text-sm md:text-xl font-black text-[var(--color-ink-black)] truncate">{p.name}</h3>
+                      <p className="text-[10px] sm:text-[11px] font-black text-[var(--color-bg-dark)] uppercase">لاعب {idx + 1}</p>
+                      <h3 className="text-xs sm:text-sm md:text-xl font-black text-[var(--color-ink-black)] truncate">{p.name}</h3>
                     </div>
                   </div>
                 </div>
@@ -163,15 +163,17 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
       </div>
 
       {/* Question Card */}
-      <div className="w-full max-w-3xl mt-4 md:mt-8">
+      <div className="w-full max-w-3xl mt-2 md:mt-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -50, opacity: 0 }}
-            className="vintage-panel p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] border-4 md:border-8 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] text-center relative overflow-hidden"
+            className="vintage-panel p-4 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] border-4 md:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] text-center relative overflow-hidden"
           >
+            <ReportButton question={currentQuestion} onReport={onOpenReport} />
+
             <div className="absolute top-0 left-0 right-0 h-3 md:h-4 bg-[var(--color-primary-gold)]/20">
               <motion.div 
                 initial={{ width: 0 }}
@@ -180,38 +182,37 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
               />
             </div>
 
-            <div className="mb-6 md:mb-8 flex justify-between items-center flex-wrap gap-2">
+            <div className="mb-4 sm:mb-8 flex justify-between items-center flex-wrap gap-2 mt-4">
               <div className="flex gap-2 items-center flex-wrap">
-                <span className="px-4 md:px-6 py-1 md:py-2 bg-[var(--color-accent-sky)] text-[var(--color-ink-black)] rounded-xl font-black border-2 border-[var(--color-ink-black)] shadow-[3px_3px_0px_var(--color-ink-black)] text-xs md:text-base">
+                <span className="px-3 sm:px-6 py-1 md:py-2 bg-[var(--color-accent-sky)] text-[var(--color-ink-black)] rounded-xl font-black border-2 border-[var(--color-ink-black)] shadow-[3px_3px_0px_var(--color-ink-black)] text-xs md:text-base">
                   {currentQuestion.category}
                 </span>
                 {currentQuestion.generatedBy && (
-                  <span className="px-3 md:px-4 py-1 bg-white text-[var(--color-ink-black)] rounded-xl font-bold border-2 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] text-[10px] md:text-xs flex items-center gap-1">
+                  <span className="px-2 sm:px-4 py-1 bg-white text-[var(--color-ink-black)] rounded-xl font-bold border-2 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] text-[10px] md:text-xs flex items-center gap-1">
                     <CartoonStar size={12} />
                     {currentQuestion.generatedBy}
                   </span>
                 )}
               </div>
-              <span className="text-lg md:text-2xl font-black text-[var(--color-ink-black)] vintage-text">
+              <span className="text-sm sm:text-2xl font-black text-[var(--color-ink-black)] vintage-text pl-12 font-display">
                 {currentIndex + 1} / {questions.length}
               </span>
             </div>
 
-            <h2 className="text-2xl md:text-5xl font-black text-[var(--color-ink-black)] leading-tight mb-8 md:mb-12 vintage-text text-center w-full">
+            <h2 className="text-base sm:text-2xl md:text-5xl font-black text-[var(--color-ink-black)] leading-tight mb-6 sm:mb-12 vintage-text text-center w-full px-4">
               <span>{currentQuestion.text}</span>
             </h2>
-            <ReportButton question={currentQuestion} onReport={onOpenReport} />
 
             {gameState === 'question' ? (
-              <div className="grid grid-cols-2 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6">
                 <button
                   onClick={() => {
                     playSound('click');
                     handleAnswer('صواب');
                   }}
-                  className="vintage-button py-6 md:py-8 bg-[var(--color-primary-green)] text-white text-2xl md:text-3xl font-black flex flex-col items-center gap-2"
+                  className="vintage-button py-3 sm:py-6 md:py-8 bg-[var(--color-primary-green)] text-white text-lg sm:text-2xl md:text-3xl font-black flex flex-col items-center gap-1 sm:gap-2"
                 >
-                  <CartoonCheck size={40} className="md:w-12 md:h-12" />
+                  <CartoonCheck size={28} className="sm:w-10 sm:h-10 md:w-12 md:h-12" />
                   <span>صواب</span>
                 </button>
                 <button
@@ -219,9 +220,9 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
                     playSound('click');
                     handleAnswer('خطأ');
                   }}
-                  className="vintage-button py-6 md:py-8 bg-[var(--color-primary-red)] text-white text-2xl md:text-3xl font-black flex flex-col items-center gap-2"
+                  className="vintage-button py-3 sm:py-6 md:py-8 bg-[var(--color-primary-red)] text-white text-lg sm:text-2xl md:text-3xl font-black flex flex-col items-center gap-1 sm:gap-2"
                 >
-                  <CartoonX size={40} className="md:w-12 md:h-12" />
+                  <CartoonX size={28} className="sm:w-10 sm:h-10 md:w-12 md:h-12" />
                   <span>خطأ</span>
                 </button>
               </div>

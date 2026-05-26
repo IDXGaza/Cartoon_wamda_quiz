@@ -52,20 +52,20 @@ const StartScreen: React.FC<Props> = ({ onStart }) => {
         initial={{ scale: 0.5, opacity: 0, rotate: -5 }}
         animate={{ scale: 1, opacity: 1, rotate: 0 }}
         transition={{ type: "spring", damping: 12, stiffness: 100 }}
-        className="relative mb-12"
+        className="relative mb-6 sm:mb-12"
       >
-        <div className="w-48 h-48 md:w-64 md:h-64 bg-white rounded-[3rem] border-8 border-[var(--color-ink-black)] shadow-[12px_12px_0px_var(--color-ink-black)] flex items-center justify-center relative z-10 overflow-hidden group">
+        <div className="w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-white rounded-2xl sm:rounded-[3rem] border-4 sm:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] sm:shadow-[12px_12px_0px_var(--color-ink-black)] flex items-center justify-center relative z-10 overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary-gold)]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <CartoonRocket size={120} className="text-[var(--color-primary-red)] group-hover:scale-110 transition-transform duration-500" />
+          <CartoonRocket size={80} className="w-16 h-16 sm:w-32 sm:h-32 md:w-40 md:h-40 text-[var(--color-primary-red)] group-hover:scale-110 transition-transform duration-500" />
         </div>
         
         {/* Decorative badge */}
         <motion.div
           animate={{ rotate: [0, 10, -10, 0] }}
           transition={{ duration: 4, repeat: Infinity }}
-          className="absolute -top-6 -right-6 bg-[var(--color-primary-gold)] border-4 border-[var(--color-ink-black)] p-4 rounded-2xl shadow-[4px_4px_0px_var(--color-ink-black)] z-20"
+          className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 bg-[var(--color-primary-gold)] border-2 sm:border-4 border-[var(--color-ink-black)] p-2 sm:p-4 rounded-xl sm:rounded-2xl shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[4px_4px_0px_var(--color-ink-black)] z-20"
         >
-          <CartoonSparkles size={32} className="text-[var(--color-ink-black)]" />
+          <CartoonSparkles size={20} className="text-[var(--color-ink-black)] sm:w-8 sm:h-8" />
         </motion.div>
       </motion.div>
 
@@ -73,12 +73,12 @@ const StartScreen: React.FC<Props> = ({ onStart }) => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="space-y-4"
+        className="space-y-2 sm:space-y-4"
       >
-        <h1 className="text-6xl md:text-8xl font-black text-[var(--color-ink-black)] vintage-text drop-shadow-[4px_4px_0px_white]">
+        <h1 className="text-4xl sm:text-6xl md:text-8xl font-black text-[var(--color-ink-black)] vintage-text drop-shadow-[2px_2px_0px_white] sm:drop-shadow-[4px_4px_0px_white]">
           ومضة
         </h1>
-        <p className="text-2xl md:text-3xl font-display text-[var(--color-bg-dark)] font-bold opacity-80">
+        <p className="text-lg sm:text-2xl md:text-3xl font-display text-[var(--color-bg-dark)] font-bold opacity-80">
           تحدي الذكاء.. بمتعة الكرتون!
         </p>
       </motion.div>
@@ -87,20 +87,20 @@ const StartScreen: React.FC<Props> = ({ onStart }) => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="mt-16"
+        className="mt-8 sm:mt-16"
       >
         <button
           onClick={() => {
             playSound('click');
             onStart();
           }}
-          className="group relative inline-flex items-center gap-6 bg-[var(--color-primary-green)] text-white px-12 py-6 rounded-[2.5rem] text-4xl font-black border-4 border-[var(--color-ink-black)] shadow-[0px_10px_0px_#1a3a2a] hover:translate-y-1 hover:shadow-[0px_6px_0px_#1a3a2a] active:translate-y-2 active:shadow-none transition-all"
+          className="group relative inline-flex items-center gap-3 sm:gap-6 bg-[var(--color-primary-green)] text-white px-6 py-3 sm:px-12 sm:py-6 rounded-xl sm:rounded-[2.5rem] text-xl sm:text-4xl font-black border-4 border-[var(--color-ink-black)] shadow-[0px_6px_0px_#1a3a2a] sm:shadow-[0px_10px_0px_#1a3a2a] hover:translate-y-1 hover:shadow-[0px_6px_0px_#1a3a2a] active:translate-y-2 active:shadow-none transition-all"
         >
           <span>ابدأ الآن</span>
-          <CartoonBot size={48} className="group-hover:rotate-12 transition-transform" />
+          <CartoonBot size={28} className="sm:w-12 sm:h-12 group-hover:rotate-12 transition-transform" />
           
           {/* Shine effect */}
-          <div className="absolute inset-x-0 top-0 h-1/2 bg-white/20 rounded-t-[2rem]"></div>
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-white/20 rounded-t-[1.5rem] sm:rounded-t-[2rem]"></div>
         </button>
       </motion.div>
 
@@ -108,7 +108,7 @@ const StartScreen: React.FC<Props> = ({ onStart }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="mt-12 text-sm font-bold text-[var(--color-bg-dark)]/50 uppercase tracking-widest"
+        className="mt-6 sm:mt-12 text-xs sm:text-sm font-bold text-[var(--color-bg-dark)]/50 uppercase tracking-widest"
       >
         Version 2.0 • Powered by Gemini AI
       </motion.div>
