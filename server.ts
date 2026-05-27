@@ -71,14 +71,23 @@ app.post("/api/generate-questions", async (req, res) => {
     const key = apiKeys?.gemini || process.env.GEMINI_API_KEY;
     
     if (!key) {
+      console.warn("Gemini API key is not set in environment or request body!");
       return res.status(400).json({ error: "Missing Gemini API key" });
     }
 
     const { GoogleGenAI } = await import("@google/genai");
-    const genAI = new GoogleGenAI({ apiKey: key });
+    const genAI = new GoogleGenAI({ 
+      apiKey: key,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
 
+    const targetModel = model || "gemini-3.5-flash";
     const result = await genAI.models.generateContent({
-      model: model || "gemini-1.5-flash",
+      model: targetModel,
       contents: [{ role: "user", parts: [{ text: promptText }] }],
       config: {
         systemInstruction: systemInstruction || undefined,
@@ -89,7 +98,7 @@ app.post("/api/generate-questions", async (req, res) => {
     const text = result.text || "";
     return res.json({ text });
   } catch (error: any) {
-    console.error("Internal API Error:", error);
+    console.error("Internal API Error in /api/generate-questions:", error);
     return res.status(500).json({ error: error.message });
   }
 });

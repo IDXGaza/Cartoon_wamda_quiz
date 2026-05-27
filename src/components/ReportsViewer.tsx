@@ -364,7 +364,8 @@ export const ReportsViewer: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed response from server API");
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.error || "Failed response from server API");
       }
 
       const rawData = await response.json();
@@ -461,11 +462,16 @@ export const ReportsViewer: React.FC = () => {
         }
       }
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI assistant execution failure:", err);
+      const errMsg = err?.message || '';
+      let errorReply = 'عذراً يا فندم، تعذر معالجة طلبك برمجياً. تأكد من صياغة طلبك باللغة العربية بوضوح وسأحاول محاكاته وتنفيذه بالكامل!';
+      if (errMsg.includes('key') || errMsg.includes('Key') || errMsg.includes('API_KEY')) {
+        errorReply = 'عذراً يا فندم، يبدو أن مفتاح API الخاص بـ Gemini غير مهيأ بعد أو غير صالح. يرجى التأكد من تهيئته في قائمة الإعدادات قبل استخدام المساعد الذكي! 🔑';
+      }
       setAssistantMessages(prev => [...prev, { 
         sender: 'bot', 
-        text: 'عذراً يا فندم، تعذر معالجة طلبك برمجياً. تأكد من صياغة طلبك باللغة العربية بوضوح وسأحاول محاكاته وتنفيذه بالكامل!', 
+        text: errorReply, 
         timestamp: new Date() 
       }]);
     } finally {
