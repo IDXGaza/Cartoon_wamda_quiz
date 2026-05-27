@@ -24,6 +24,7 @@ import SettingsModal from './components/SettingsModal';
 import ReportScreen from './components/ReportScreen';
 import ReportsViewer from './components/ReportsViewer';
 import BankManager from './components/BankManager';
+// import GuideScreen from './components/GuideScreen';
 import { useSettings } from './contexts/SettingsContext';
 import { useToast } from './contexts/ToastContext';
 import { playSound } from './utils/sound';
@@ -336,23 +337,23 @@ const App: React.FC = () => {
               }}
             >
               <div className="w-10 h-10 md:w-14 md:h-14 bg-[var(--color-primary-gold)] rounded-xl flex items-center justify-center text-[var(--color-ink-black)] border-2 md:border-4 border-[var(--color-ink-black)] group-hover:rotate-12 transition-transform shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">
-                <CartoonRocket size={24} className="md:w-[32px] md:h-[32px]" />
+                <CartoonRocket size={24} className="w-6 h-6 md:w-8 md:h-8" />
               </div>
               <div className="flex flex-col">
                 <h1 className="text-xl md:text-3xl font-bold text-[var(--color-ink-black)] leading-none vintage-text">ومضة</h1>
               </div>
             </motion.div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 md:gap-3">
               {gameState !== 'config' && gameState !== 'loading' && gameState !== 'library' && gameState !== 'start' && (
                 <button 
                   onClick={() => {
                     playSound('click');
                     handleReset();
                   }} 
-                  className="vintage-button bg-[var(--color-primary-red)] text-white px-3 py-2 md:px-6 md:py-3 rounded-xl text-sm md:text-md flex items-center gap-2 md:gap-3"
+                  className="vintage-button bg-[var(--color-primary-red)] text-white px-2 py-2 md:px-6 md:py-3 rounded-xl text-xs md:text-md flex items-center gap-1 md:gap-3"
                 >
-                  <CartoonX size={20} className="md:w-[24px] md:h-[24px]" /> <span className="hidden md:inline">إلغاء</span>
+                  <CartoonX size={16} className="w-4 h-4 md:w-6 md:h-6" /> <span className="hidden md:inline">إلغاء</span>
                 </button>
               )}
               {gameState === 'config' && (
@@ -364,21 +365,44 @@ const App: React.FC = () => {
                   playSound('click');
                   toggleFullScreen();
                 }} 
-                className="vintage-button w-10 h-10 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl"
+                className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl shrink-0"
                 title="ملء الشاشة"
               >
-                <CartoonEye size={24} className="md:w-[44px] md:h-[44px]" />
+                <CartoonEye size={20} className="w-5 h-5 md:w-11 md:h-11" />
               </button>
               <button 
                 onClick={() => {
                   playSound('click');
                   setIsSettingsOpen(true);
                 }} 
-                className="vintage-button w-10 h-10 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl"
+                className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl shrink-0"
                 title="الإعدادات"
               >
-                <CartoonGear size={24} className="md:w-[44px] md:h-[44px] animate-spin-slow" />
+                <CartoonGear size={20} className="w-5 h-5 md:w-11 md:h-11 animate-spin-slow" />
               </button>
+              <button 
+                onClick={() => {
+                  playSound('click');
+                  window.location.pathname = '/reports';
+                }} 
+                className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center bg-orange-100 rounded-xl md:rounded-2xl shrink-0 text-center"
+                title="لوحة الإدارة واكتشاف البلاغات"
+                id="header-admin-panel-btn"
+              >
+                <span className="text-lg md:text-2xl leading-none">🛡️</span>
+              </button>
+              {/* 
+              <button                
+                onClick={() => {                
+                  playSound('click');                
+                  setGameState('guide');
+                }}                
+                className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl bg-[var(--color-primary-gold)] shrink-0"                
+                title="دليل اللعب"
+              >                
+                <CartoonBook size={20} className="md:w-[44px] md:h-[44px]" />
+              </button>
+              */}
             </div>
           </div>
         </header>

@@ -52,6 +52,7 @@ const CATEGORY_CLASSIFICATIONS = [
 ];
 
 import { getUserCustomCategories, UserCategory } from '../services/categoryService';
+import { generateQuestions } from '../services/geminiService';
 // ... (imports)
 const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const { settings } = useSettings();
@@ -79,6 +80,26 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [buzzerTimeout, setBuzzerTimeout] = useState<number>(20);
   const [isRestrictedMode, setIsRestrictedMode] = useState<boolean>(true);
   const [inputMethod, setInputMethod] = useState<'manual' | 'bank'>('bank');
+
+  const [activeFeats, setActiveFeats] = useState<any[]>([]);
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('app_features');
+      if (saved) {
+        setActiveFeats(JSON.parse(saved).filter((f: any) => f.isEnabled));
+      } else {
+        const defaultFeats = [
+          { id: 'visual_spark', name: 'المؤثرات البصرية الفائقة ✨', isEnabled: true },
+          { id: 'double_chance', name: 'حصانة الإجابة الثانية 🛡️', isEnabled: false },
+          { id: 'ai_hints', name: 'تلميحات الذكاء الفوري 💡', isEnabled: true },
+          { id: 'cartoon_vfx', name: 'الموسيقى والأصوات المفرحة 🎵', isEnabled: true }
+        ];
+        setActiveFeats(defaultFeats.filter(f => f.isEnabled));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   React.useEffect(() => {
     setIsRestrictedMode(mode === GameMode.GRID || mode === GameMode.HEX_GRID || mode === GameMode.LISTING);
@@ -565,6 +586,21 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               </button>
             </div>
           </div>
+          
+          {/* Active Features indicators indicator dynamically loaded */}
+          {activeFeats && activeFeats.length > 0 && (
+            <div className="mt-8 p-3 bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-2xl max-w-xl mx-auto flex flex-wrap justify-center items-center gap-1.5" id="active-features-indicator-box">
+              <span className="text-xs font-black text-indigo-700 ml-1">🚀 الميزات النشطة حالياً:</span>
+              {activeFeats.map((feat) => (
+                <span 
+                  key={feat.id}
+                  className="px-2 py-0.5 bg-white border-2 border-black text-[10px] md:text-xs font-black rounded-lg shadow-[2px_2px_0px_black] text-[var(--color-ink-black)]"
+                >
+                  {feat.name}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-12 relative z-10">
