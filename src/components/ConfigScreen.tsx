@@ -44,11 +44,11 @@ const JEOPARDY_SETS = [
 
 const CATEGORY_CLASSIFICATIONS = [
   { name: "العلوم والطبيعة", icon: "🧬", color: "bg-emerald-500", categories: ['علوم', 'فضاء وتقنية', 'الفضاء', 'فضاء', 'جسم الإنسان', 'أحياء', 'كيمياء', 'فيزياء', 'طب', 'طبيعة', 'حيوانات', 'مملكة الحيوان'] },
-  { name: "اطلس", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ', 'التاريخ', 'العملات', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي', 'العواصم العالمية', 'الحرب العالمية الأولى والثانية'] },
-  { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء', 'الدين', 'حياة المعصومين', 'إكمال الدعاء', 'اكمال الدعاء', 'فقه السيد السيستاني', 'القرآن'] },
-  { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم', 'فورمولا 1'] },
+  { name: "اطلس", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ', 'التاريخ', 'العملات', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي', 'العواصم العالمية', 'الحرب العالمية الأولى والثانية', 'ما هي الدولة؟'] },
+  { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء', 'الدين', 'حياة المعصومين', 'إكمال الدعاء', 'اكمال الدعاء', 'فقه السيد السيستاني', 'القرآن', 'قصص الأنبياء'] },
+  { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم', 'فورمولا 1', 'فورميلا 1'] },
   { name: "مسلسلات و انمي", icon: "🎬", color: "bg-purple-500", categories: ['Game of Thrones', 'ون بيس', 'هجوم العمالقة', 'كرتون', 'Breaking Bad', 'Dexter'] },
-  { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['رياضة', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'هاري بوتر', 'الدن رينج', 'ذكاء', 'سيارات', 'التقنية'] }
+  { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['رياضة', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'هاري بوتر', 'الدن رينج', 'ذكاء', 'سيارات', 'التقنية', 'مورتال كومبات', 'تكن', 'the last of us'] }
 ];
 
 import { getUserCustomCategories, UserCategory } from '../services/categoryService';
@@ -81,25 +81,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [isRestrictedMode, setIsRestrictedMode] = useState<boolean>(true);
   const [inputMethod, setInputMethod] = useState<'manual' | 'bank'>('bank');
 
-  const [activeFeats, setActiveFeats] = useState<any[]>([]);
-  React.useEffect(() => {
-    try {
-      const saved = localStorage.getItem('app_features');
-      if (saved) {
-        setActiveFeats(JSON.parse(saved).filter((f: any) => f.isEnabled));
-      } else {
-        const defaultFeats = [
-          { id: 'visual_spark', name: 'المؤثرات البصرية الفائقة ✨', isEnabled: true },
-          { id: 'double_chance', name: 'حصانة الإجابة الثانية 🛡️', isEnabled: false },
-          { id: 'ai_hints', name: 'تلميحات الذكاء الفوري 💡', isEnabled: true },
-          { id: 'cartoon_vfx', name: 'الموسيقى والأصوات المفرحة 🎵', isEnabled: true }
-        ];
-        setActiveFeats(defaultFeats.filter(f => f.isEnabled));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
+  // ... (activeFeats state removed)
 
   React.useEffect(() => {
     setIsRestrictedMode(mode === GameMode.GRID || mode === GameMode.HEX_GRID || mode === GameMode.LISTING);
@@ -544,8 +526,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   };
 
   return (
-    <div className="min-h-screen py-6 md:py-12 px-2 md:px-4 relative z-10">
-      <div className="vintage-panel rounded-3xl md:rounded-[3rem] p-4 md:p-12 max-w-5xl mx-auto animate-fade-up relative overflow-hidden">
+    <div className="min-h-screen pt-6 pb-6 md:pt-12 md:pb-12 px-2 md:px-4 relative z-10">
+      <div className="vintage-panel rounded-3xl md:rounded-[3rem] p-4 md:p-12 max-w-5xl mx-auto animate-fade-up relative">
         <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/20 blur-[100px] rounded-full mix-blend-screen pointer-events-none"></div>
         <div className="absolute bottom-[-20%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/20 blur-[100px] rounded-full mix-blend-screen pointer-events-none"></div>
         
@@ -588,19 +570,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           </div>
           
           {/* Active Features indicators indicator dynamically loaded */}
-          {activeFeats && activeFeats.length > 0 && (
-            <div className="mt-8 p-3 bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-2xl max-w-xl mx-auto flex flex-wrap justify-center items-center gap-1.5" id="active-features-indicator-box">
-              <span className="text-xs font-black text-indigo-700 ml-1">🚀 الميزات النشطة حالياً:</span>
-              {activeFeats.map((feat) => (
-                <span 
-                  key={feat.id}
-                  className="px-2 py-0.5 bg-white border-2 border-black text-[10px] md:text-xs font-black rounded-lg shadow-[2px_2px_0px_black] text-[var(--color-ink-black)]"
-                >
-                  {feat.name}
-                </span>
-              ))}
-            </div>
-          )}
+          {/* Deleted as requested */}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-12 relative z-10">

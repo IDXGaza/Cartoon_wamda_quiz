@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { GameConfig, Player, Question, GameMode } from '../types';
+import { GameConfig, Player, Question, GameMode, QuestionType } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 import { generateQuestions, getQuestionsFromBank, shuffleArray } from '../services/geminiService';
 import { updateQuestionStats } from '../services/vaultService';
@@ -90,7 +90,7 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
           const aiQuestions = await generateQuestions(
             config.topic || 'عام',
             5 - newQuestions.length,
-            config.questionTypes,
+            config.questionTypes.filter(t => t !== QuestionType.TRUE_FALSE),
             GameMode.TIMED,
             config.difficulty,
             settings.aiModel,

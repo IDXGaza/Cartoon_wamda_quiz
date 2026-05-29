@@ -105,7 +105,7 @@ const App: React.FC = () => {
       const { getDocFromServer, doc } = await import('firebase/firestore');
       // We use a timeout to avoid hanging indefinitely if the connection is really stuck
       const loadPromise = getDocFromServer(doc(db, '_connectivity_test_', 'ping'));
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000));
       
       await Promise.race([loadPromise, timeoutPromise]);
       console.log("Firebase connection successful");
@@ -379,17 +379,6 @@ const App: React.FC = () => {
                 title="الإعدادات"
               >
                 <CartoonGear size={20} className="w-5 h-5 md:w-11 md:h-11 animate-spin-slow" />
-              </button>
-              <button 
-                onClick={() => {
-                  playSound('click');
-                  window.location.pathname = '/reports';
-                }} 
-                className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center bg-orange-100 rounded-xl md:rounded-2xl shrink-0 text-center"
-                title="لوحة الإدارة واكتشاف البلاغات"
-                id="header-admin-panel-btn"
-              >
-                <span className="text-lg md:text-2xl leading-none">🛡️</span>
               </button>
               {/* 
               <button                

@@ -88,7 +88,16 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   const [stolenCells, setStolenCells] = useState<Record<string, boolean>>({}); // cellId -> wasStolen
   const [activePower, setActivePower] = useState<{type: PowerType, playerId: string} | null>(null);
   const [powerInUse, setPowerInUse] = useState<PowerType | null>(null);
-  
+
+  useEffect(() => {
+    if (activeQuestion) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [activeQuestion]);
+
   const handlePass = () => {
     if (isStealTurn) {
         //Already passed once, time ran out on 2nd team too
