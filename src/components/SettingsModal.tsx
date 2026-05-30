@@ -75,24 +75,28 @@ const SettingsModal: React.FC = () => {
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="vintage-panel w-full max-w-md p-10 relative max-h-[90vh] overflow-y-auto custom-scrollbar rounded-[3rem] border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] bg-[var(--color-bg-cream)]"
+            className="vintage-panel vintage-panel-animate w-full max-w-md p-5 pb-5 md:p-8 md:pb-8 relative max-h-[90vh] flex flex-col rounded-[3rem] border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] bg-[var(--color-bg-cream)] overflow-hidden"
           >
-            <button 
-              onClick={() => {
-                playSound('click');
-                setIsSettingsOpen(false);
-              }}
-              className="absolute top-6 left-6 w-14 h-14 bg-[var(--color-primary-red)] text-white rounded-2xl flex items-center justify-center hover:scale-110 transition-transform border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none"
-            >
-              <CartoonX size={32} />
-            </button>
-        
-        <h2 className="text-4xl font-display text-[var(--color-ink-black)] mb-10 flex items-center gap-4">
-          <CartoonGear size={48} className="animate-spin-slow" />
-          <span>الإعدادات</span>
-        </h2>
+            {/* Fixed Header: Title and Static Close Button */}
+            <div className="flex items-center justify-between mb-4 md:mb-6 shrink-0 z-20">
+              <h2 className="text-3xl md:text-4xl font-display text-[var(--color-ink-black)] flex items-center gap-3">
+                <CartoonGear size={36} className="animate-spin-slow" />
+                <span>الإعدادات</span>
+              </h2>
+              <button 
+                onClick={() => {
+                  playSound('click');
+                  setIsSettingsOpen(false);
+                }}
+                className="w-12 h-12 bg-[var(--color-primary-red)] text-white rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform border-4 border-[var(--color-ink-black)] shadow-[3px_3px_0px_var(--color-ink-black)] active:translate-y-0.5 active:shadow-none shrink-0"
+              >
+                <CartoonX size={24} />
+              </button>
+            </div>
 
-        <div className="space-y-10 bg-[var(--color-off-white)] p-8 rounded-[2.5rem] border-4 border-[var(--color-ink-black)] shadow-[inner_4px_4px_0px_rgba(0,0,0,0.1)]">
+            {/* Scrollable container for parameters - wrapped in an overflow-hidden rounded container to prevent scrollbars from clipping the rounded corners */}
+            <div className="flex-1 rounded-[2rem] border-4 border-[var(--color-ink-black)] bg-[var(--color-off-white)] shadow-[inner_4px_4px_0px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col">
+              <div className="overflow-y-auto custom-scrollbar flex-1 p-4 md:p-8 space-y-6 md:space-y-8">
           {/* AI Connection Test */}
           <div className="space-y-4">
             <div className="flex flex-col gap-3">
@@ -205,6 +209,7 @@ const SettingsModal: React.FC = () => {
               <span>تصفير الأسئلة الملعوبة (السماح بتكرار الأسئلة السابقة)</span>
             </button>
           </div>
+        </div>
         </div>
       </motion.div>
     </motion.div>

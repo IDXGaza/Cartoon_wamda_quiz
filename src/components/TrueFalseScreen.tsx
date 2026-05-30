@@ -136,7 +136,7 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 md:gap-8 min-h-screen p-2 md:p-8 relative">
+    <div className="flex flex-col items-center gap-4 md:gap-8 p-2 md:p-8 relative">
       {/* Scoreboard */}
       <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
             {players.map((p, idx) => {

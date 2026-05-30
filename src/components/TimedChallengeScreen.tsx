@@ -279,7 +279,7 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 md:gap-10 py-4 md:py-8 min-h-screen relative overflow-hidden">
+    <div className="flex flex-col items-center gap-6 md:gap-10 py-4 md:py-8 relative overflow-hidden">
       
       {/* Header: Timer and Scores */}
       <div className="relative flex flex-wrap justify-center items-center gap-3 md:gap-6 w-full max-w-7xl px-4 py-4">

@@ -397,7 +397,7 @@ const App: React.FC = () => {
         </header>
       )}
 
-      <main className={`${gameState === 'remote' ? 'w-full h-full' : 'container mx-auto px-2 md:px-4 py-4 md:py-12 max-w-7xl'} relative z-10`}>
+      <main className={`${gameState === 'remote' ? 'w-full h-full' : 'container mx-auto px-2 md:px-4 pt-2 pb-2 md:pt-8 md:pb-12 max-w-7xl'} relative z-10`}>
         <AnimatePresence mode="wait">
           {!isAuthReady ? (
             <motion.div 

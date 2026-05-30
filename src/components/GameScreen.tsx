@@ -581,7 +581,6 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   }, [questions, config.mode, config.categories]);
 
   const fetchAndSetQuestion = async (q: Question) => {
-    setIsLoadingQuestion(true);
     try {
       // Use the local bank
       const bank = QUESTION_BANK[config.mode] || [];
@@ -591,6 +590,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       console.log("DEBUG: fetchAndSetQuestion targetDifficulty:", targetDifficulty);
 
       // Try to find matches based on category or letter
+      const playedHashes = new Set(getPlayedQuestionHashes());
       const matches = bank.filter(bq => {
         // In Jeopardy mode (GRID), we want strict matches for the column
         const catMatch = config.mode === GameMode.GRID 
@@ -603,7 +603,6 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                           (targetDifficulty === 'expert' && bq.difficulty.toLowerCase() === 'hard');
         
         // Filter out played questions
-        const playedHashes = new Set(getPlayedQuestionHashes());
         const alreadyPlayed = playedHashes.has(getQuestionHash(bq));
 
         if (catMatch && diffMatch && !alreadyPlayed) {
@@ -638,8 +637,6 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       }
     } catch (err) {
       showToast("خطأ في جلب السؤال", "error");
-    } finally {
-      setIsLoadingQuestion(false);
     }
   };
 
@@ -1433,7 +1430,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 md:gap-8 min-h-screen p-2 md:p-8 relative">
+    <div className="flex flex-col items-center gap-4 md:gap-8 p-2 md:p-8 relative">
       
       {/* Scoreboard */}
       <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-8 relative z-10">

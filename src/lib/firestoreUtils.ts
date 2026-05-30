@@ -49,14 +49,20 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   console.error('Firestore Error: ', JSON.stringify(errInfo));
 
   // Determine if this is an offline or network error
+  const errCode = error && typeof error === 'object' && 'code' in error ? String((error as any).code) : '';
   const isNetworkOrOffline = 
     errMsg.toLowerCase().includes('offline') || 
     errMsg.toLowerCase().includes('network') || 
     errMsg.toLowerCase().includes('unavailable') ||
-    errMsg.toLowerCase().includes('internet');
+    errMsg.toLowerCase().includes('internet') ||
+    errMsg.toLowerCase().includes('failed to get document') ||
+    errMsg.toLowerCase().includes('connection') ||
+    errCode === 'unavailable' ||
+    errCode === 'failed-precondition' ||
+    errCode === 'cancelled';
 
-  if (isNetworkOrOffline) {
-    console.warn(`[Offline Mode] Firestore operation '${operationType}' deferred/bypassed on path '${path}' due to offline or connection failure:`, errMsg);
+  if (isNetworkOrOffline || errCode !== '') {
+    console.warn(`[Offline/Graceful Mode] Firestore operation '${operationType}' deferred/bypassed on path '${path}' due to connection/auth failure:`, errMsg, "Code:", errCode);
     return; // return/exit gracefully instead of throwing a fatal error
   }
 

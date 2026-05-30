@@ -45,7 +45,7 @@ export const PROPHETS_QUESTIONS: BankQuestion[] = [
   {
     id: "prophets_6",
     category: "قصص الأنبياء",
-    text: "من هو أول البشر وخاتم الأنبياء والرسل؟",
+    text: "من هو خاتم الأنبياء والرسل؟",
     answer: "محمد صلى الله عليه وسلم",
     difficulty: "beginner",
     points: 100

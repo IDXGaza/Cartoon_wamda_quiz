@@ -19,7 +19,11 @@ export const getUserCustomCategories = async (): Promise<UserCategory[]> => {
         }
         return [];
     } catch (err) {
-        handleFirestoreError(err, OperationType.GET, USERS_COLLECTION);
+        try {
+            handleFirestoreError(err, OperationType.GET, USERS_COLLECTION);
+        } catch (e) {
+            console.warn("Bypassed firestore category fetch error in offline mode:", e);
+        }
         return [];
     }
 };
@@ -39,6 +43,10 @@ export const addUserCustomCategory = async (categoryName: string, topicName: str
              console.warn("User document not found, skipping custom category addition");
         }
     } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, USERS_COLLECTION);
+        try {
+            handleFirestoreError(err, OperationType.WRITE, USERS_COLLECTION);
+        } catch (e) {
+            console.warn("Bypassed firestore category write error:", e);
+        }
     }
 };

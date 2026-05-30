@@ -47,7 +47,7 @@ const CATEGORY_CLASSIFICATIONS = [
   { name: "اطلس", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ', 'التاريخ', 'العملات', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي', 'العواصم العالمية', 'الحرب العالمية الأولى والثانية', 'ما هي الدولة؟'] },
   { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء', 'الدين', 'حياة المعصومين', 'إكمال الدعاء', 'اكمال الدعاء', 'فقه السيد السيستاني', 'القرآن', 'قصص الأنبياء'] },
   { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم', 'فورمولا 1', 'فورميلا 1'] },
-  { name: "مسلسلات و انمي", icon: "🎬", color: "bg-purple-500", categories: ['Game of Thrones', 'ون بيس', 'هجوم العمالقة', 'كرتون', 'Breaking Bad', 'Dexter'] },
+  { name: "مسلسلات و انمي", icon: "🎬", color: "bg-purple-500", categories: ['Game of Thrones', 'ون بيس', 'هجوم العمالقة', 'كرتون', 'Breaking Bad', 'Dexter', 'hunter x hunter'] },
   { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['رياضة', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'هاري بوتر', 'الدن رينج', 'ذكاء', 'سيارات', 'التقنية', 'مورتال كومبات', 'تكن', 'the last of us'] }
 ];
 
@@ -526,10 +526,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   };
 
   return (
-    <div className="min-h-screen pt-6 pb-6 md:pt-12 md:pb-12 px-2 md:px-4 relative z-10">
-      <div className="vintage-panel rounded-3xl md:rounded-[3rem] p-4 md:p-12 max-w-5xl mx-auto animate-fade-up relative">
-        <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/20 blur-[100px] rounded-full mix-blend-screen pointer-events-none"></div>
-        <div className="absolute bottom-[-20%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/20 blur-[100px] rounded-full mix-blend-screen pointer-events-none"></div>
+    <div className="pt-1 pb-1 md:pb-6 px-1 md:px-4 relative z-10">
+      <div className="vintage-panel rounded-3xl md:rounded-[3rem] p-3 md:p-12 max-w-5xl mx-auto animate-fade-up relative">
         
         <div className="text-center mb-8 md:mb-16 relative z-10">
           <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-[var(--color-primary-gold)] rounded-2xl md:rounded-3xl mb-4 md:mb-6 border-2 md:border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)]">
@@ -537,45 +535,13 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           </div>
           <h1 className="text-3xl md:text-7xl font-bold mb-4 text-[var(--color-ink-black)] vintage-text">إعداد المسابقة</h1>
           
-          {/* Join Room Section */}
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <p className="text-lg font-bold text-[var(--color-bg-dark)]">لديك رمز غرفة؟</p>
-            <div className="flex gap-2 w-full max-w-sm">
-              <input 
-                type="text" 
-                placeholder="أدخل الرمز هنا..." 
-                className="vintage-input flex-1 p-4 text-center font-display"
-                id="room-code-input"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const code = (e.target as HTMLInputElement).value.trim().toUpperCase();
-                    if (code) window.location.href = `?mode=remote&roomId=${code}`;
-                  }
-                }}
-              />
-              <button 
-                type="button"
-                onClick={() => {
-                  playSound('click');
-                  const input = document.getElementById('room-code-input') as HTMLInputElement;
-                  const code = input.value.trim().toUpperCase();
-                  if (code) window.location.href = `?mode=remote&roomId=${code}`;
-                  else showToast("الرجاء إدخال رمز الغرفة", "warning");
-                }}
-                className="vintage-button bg-[var(--color-primary-blue)] text-white px-6"
-              >
-                انضمام
-              </button>
-            </div>
-          </div>
-          
           {/* Active Features indicators indicator dynamically loaded */}
           {/* Deleted as requested */}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-12 relative z-10">
+        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-12 relative z-10">
           {/* Game Mode Selection */}
-          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-8 vintage-panel p-4 sm:p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-indigo-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
               <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-primary-gold)] border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-ink-black)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">1</div>
@@ -627,7 +593,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           </motion.div>
 
           {/* Topic Selection */}
-          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-8 vintage-panel p-4 sm:p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6">
               <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-accent-sky)] border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-ink-black)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">2</div>
@@ -897,7 +863,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
 
 
           {/* Input Method Selection */}
-          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-8 vintage-panel p-4 sm:p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden group">
+          <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-green)]"></div>
             <div className="flex items-center gap-4 mb-6">
               <div className="w-14 h-14 rounded-xl bg-[var(--color-primary-green)] border-4 border-[var(--color-ink-black)] flex items-center justify-center text-white font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">3</div>
@@ -1096,7 +1062,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
 
           <div className="mt-12 flex flex-col lg:flex-row justify-center gap-6 items-start w-full max-w-5xl mx-auto">
             {/* Players and Difficulty */}
-            <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-8 vintage-panel p-6 md:p-10 rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl">
+            <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-4 md:space-y-8 vintage-panel p-4 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl">
               <div className="absolute top-0 right-0 w-2 h-full bg-violet-500"></div>
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 rounded-xl bg-violet-500/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-violet-600 font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">4</div>
@@ -1157,31 +1123,34 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 animate={{ opacity: 1, scale: 1 }} 
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.4 }}
-                className="space-y-8 vintage-panel p-8 md:p-10 rounded-[2.5rem] relative overflow-hidden group border-4 border-dashed border-[var(--color-primary-gold)] w-full max-w-2xl"
+                className="space-y-4 md:space-y-6 vintage-panel p-3 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl"
               >
                 <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-gold)]"></div>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-xl bg-[var(--color-primary-gold)]/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-primary-gold)] font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">6</div>
-                  <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">سرعة الإجابة</label>
+                <div className="flex items-center gap-3 md:gap-4 mb-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-primary-gold)]/20 border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-primary-gold)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">6</div>
+                  <label className="text-xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">سرعة الإجابة</label>
                 </div>
-                <div className="space-y-6">
+                
+                <div className="bg-[var(--color-off-white)] p-4 md:p-6 rounded-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] space-y-6">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-xl">المهلة الزمنية</span>
-                    <span className="bg-[var(--color-primary-gold)] px-6 py-2 rounded-2xl font-black border-4 border-black text-2xl">{buzzerTimeout}ث</span>
+                    <span className="font-bold text-lg md:text-xl text-[var(--color-ink-black)]">المهلة الزمنية</span>
+                    <span className="bg-[var(--color-primary-gold)] px-4 py-1.5 md:px-6 md:py-2 rounded-xl border-4 border-[var(--color-ink-black)] font-black text-xl md:text-2xl shadow-[3px_3px_0px_var(--color-ink-black)]">{buzzerTimeout}ث</span>
                   </div>
-                  <input 
-                    type="range" 
-                    min="5" 
-                    max="60" 
-                    step="5"
-                    value={buzzerTimeout}
-                    onChange={(e) => {
-                      playSound('click');
-                      setBuzzerTimeout(parseInt(e.target.value));
-                    }}
-                    className="w-full h-6 bg-slate-200 rounded-2xl appearance-none cursor-pointer accent-[var(--color-primary-gold)] border-4 border-black"
-                  />
-                  <div className="flex justify-between text-xs font-black opacity-60">
+                  <div className="px-1 md:px-2 py-1">
+                    <input 
+                      type="range" 
+                      min="5" 
+                      max="60" 
+                      step="5"
+                      value={buzzerTimeout}
+                      onChange={(e) => {
+                         playSound('click');
+                         setBuzzerTimeout(parseInt(e.target.value));
+                      }}
+                      className="vintage-slider cursor-pointer w-full"
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs font-black opacity-65 text-[var(--color-ink-black)]">
                     <span>ثواني معدودة ⚡</span>
                     <span>وقت كافٍ 🐢</span>
                   </div>
@@ -1191,7 +1160,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             </AnimatePresence>
           </div>
 
-          <motion.button layout type="submit" className="vintage-button w-full py-8 md:py-10 rounded-[2.5rem] text-3xl md:text-5xl font-bold mt-12 relative overflow-hidden group">
+          <motion.button layout type="submit" className="vintage-button w-full py-5 md:py-10 rounded-[1.5rem] md:rounded-[2.5rem] text-2xl md:text-5xl font-bold mt-6 md:mt-12 relative overflow-hidden group">
             <span className="relative z-10 flex items-center justify-center gap-6">
               انطلاق المسابقة <CartoonRocket className="w-10 h-10 group-hover:translate-x-[-10px] group-hover:translate-y-[-10px] transition-transform duration-300" />
             </span>
