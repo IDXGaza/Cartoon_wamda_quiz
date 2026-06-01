@@ -72,7 +72,7 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
       
       <g transform={`translate(${hexHalfWidth}, ${hexHalfHeight})`}>
         <text 
-          className="font-display text-6xl select-none"
+          className="font-display text-4xl md:text-6xl select-none"
           style={{ 
             fill: '#000000', 
             opacity: 0.3,
@@ -84,7 +84,7 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
           {question.letter?.replace(/[\u0640]/g, '')}
         </text>
         <text 
-          className="font-display text-6xl select-none"
+          className="font-display text-4xl md:text-6xl select-none"
           style={{ 
             fill: isPlayer0 || isPlayer1 ? '#FFFFFF' : '#6B46C1',
             stroke: '#FFFFFF',

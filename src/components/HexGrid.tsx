@@ -33,9 +33,9 @@ const HexGrid: React.FC<HexGridProps> = ({
     const handleResize = () => {
       const width = window.innerWidth;
       if (width < 640) {
-        setScale(0.5);
+        setScale(0.4);
       } else if (width < 1024) {
-        setScale(0.6);
+        setScale(0.5);
       } else {
         setScale(0.7);
       }

@@ -659,21 +659,21 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     }
 
     return (
-      <div className="w-full max-w-5xl mx-auto vintage-panel p-1 md:p-3 overflow-x-auto relative shadow-2xl">
+      <div className="w-full max-w-5xl mx-auto vintage-panel p-0.5 md:p-3 overflow-x-auto relative shadow-2xl">
         <div 
-          className="grid gap-1 md:gap-2 min-w-max md:min-w-0 relative z-10 justify-center mx-auto" 
-          style={{ gridTemplateColumns: `repeat(${displayCategories.length}, minmax(100px, 1fr))` }}
+          className="grid gap-0 md:gap-2 min-w-max md:min-w-0 relative z-10 justify-center mx-auto" 
+          style={{ gridTemplateColumns: `repeat(${displayCategories.length}, minmax(36px, 1fr))` }}
         >
           {displayCategories.map((cat, i) => (
-            <div key={i} className="flex flex-col gap-1 md:gap-2 min-w-[100px] md:min-w-0">
-              <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-1 md:p-2 rounded-xl text-center h-14 md:h-16 flex items-center justify-center backdrop-blur-md shadow-lg transition-all duration-300 hover:border-white/40">
-                <h3 className="font-bold text-xs md:text-base xl:text-lg leading-tight text-white drop-shadow-md">{cat}</h3>
+            <div key={i} className="flex flex-col gap-0 md:gap-2 min-w-[36px] md:min-w-[100px]">
+              <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-0.5 md:p-2 rounded-lg md:rounded-xl text-center h-6 md:h-16 flex items-center justify-center backdrop-blur-md shadow-lg transition-all duration-300 hover:border-white/40">
+                <h3 className="font-bold text-[10px] md:text-base xl:text-lg leading-tight text-white drop-shadow-md">{cat}</h3>
               </div>
               {(jeopardyGrid[cat] || Array(5).fill(null)).map((q, qIdx) => {
                 if (!q) {
                   return (
-                    <div key={qIdx} className="w-full aspect-[4/3] bg-black/20 rounded-lg border-2 border-dashed border-white/10 flex items-center justify-center">
-                      <span className="text-white/20 text-xs">لا أسئلة</span>
+                    <div key={qIdx} className="w-full h-16 md:h-auto md:aspect-[4/3] bg-black/20 rounded-md md:rounded-lg border-2 border-dashed border-white/10 flex items-center justify-center">
+                      <span className="text-white/20 text-[7px] md:text-xs">لا أسئلة</span>
                     </div>
                   );
                 }
@@ -695,10 +695,10 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                       }
                       setIsEditing(false);
                     }}
-                    className={`w-full aspect-[4/3] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-[2px] ${
+                    className={`w-full h-16 md:h-auto md:aspect-[4/3] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[1px_1px_0px_var(--color-ink-black)] active:translate-y-[1px] ${
                       isAnswered 
                         ? 'opacity-80' 
-                        : 'hover:-translate-y-[2px] hover:shadow-[6px_6px_0px_var(--color-ink-black)]'
+                        : 'hover:-translate-y-[1px] hover:shadow-[2px_2px_0px_var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)]'
                     }`}
                     style={isAnswered ? { backgroundColor: answeredMap[q.id], borderColor: 'var(--color-ink-black)', opacity: 0.8, transform: 'scale(0.95)' } : {}}
                   >
@@ -706,12 +706,12 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                       <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150"></div>
                     )}
                     {isAnswered ? (
-                      <div className="flex flex-col items-center justify-center animate-pop-in">
-                        <CartoonCheck size={36} className="mb-1 text-white opacity-80 animate-bounce" />
-                        <span className="text-[10px] md:text-xs bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <CartoonCheck size={14} className="mb-0.5 text-white opacity-80 md:w-9 md:h-9" />
+                        <span className="text-[5px] md:text-xs bg-black/60 px-0.5 md:px-3 py-0.5 md:py-1 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
                       </div>
                     ) : (
-                      <span className="vintage-text text-2xl md:text-4xl text-[var(--color-primary-gold)] drop-shadow-[2px_2px_0px_var(--color-ink-black)] font-black">
+                      <span className="vintage-text text-sm md:text-4xl text-[var(--color-primary-gold)] drop-shadow-[1px_1px_0px_var(--color-ink-black)] font-black">
                         {q.points}
                       </span>
                     )}
@@ -1150,7 +1150,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className={`w-full max-w-3xl rounded-3xl md:rounded-[2.5rem] p-4 sm:p-6 md:p-12 vintage-panel relative overflow-visible my-auto text-center border-4 md:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] ${
+              className={`w-full max-w-[90vw] sm:max-w-3xl rounded-2xl md:rounded-[2.5rem] p-2 sm:p-6 md:p-12 vintage-panel relative overflow-visible my-auto text-center border-4 md:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] ${
                 powerInUse === PowerType.STEAL ? 'ring-4 md:ring-8 ring-[var(--color-primary-red)]' : ''
               }`}
             >
@@ -1216,15 +1216,15 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                   ) : (
                     <div className="space-y-10">
                       <div className="flex justify-center -mt-14 sm:-mt-24">
-                        <div className="w-16 h-16 sm:w-28 sm:h-28 rounded-2xl sm:rounded-[2rem] bg-[var(--color-primary-gold)] flex items-center justify-center text-[var(--color-ink-black)] font-black text-2xl sm:text-5xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)] vintage-text">
+                        <div className="w-12 h-12 sm:w-28 sm:h-28 rounded-xl sm:rounded-[2rem] bg-[var(--color-primary-gold)] flex items-center justify-center text-[var(--color-ink-black)] font-black text-xl sm:text-5xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)] vintage-text">
                           {config.mode === GameMode.GRID 
                             ? activeQuestion.points 
                             : ((activeQuestion.letter || '').replace(/[\u0640]/g, '') || (activeQuestion.answer ? activeQuestion.answer[0] : '?'))}
                         </div>
                       </div>
 
-                      <div className="relative p-4 sm:p-12 rounded-2xl sm:rounded-3xl bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)]">
-                        <ReportButton question={activeQuestion} onReport={onOpenReport} />
+                      <div className="relative p-2 sm:p-12 rounded-xl sm:rounded-3xl bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)]">
+                        <ReportButton className="!-top-8 !right-2" question={activeQuestion} onReport={onOpenReport} />
                         <h3 className="text-base sm:text-3xl md:text-5xl font-black leading-tight text-[var(--color-ink-black)] vintage-text text-center w-full pt-6 md:pt-4">
                           <span>{activeQuestion.text}</span>
                         </h3>

@@ -7,7 +7,7 @@ export enum GameMode {
   TIMED = 'TIMED',
   SILENT_GUESS = 'SILENT_GUESS',
   TRUE_FALSE = 'TRUE_FALSE',
-  LISTING = 'LISTING'
+  TABOO = 'TABOO'
 }
 
 export enum QuestionType {

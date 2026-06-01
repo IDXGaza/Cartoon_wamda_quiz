@@ -20,6 +20,9 @@ import ConfigScreen from './components/ConfigScreen';
 import GameScreen from './components/GameScreen';
 import SummaryScreen from './components/SummaryScreen';
 import RemoteBuzzer from './components/RemoteBuzzer';
+import RemoteTaboo from './components/RemoteTaboo';
+import TabooStartScreen from './components/TabooStartScreen';
+import TabooGameScreen from './components/TabooGameScreen';
 import SettingsModal from './components/SettingsModal';
 import ReportScreen from './components/ReportScreen';
 import ReportsViewer from './components/ReportsViewer';
@@ -34,7 +37,7 @@ import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 const App: React.FC = () => {
   const [currentPath] = useState(window.location.pathname);
-  const [gameState, setGameState] = useState<'config' | 'loading' | 'playing' | 'summary' | 'remote' | 'remote-taboo' | 'error' | 'bank' | 'report'>('config');
+  const [gameState, setGameState] = useState<'config' | 'loading' | 'playing' | 'summary' | 'remote' | 'remote-taboo' | 'taboo-start' | 'taboo-playing' | 'error' | 'bank' | 'report'>('config');
   const [config, setConfig] = useState<GameConfig | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -205,6 +208,12 @@ const App: React.FC = () => {
         console.error("Failed to load history", e);
       }
 
+      if (newConfig.mode === GameMode.TABOO) {
+        setQuestions(newConfig.manualQuestions || []); // Should be populated properly
+        setGameState('taboo-start');
+        return;
+      }
+
       if (newConfig.mode === GameMode.HEX_GRID && newConfig.hexMode === 'manual') {
         setQuestions([]);
         setGameState('playing');
@@ -368,7 +377,7 @@ const App: React.FC = () => {
                 className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl shrink-0"
                 title="ملء الشاشة"
               >
-                <CartoonEye size={20} className="w-5 h-5 md:w-11 md:h-11" />
+                <CartoonEye size={48} className="w-full h-full" />
               </button>
               <button 
                 onClick={() => {
@@ -378,7 +387,7 @@ const App: React.FC = () => {
                 className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl shrink-0"
                 title="الإعدادات"
               >
-                <CartoonGear size={20} className="w-5 h-5 md:w-11 md:h-11 animate-spin-slow" />
+                <CartoonGear size={48} className="w-full h-full animate-spin-slow" />
               </button>
               {/* 
               <button                
@@ -451,6 +460,9 @@ const App: React.FC = () => {
               )}
 
               {!authError && isAuthReady && gameState === 'remote' && <RemoteBuzzer />}
+              {!authError && isAuthReady && gameState === 'remote-taboo' && <RemoteTaboo />}
+              {!authError && isAuthReady && gameState === 'taboo-start' && config && <TabooStartScreen config={config} roomId={sessionId} onStart={() => setGameState('taboo-playing')} />}
+              {!authError && isAuthReady && gameState === 'taboo-playing' && <TabooGameScreen />}
               
               {!authError && isAuthReady && gameState === 'config' && <ConfigScreen onStart={handleStartGame} />}
               

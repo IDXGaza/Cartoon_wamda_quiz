@@ -37,6 +37,8 @@ import { THE_LAST_OF_US_QUESTIONS } from './theLastOfUsData';
 import { PROPHETS_QUESTIONS } from './prophetsData';
 import { FORMULA_ONE_QUESTIONS } from './formulaOneData';
 import { HUNTER_QUESTIONS } from './hunterData';
+import { INVENTIONS_QUESTIONS } from './inventionsData';
+import { LETTER_GRID_QUESTIONS } from './letterGridData';
 
 
 export interface BankQuestion {
@@ -60,7 +62,7 @@ export const GEOGRAPHY_QUESTIONS: BankQuestion[] = getDeduplicatedGeographyQuest
 
 
 export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
-  [GameMode.GRID]: [...DARK_SOULS_QUESTIONS, ...OVERWATCH_QUESTIONS, ...SCIENCE_QUESTIONS, ...ISLAMIC_QUESTIONS, ...DUA_QUESTIONS, ...HUMAN_BODY_QUESTIONS, ...ONE_PIECE_QUESTIONS, ...SPORTS_QUESTIONS, ...GEOGRAPHY_QUESTIONS, ...WRESTLING_QUESTIONS, ...HARRY_POTTER_QUESTIONS, ...HISTORY_GEOGRAPHY_QUESTIONS, ...NEW_HISTORY_QUESTIONS, ...CAPITAL_CITIES_QUESTIONS, ...ELDEN_RING_QUESTIONS, ...SISTANI_QUESTIONS, ...AOT_QUESTIONS, ...QURAN_QUESTIONS, ...SPACE_QUESTIONS, ...SPACE_SCIENCE_QUESTIONS, ...CARTOON_QUESTIONS, ...ANIMAL_QUESTIONS, ...CARS_QUESTIONS, ...GOT_QUESTIONS, ...BREAKING_BAD_QUESTIONS, ...DEXTER_QUESTIONS, ...CURRENCIES_QUESTIONS, ...WORLD_WAR_QUESTIONS, ...TECHNOLOGY_QUESTIONS, ...ATLAS_QUESTIONS, ...MORTAL_KOMBAT_QUESTIONS, ...TEKKEN_QUESTIONS, ...THE_LAST_OF_US_QUESTIONS, ...PROPHETS_QUESTIONS, ...FORMULA_ONE_QUESTIONS, ...HUNTER_QUESTIONS],
+  [GameMode.GRID]: [...DARK_SOULS_QUESTIONS, ...OVERWATCH_QUESTIONS, ...SCIENCE_QUESTIONS, ...ISLAMIC_QUESTIONS, ...DUA_QUESTIONS, ...HUMAN_BODY_QUESTIONS, ...ONE_PIECE_QUESTIONS, ...SPORTS_QUESTIONS, ...GEOGRAPHY_QUESTIONS, ...WRESTLING_QUESTIONS, ...HARRY_POTTER_QUESTIONS, ...HISTORY_GEOGRAPHY_QUESTIONS, ...NEW_HISTORY_QUESTIONS, ...CAPITAL_CITIES_QUESTIONS, ...ELDEN_RING_QUESTIONS, ...SISTANI_QUESTIONS, ...AOT_QUESTIONS, ...QURAN_QUESTIONS, ...SPACE_QUESTIONS, ...SPACE_SCIENCE_QUESTIONS, ...CARTOON_QUESTIONS, ...ANIMAL_QUESTIONS, ...CARS_QUESTIONS, ...GOT_QUESTIONS, ...BREAKING_BAD_QUESTIONS, ...DEXTER_QUESTIONS, ...CURRENCIES_QUESTIONS, ...WORLD_WAR_QUESTIONS, ...TECHNOLOGY_QUESTIONS, ...ATLAS_QUESTIONS, ...MORTAL_KOMBAT_QUESTIONS, ...TEKKEN_QUESTIONS, ...THE_LAST_OF_US_QUESTIONS, ...PROPHETS_QUESTIONS, ...FORMULA_ONE_QUESTIONS, ...HUNTER_QUESTIONS, ...INVENTIONS_QUESTIONS],
   [GameMode.POINTS]: [],
   [GameMode.TRUE_FALSE]: TRUE_FALSE_QUESTIONS,
   [GameMode.SILENT_GUESS]: SHUFFLED_SILENT_GUESS_QUESTIONS,
@@ -1488,7 +1490,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_م_ext_16', category: 'جغرافيا', text: 'دولة تقع في جنوب شرق آسيا مقسمة إلى جزء شرقي وغربي', answer: 'ماليزيا', letter: 'م', tabooWords: ['دولة', 'آسيا', 'كوالالمبور', 'جنوب شرق'], difficulty: 'medium' },
     { id: 'h_م_ext_17', category: 'كيمياء', text: 'عنصر كيميائي فلزي رمزه Mn ضروري لصناعة الفولاذ', answer: 'منغنيز', letter: 'م', tabooWords: ['عنصر', 'فلزي', 'فولاذ', 'كيمياء'], difficulty: 'hard' },
     { id: 'h_م_ext_18', category: 'كيمياء', text: 'عنصر كيميائي فلزي رمزه Mo يستخدم في السبائك القوية', answer: 'موليبدنيوم', letter: 'م', tabooWords: ['عنصر', 'فلزي', 'سبائك', 'كيمياء'], difficulty: 'hard' },
-    { id: 'h_م_ext_19', category: 'علوم', text: 'جهاز لرؤية الأجرام السماوية البعيدة وتكبيرها', answer: 'مقراب', letter: 'م', tabooWords: ['جهاز', 'رؤية', 'أجرام', 'تلسكوب'], difficulty: 'medium' },
+    { id: 'h_م_ext_19', category: 'علوم', text: 'جهاز لرؤية الأجرام السماوية البعيدة وتكبيرها', answer: 'منظار', letter: 'م', tabooWords: ['جهاز', 'رؤية', 'أجرام', 'تلسكوب'], difficulty: 'medium' },
     { id: 'h_م_ext_20', category: 'فيزياء', text: 'جهاز يستخدم لزيادة سرعة الجسيمات دون الذرية', answer: 'مسرع', letter: 'م', tabooWords: ['جهاز', 'سرعة', 'جسيمات', 'ذرة'], difficulty: 'hard' },
     { id: 'h_م_ext_21', category: 'علوم', text: 'منشأة تستخدم لبدء والتحكم في تفاعل نووي متسلسل', answer: 'مفاعل', letter: 'م', tabooWords: ['منشأة', 'تفاعل', 'نووي', 'طاقة'], difficulty: 'medium' },
     { id: 'h_م_ext_22', category: 'تقنية', text: 'عنصر إلكتروني يقوم بتخزين الشحنة الكهربائية', answer: 'مكثف', letter: 'م', tabooWords: ['عنصر', 'إلكتروني', 'شحنة', 'تخزين'], difficulty: 'hard' },
@@ -2186,6 +2188,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_add_53', category: 'طبيعة', text: 'الجزء الصلب الصغير الموجود في مركز الثمرة كالتمر والزيتون، وتنبأ منها الشجرة؟', answer: 'نواة', letter: 'ن', difficulty: 'medium' },
     { id: 'h_add_54', category: 'طبيعة', text: 'الغبار الدقيق الخفيف جداً السابح في الهواء ولا يرى إلا في ضوء الشمس النافذ؟', answer: 'هباء', letter: 'هـ', difficulty: 'easy' },
     { id: 'h_add_55', category: 'ثقافة عامة', text: 'الورقة المالية أو الوثيقة الرسمية الإثباتية التي تسجل الحقوق والمعاملات التجارية؟', answer: 'وثيقة', letter: 'و', difficulty: 'easy' },
-    { id: 'h_add_56', category: 'طبيعة', text: 'الينبوع الطبيعي التدفيقي الذي تخرج منه المياه الجوفية الساخنة أو الباردة من الأرض؟', answer: 'ينبوع', letter: 'ي', difficulty: 'easy' }
+    { id: 'h_add_56', category: 'طبيعة', text: 'الينبوع الطبيعي التدفيقي الذي تخرج منه المياه الجوفية الساخنة أو الباردة من الأرض؟', answer: 'ينبوع', letter: 'ي', difficulty: 'easy' },
+    ...LETTER_GRID_QUESTIONS
   ]
 };

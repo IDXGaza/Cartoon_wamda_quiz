@@ -42,14 +42,35 @@ const JEOPARDY_SETS = [
   { name: "مستكشف العالم", categories: ['جغرافيا', 'تاريخ وثقافة', 'فضاء وتقنية', 'علوم', 'معلومات عامة'], icon: "🌍" },
 ];
 
-const CATEGORY_CLASSIFICATIONS = [
-  { name: "العلوم والطبيعة", icon: "🧬", color: "bg-emerald-500", categories: ['علوم', 'فضاء وتقنية', 'الفضاء', 'فضاء', 'جسم الإنسان', 'أحياء', 'كيمياء', 'فيزياء', 'طب', 'طبيعة', 'حيوانات', 'مملكة الحيوان'] },
+// Define base classifications
+const BASE_CATEGORY_CLASSIFICATIONS = [
+  { name: "العلوم والطبيعة", icon: "🧬", color: "bg-emerald-500", categories: ['علوم', 'فضاء وتقنية', 'الفضاء', 'فضاء', 'جسم الإنسان', 'أحياء', 'كيمياء', 'فيزياء', 'طب', 'طبيعة', 'حيوانات', 'مملكة الحيوان', 'اختراعات ومخترعون'] },
   { name: "اطلس", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ', 'التاريخ', 'العملات', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي', 'العواصم العالمية', 'الحرب العالمية الأولى والثانية', 'ما هي الدولة؟'] },
   { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء', 'الدين', 'حياة المعصومين', 'إكمال الدعاء', 'اكمال الدعاء', 'فقه السيد السيستاني', 'القرآن', 'قصص الأنبياء'] },
   { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم', 'فورمولا 1', 'فورميلا 1'] },
   { name: "مسلسلات و انمي", icon: "🎬", color: "bg-purple-500", categories: ['Game of Thrones', 'ون بيس', 'هجوم العمالقة', 'كرتون', 'Breaking Bad', 'Dexter', 'hunter x hunter'] },
   { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['رياضة', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'هاري بوتر', 'الدن رينج', 'ذكاء', 'سيارات', 'التقنية', 'مورتال كومبات', 'تكن', 'the last of us'] }
 ];
+
+const getDynamicCategoryClassifications = () => {
+  const allBankCats = Array.from(new Set((QUESTION_BANK[GameMode.GRID] || []).map(q => q.category)));
+  const classifications = JSON.parse(JSON.stringify(BASE_CATEGORY_CLASSIFICATIONS));
+
+  const classifiedCats = new Set(classifications.flatMap((c: any) => c.categories));
+  const unclassifiedCats = allBankCats.filter(cat => !classifiedCats.has(cat));
+
+  if (unclassifiedCats.length > 0) {
+    const miscellaneous = classifications.find((c: any) => c.name === "منوعات");
+    if (miscellaneous) {
+      miscellaneous.categories.push(...unclassifiedCats);
+    }
+  }
+  
+  return classifications;
+};
+
+const CATEGORY_CLASSIFICATIONS = getDynamicCategoryClassifications();
+
 
 import { getUserCustomCategories, UserCategory } from '../services/categoryService';
 import { generateQuestions } from '../services/geminiService';
@@ -490,7 +511,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
         
         const count = numQuestionsState;
         for (let i = 0; i < count; i++) {
-          const q = bank[i % bank.length] || { id: 'bk-def', text: 'ما هي عاصمة العالم في الثقافة والجمال؟', answer: 'باريس', category: 'عام', difficulty: Difficulty.MEDIUM };
+          const q = bank[i % bank.length] || { id: `bk-def-${i}`, text: 'ما هي عاصمة العالم في الثقافة والجمال؟', answer: 'باريس', category: 'عام', difficulty: Difficulty.MEDIUM };
           finalManualQuestions.push({
             id: q.id, // Keep original ID to mark as played
             text: q.text,
@@ -555,20 +576,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 { val: GameMode.TIMED, label: 'سباق الوقت', icon: <CartoonTimer size={32} className="sm:size-12" />, desc: 'أكبر عدد إجابات', color: 'text-[var(--color-primary-gold)]', ring: 'ring-[var(--color-primary-gold)]/50', activeBg: 'var(--color-primary-gold)', activeText: 'var(--color-ink-black)' },
                 { val: GameMode.TRUE_FALSE, label: 'صواب أم خطأ؟', icon: <CartoonAlert size={32} className="sm:size-12" />, desc: 'حقائق مذهلة', color: 'text-[var(--color-primary-red)]', ring: 'ring-[var(--color-primary-red)]/50', activeBg: 'var(--color-primary-red)', activeText: 'white' },
                 { val: GameMode.SILENT_GUESS, label: 'تخمين صامت', icon: <CartoonSilent size={32} className="sm:size-12" />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' },
-                { val: GameMode.LISTING, label: 'تحدي القائمة', icon: <CartoonSparkles size={32} className="sm:size-12" />, desc: 'كم تقدر تعدد؟', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
+                { val: GameMode.TABOO, label: 'قول بس لا تقول', icon: <CartoonSparkles size={32} className="sm:size-12" />, desc: 'تحدي الكلمات الممنوعة', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
               ].map(m => {
-                if (m.val === GameMode.LISTING) {
-                  return (
-                    <div
-                      key={m.val}
-                      className="vintage-button rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col items-center gap-2 sm:gap-4 text-center transition-all duration-300 bg-gray-200 border-4 border-gray-300 cursor-not-allowed opacity-60"
-                    >
-                      <div className="mb-2 text-gray-400">{m.icon}</div>
-                      <h3 className="font-bold text-xl text-gray-500">تحت الإصلاح</h3>
-                      <p className="text-xs text-gray-400">سيعود قريباً</p>
-                    </div>
-                  );
-                }
                 return (
                   <motion.button
                     layout
