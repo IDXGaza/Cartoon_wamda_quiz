@@ -39,6 +39,7 @@ import { FORMULA_ONE_QUESTIONS } from './formulaOneData';
 import { HUNTER_QUESTIONS } from './hunterData';
 import { INVENTIONS_QUESTIONS } from './inventionsData';
 import { LETTER_GRID_QUESTIONS } from './letterGridData';
+import { TABOO_QUESTIONS_BANK } from './tabooData';
 
 
 export interface BankQuestion {
@@ -66,6 +67,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
   [GameMode.POINTS]: [],
   [GameMode.TRUE_FALSE]: TRUE_FALSE_QUESTIONS,
   [GameMode.SILENT_GUESS]: SHUFFLED_SILENT_GUESS_QUESTIONS,
+  [GameMode.TABOO]: TABOO_QUESTIONS_BANK,
   [GameMode.LISTING]: [], 
   [GameMode.BUZZER]: [
     { id: 'bz1', category: 'معلومات عامة', text: 'ما هو اللون الذي يرمز للسلام؟', answer: 'أبيض', tabooWords: ['سلام', 'لون', 'حمامة', 'نقي'], difficulty: 'beginner', points: 100 },
@@ -649,7 +651,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ص_ext_ijmbc', category: 'ثقافة عامة', text: 'جزء في القلب يمنع رجوع الدم للخلف', answer: 'صمام', letter: 'ص', tabooWords: ['جزء', 'القلب', 'يمنع', 'رجوع', 'الدم'], difficulty: 'medium' },
     { id: 'h_ص_ext_exw2i', category: 'ثقافة عامة', text: 'محافظة على القيم', answer: 'صون', letter: 'ص', tabooWords: ['محافظة', 'القيم', 'صون'], difficulty: 'medium' },
     { id: 'h_ص_ext_793w1', category: 'ثقافة عامة', text: 'من يعمل بيديه في الحرف', answer: 'صانع', letter: 'ص', tabooWords: ['يعمل', 'بيديه', 'الحرف', 'صانع'], difficulty: 'medium' },
-    { id: 'h_ص_ext_ea2yh', category: 'ثقافة عامة', text: 'بطل خارق في عالم مارفل يتميز بجسم صخري وقوة هائلة', answer: 'الشيء (The Thing)', letter: 'ص', tabooWords: ['بطل', 'خارق', 'يتميز', 'بجسم', 'صخري'], difficulty: 'medium' },
+    { id: 'h_ص_ext_ea2yh', category: 'ثقافة عامة', text: 'بطل خارق في عالم مارفل يتميز بجسم صخري وقوة هائلة', answer: 'صخر (The Thing)', letter: 'ص', tabooWords: ['بطل', 'خارق', 'يتميز', 'بجسم', 'صخري'], difficulty: 'medium' },
     { id: 'h_ص_ext_y9g8p', category: 'ثقافة عامة', text: 'تجمد بخار الماء على الأجسام', answer: 'صقيع', letter: 'ص', tabooWords: ['تجمد', 'بخار', 'الماء', 'الأجسام', 'صقيع'], difficulty: 'medium' },
     { id: 'h_ص_ext_dwplh', category: 'ثقافة عامة', text: 'وقت طلوع الشمس وما بعده', answer: 'صباح', letter: 'ص', tabooWords: ['وقت', 'طلوع', 'الشمس', 'وما', 'بعده'], difficulty: 'medium' },
     { id: 'h_ص_ext_p8v6j', category: 'ثقافة عامة', text: 'أكبر جزيرة في البحر المتوسط وتابعة لإيطاليا', answer: 'صقلية', letter: 'ص', tabooWords: ['جزيرة', 'البحر', 'المتوسط', 'وتابعة', 'لإيطاليا'], difficulty: 'medium' },

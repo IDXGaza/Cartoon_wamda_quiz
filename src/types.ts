@@ -7,7 +7,8 @@ export enum GameMode {
   TIMED = 'TIMED',
   SILENT_GUESS = 'SILENT_GUESS',
   TRUE_FALSE = 'TRUE_FALSE',
-  TABOO = 'TABOO'
+  TABOO = 'TABOO',
+  LISTING = 'LISTING'
 }
 
 export enum QuestionType {
@@ -86,5 +87,6 @@ export interface GameConfig {
   timerDuration?: number; // for timed racing
   buzzerTimeout?: number; // for buzzer mode
   aiModel?: string;
+  tabooType?: 'local' | 'remote';
 }
 

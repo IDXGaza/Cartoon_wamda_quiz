@@ -659,21 +659,21 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     }
 
     return (
-      <div className="w-full max-w-5xl mx-auto vintage-panel p-0.5 md:p-3 overflow-x-auto relative shadow-2xl">
+      <div className="w-full max-w-5xl mx-auto vintage-panel p-0.5 sm:p-2 md:p-3 overflow-x-auto relative shadow-2xl">
         <div 
-          className="grid gap-0 md:gap-2 min-w-max md:min-w-0 relative z-10 justify-center mx-auto" 
+          className="grid gap-0.5 sm:gap-1.5 md:gap-2 min-w-max md:min-w-0 relative z-10 justify-center mx-auto" 
           style={{ gridTemplateColumns: `repeat(${displayCategories.length}, minmax(36px, 1fr))` }}
         >
           {displayCategories.map((cat, i) => (
-            <div key={i} className="flex flex-col gap-0 md:gap-2 min-w-[36px] md:min-w-[100px]">
-              <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-0.5 md:p-2 rounded-lg md:rounded-xl text-center h-6 md:h-16 flex items-center justify-center backdrop-blur-md shadow-lg transition-all duration-300 hover:border-white/40">
-                <h3 className="font-bold text-[10px] md:text-base xl:text-lg leading-tight text-white drop-shadow-md">{cat}</h3>
+            <div key={i} className="flex flex-col gap-0.5 sm:gap-1.5 md:gap-2 min-w-[36px] sm:min-w-[70px] md:min-w-[100px]">
+              <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-0.5 sm:p-1 md:p-2 rounded-md sm:rounded-lg md:rounded-xl text-center h-8 sm:h-12 md:h-16 flex items-center justify-center backdrop-blur-md shadow-md transition-all duration-300 hover:border-white/40">
+                <h3 className="font-bold text-[7px] sm:text-[10px] md:text-base xl:text-lg leading-tight text-white drop-shadow-md">{cat}</h3>
               </div>
               {(jeopardyGrid[cat] || Array(5).fill(null)).map((q, qIdx) => {
                 if (!q) {
                   return (
-                    <div key={qIdx} className="w-full h-16 md:h-auto md:aspect-[4/3] bg-black/20 rounded-md md:rounded-lg border-2 border-dashed border-white/10 flex items-center justify-center">
-                      <span className="text-white/20 text-[7px] md:text-xs">لا أسئلة</span>
+                    <div key={qIdx} className="w-full h-8 sm:h-12 md:h-20 lg:h-auto md:aspect-[4/3] bg-black/20 rounded-md md:rounded-lg border border-dashed border-white/10 flex items-center justify-center">
+                      <span className="text-white/20 text-[5px] sm:text-[8px] md:text-xs">لا أسئلة</span>
                     </div>
                   );
                 }
@@ -695,7 +695,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                       }
                       setIsEditing(false);
                     }}
-                    className={`w-full h-16 md:h-auto md:aspect-[4/3] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[1px_1px_0px_var(--color-ink-black)] active:translate-y-[1px] ${
+                    className={`w-full h-8 sm:h-12 md:h-16 lg:h-auto md:aspect-[4/3] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[1px_1px_0px_var(--color-ink-black)] active:translate-y-[1px] ${
                       isAnswered 
                         ? 'opacity-80' 
                         : 'hover:-translate-y-[1px] hover:shadow-[2px_2px_0px_var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)]'
@@ -707,11 +707,11 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                     )}
                     {isAnswered ? (
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <CartoonCheck size={14} className="mb-0.5 text-white opacity-80 md:w-9 md:h-9" />
-                        <span className="text-[5px] md:text-xs bg-black/60 px-0.5 md:px-3 py-0.5 md:py-1 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
+                        <CartoonCheck className="mb-0.5 text-white opacity-80 w-3 h-3 sm:w-5 sm:h-5 md:w-8 md:h-8" />
+                        <span className="text-[4px] sm:text-[8px] md:text-xs bg-black/60 px-0.5 sm:px-2 md:px-3 py-0.5 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
                       </div>
                     ) : (
-                      <span className="vintage-text text-sm md:text-4xl text-[var(--color-primary-gold)] drop-shadow-[1px_1px_0px_var(--color-ink-black)] font-black">
+                      <span className="vintage-text text-[9px] sm:text-xs md:text-2xl xl:text-4xl text-[var(--color-primary-gold)] drop-shadow-[1px_1px_0px_var(--color-ink-black)] font-black">
                         {q.points}
                       </span>
                     )}

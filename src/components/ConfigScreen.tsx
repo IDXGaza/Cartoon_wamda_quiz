@@ -101,6 +101,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [buzzerTimeout, setBuzzerTimeout] = useState<number>(20);
   const [isRestrictedMode, setIsRestrictedMode] = useState<boolean>(true);
   const [inputMethod, setInputMethod] = useState<'manual' | 'bank'>('bank');
+  const [tabooType, setTabooType] = useState<'local' | 'remote'>('local');
 
   // ... (activeFeats state removed)
 
@@ -519,7 +520,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             category: q.category,
             points: 100,
             type: QuestionType.OPEN,
-            difficulty: (q.difficulty?.toUpperCase() as Difficulty) || Difficulty.MEDIUM
+            difficulty: (q.difficulty?.toUpperCase() as Difficulty) || Difficulty.MEDIUM,
+            tabooWords: q.tabooWords
           });
         }
         
@@ -542,7 +544,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions as any : undefined,
       buzzerTimeout: buzzerTimeout,
       timerDuration: mode === GameMode.TIMED ? timedDuration : buzzerTimeout,
-      aiModel: settings.aiModel === 'custom' ? (settings.customModel || 'gemini-1.5-flash') : settings.aiModel
+      aiModel: settings.aiModel === 'custom' ? (settings.customModel || 'gemini-1.5-flash') : settings.aiModel,
+      tabooType: mode === GameMode.TABOO ? tabooType : undefined
     });
   };
 
@@ -1163,6 +1166,48 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                     <span>ثواني معدودة ⚡</span>
                     <span>وقت كافٍ 🐢</span>
                   </div>
+                </div>
+              </motion.div>
+            )}
+            {mode === GameMode.TABOO && (
+              <motion.div 
+                layout 
+                initial={{ opacity: 0, scale: 0.95 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+                className="space-y-4 md:space-y-6 vintage-panel p-3 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl"
+              >
+                <div className="absolute top-0 right-0 w-2 h-full bg-rose-500"></div>
+                <div className="flex items-center gap-3 md:gap-4 mb-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-rose-500/20 border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-rose-500 font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">6</div>
+                  <label className="text-xl md:text-3xl font-bold text-[var(--color-ink-black)] vintage-text">طريقة لعب "قول بس لا تقول"</label>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound('click');
+                      setTabooType('local');
+                    }}
+                    className={`vintage-button rounded-2xl p-4 flex flex-col items-center gap-2 text-center transition-all ${tabooType === 'local' ? 'bg-rose-600 text-white shadow-[4px_4px_0px_var(--color-ink-black)] ring-2 ring-rose-500/50' : 'bg-[var(--color-off-white)]'}`}
+                  >
+                    <span className="font-bold text-lg md:text-xl vintage-text">محلي 📱</span>
+                    <span className="text-[10px] opacity-85">على جهاز واحد متناوب</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound('click');
+                      setTabooType('remote');
+                    }}
+                    className={`vintage-button rounded-2xl p-4 flex flex-col items-center gap-2 text-center transition-all ${tabooType === 'remote' ? 'bg-blue-600 text-white shadow-[4px_4px_0px_var(--color-ink-black)] ring-2 ring-blue-500/50' : 'bg-[var(--color-off-white)]'}`}
+                  >
+                    <span className="font-bold text-lg md:text-xl vintage-text">عن بعد 🌐</span>
+                    <span className="text-[10px] opacity-85">باستخدام الرابط والغرفة</span>
+                  </button>
                 </div>
               </motion.div>
             )}

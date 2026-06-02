@@ -210,7 +210,11 @@ const App: React.FC = () => {
 
       if (newConfig.mode === GameMode.TABOO) {
         setQuestions(newConfig.manualQuestions || []); // Should be populated properly
-        setGameState('taboo-start');
+        if (newConfig.tabooType === 'local') {
+          setGameState('taboo-playing');
+        } else {
+          setGameState('taboo-start');
+        }
         return;
       }
 
@@ -461,8 +465,19 @@ const App: React.FC = () => {
 
               {!authError && isAuthReady && gameState === 'remote' && <RemoteBuzzer />}
               {!authError && isAuthReady && gameState === 'remote-taboo' && <RemoteTaboo />}
-              {!authError && isAuthReady && gameState === 'taboo-start' && config && <TabooStartScreen config={config} roomId={sessionId} onStart={() => setGameState('taboo-playing')} />}
-              {!authError && isAuthReady && gameState === 'taboo-playing' && <TabooGameScreen />}
+              {!authError && isAuthReady && gameState === 'taboo-start' && config && <TabooStartScreen config={config} questions={questions} roomId={sessionId} onStart={() => setGameState('taboo-playing')} />}
+              {!authError && isAuthReady && gameState === 'taboo-playing' && config && (
+                <TabooGameScreen 
+                  config={config} 
+                  questions={questions} 
+                  players={config.players} 
+                  onFinish={(updatedPlayers) => {
+                    setConfig({ ...config, players: updatedPlayers });
+                    setGameState('config');
+                  }} 
+                  onClose={() => setGameState('config')}
+                />
+              )}
               
               {!authError && isAuthReady && gameState === 'config' && <ConfigScreen onStart={handleStartGame} />}
               
