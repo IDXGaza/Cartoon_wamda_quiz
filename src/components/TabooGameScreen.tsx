@@ -23,6 +23,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
   const [gameState, setGameState] = useState<'intro' | 'playing' | 'timesup' | 'ended'>('intro');
   const [activePlayerIndex, setActivePlayerIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
+  const [usedIndices, setUsedIndices] = useState<number[]>([]);
   const [timeLeft, setTimeLeft] = useState(config.timerDuration || 60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [turnHistory, setTurnHistory] = useState<{ word: string; status: 'correct' | 'wrong' | 'pass' }[]>([]);
@@ -73,7 +74,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     : activePlayerIndex;
 
   const currentActivePlayer = currentPlayers[currentActivePlayerIndex] || currentPlayers[0];
-  const currentActiveQuestion = isRemote ? remoteRoom?.currentQuestion : questions[questionIndex % questions.length];
+  const currentActiveQuestion = isRemote ? remoteRoom?.currentQuestion : questions[questionIndex];
 
   const currentTimeLeft = isRemote ? (remoteRoom?.timeLeft || 0) : timeLeft;
   const currentTurnScore = isRemote ? (remoteRoom?.turnScore || 0) : turnScore;
@@ -112,6 +113,23 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
   }, [timeLeft, isTimerRunning, turnScore, activePlayerIndex, isRemote]);
 
   // Local turn handlers
+  const getNextUnusedIndex = (currentIndex: number, used: number[]) => {
+    if (questions.length === 0) return 0;
+    if (used.length >= questions.length) {
+      // If everything is used, reset but keep the current one to avoid immediate repeat if possible
+      setUsedIndices([currentIndex]);
+      return (currentIndex + 1) % questions.length;
+    }
+    
+    let nextIdx = (currentIndex + 1) % questions.length;
+    let attempts = 0;
+    while (used.includes(nextIdx) && attempts < questions.length) {
+      nextIdx = (nextIdx + 1) % questions.length;
+      attempts++;
+    }
+    return nextIdx;
+  };
+
   const handleStartTurn = () => {
     playSound('start');
     setTurnScore(0);
@@ -122,6 +140,20 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     setGameState('playing');
     setIsTimerRunning(true);
     setRevealed(true);
+    
+    // Initialize question index if needed or pick a random one to start fresh turn
+    const startIdx = Math.floor(Math.random() * questions.length);
+    setQuestionIndex(startIdx);
+    setUsedIndices(prev => {
+      if (prev.includes(startIdx)) return prev;
+      return [...prev, startIdx];
+    });
+  };
+
+  const moveToNextQuestion = () => {
+    const nextIdx = getNextUnusedIndex(questionIndex, usedIndices);
+    setQuestionIndex(nextIdx);
+    setUsedIndices(prev => [...prev, nextIdx]);
   };
 
   const handleCorrect = () => {
@@ -130,7 +162,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     setTurnCorrect(prev => prev + 1);
     const word = currentActiveQuestion ? currentActiveQuestion.answer : 'سؤال';
     setTurnHistory(prev => [...prev, { word, status: 'correct' }]);
-    setQuestionIndex(prev => prev + 1);
+    moveToNextQuestion();
   };
 
   const handleWrong = () => {
@@ -139,21 +171,21 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     setTurnWrong(prev => prev + 1);
     const word = currentActiveQuestion ? currentActiveQuestion.answer : 'سؤال';
     setTurnHistory(prev => [...prev, { word, status: 'wrong' }]);
-    setQuestionIndex(prev => prev + 1);
+    moveToNextQuestion();
   };
 
   const handlePass = () => {
     playSound('click');
     const word = currentActiveQuestion ? currentActiveQuestion.answer : 'سؤال';
     setTurnHistory(prev => [...prev, { word, status: 'pass' }]);
-    setQuestionIndex(prev => prev + 1);
+    moveToNextQuestion();
   };
 
   const handleNextPlayer = () => {
     playSound('click');
     setActivePlayerIndex(prev => (prev + 1) % players.length);
     setGameState('intro');
-    setQuestionIndex(prev => prev + 1);
+    moveToNextQuestion();
   };
 
   const handleEndGame = () => {
@@ -182,7 +214,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
         describerId: nextPlayer.id,
         currentQuestion: nextQuestion,
         questionIndex: nextQuestionIndex,
-        timeLeft: 60,
+        timeLeft: config.timerDuration || 60,
         turnScore: 0,
         turnCorrect: 0,
         turnWrong: 0,
@@ -299,17 +331,10 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
                 </p>
               </div>
 
-              <div className="bg-rose-100 rounded-2xl border-4 border-black p-3 flex flex-col items-center justify-center shadow-[4px_4px_0px_black]">
+              <div className="bg-rose-100 rounded-2xl border-4 border-black p-3 flex flex-col items-center justify-center shadow-[4px_4px_0px_black] col-start-2">
                 <CartoonTimer className={`w-8 h-8 ${currentTimeLeft <= 10 ? 'animate-bounce text-red-600' : 'animate-spin-slow'}`} />
                 <p className={`text-2xl font-black mt-1 ${currentTimeLeft <= 10 ? 'text-red-600 font-extrabold scale-110' : ''}`}>
                   {currentTimeLeft} ث
-                </p>
-              </div>
-
-              <div className="bg-emerald-100/50 rounded-2xl border-4 border-black p-3 text-center shadow-[4px_4px_0px_black]">
-                <p className="text-xs font-bold opacity-75 mb-1">التقدم الكلي</p>
-                <p className="text-2xl font-black text-emerald-800">
-                  {currentTurnCorrect} <span className="text-xs opacity-60">صح</span>
                 </p>
               </div>
             </div>
@@ -333,10 +358,6 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
             ) : (
               // Local Host Screen - Shows word & taboo words on same device
               <div className="vintage-panel rounded-[2.5rem] p-6 sm:p-10 border-4 border-black shadow-[8px_8px_0px_black] bg-[var(--color-bg-cream)] text-center relative overflow-hidden">
-                <div className="absolute top-3 right-3 flex items-center gap-1 bg-white border border-black text-xs font-black px-3 py-1 rounded-full shadow-[2px_2px_0px_black]">
-                  🏷️ {currentActiveQuestion?.category || 'عام'}
-                </div>
-
                 <div className="my-8">
                   <span className="text-xs opacity-50 uppercase tracking-widest block mb-2 font-black">الكلمة المراد تخمينها</span>
                   
@@ -389,24 +410,24 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
             {!isRemote && (
               <div className="grid grid-cols-2 gap-4">
                 <button 
-                  onClick={handleWrong}
-                  className="bg-red-500 hover:bg-red-600 text-white p-5 rounded-2xl border-4 border-black text-lg font-black flex items-center justify-center gap-3 shadow-[4px_4px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_black] transition-all"
+                  onClick={handleCorrect}
+                  className="bg-[var(--color-primary-green)] hover:bg-green-600 text-white p-5 rounded-2xl border-4 border-black text-lg font-black flex items-center justify-center gap-3 shadow-[4px_4px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_black] transition-all order-1"
                 >
-                  <X size={26} /> <span>خطأ / ممنوعة (-١)</span>
+                  <Check size={26} /> <span>صح</span>
+                </button>
+
+                <button 
+                  onClick={handleWrong}
+                  className="bg-red-500 hover:bg-red-600 text-white p-5 rounded-2xl border-4 border-black text-lg font-black flex items-center justify-center gap-3 shadow-[4px_4px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_black] transition-all order-2"
+                >
+                  <X size={26} /> <span>خطأ</span>
                 </button>
 
                 <button 
                   onClick={handlePass}
-                  className="bg-gray-400 hover:bg-gray-500 text-white p-5 rounded-2xl border-4 border-black text-lg font-black flex items-center justify-center gap-3 shadow-[4px_4px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_black] transition-all"
+                  className="col-span-2 bg-gray-400 hover:bg-gray-500 text-white p-10 rounded-2xl border-4 border-black text-4xl font-black flex items-center justify-center gap-4 shadow-[4px_4px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_black] transition-all order-3"
                 >
-                  <span>تخطي (٠)</span>
-                </button>
-
-                <button 
-                  onClick={handleCorrect}
-                  className="col-span-2 bg-[var(--color-primary-green)] hover:bg-green-600 text-white p-6 rounded-2xl border-4 border-black text-2xl font-black flex items-center justify-center gap-4 shadow-[4px_4px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_black] transition-all"
-                >
-                  <Check size={32} /> <span>إجابة صحيحة (+١)</span>
+                  <span>تخطي</span>
                 </button>
               </div>
             )}
@@ -429,18 +450,14 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
             <h1 className="text-3xl sm:text-5xl font-black mb-1 text-[var(--color-ink-black)]">ملخص جولة {currentActivePlayer?.name}</h1>
             <p className="text-gray-500 mb-8 font-bold">تم حفظ النقاط المكتسبة بنجاح</p>
 
-            <div className="grid grid-cols-3 gap-3 mb-8 max-w-sm mx-auto">
+            <div className="grid grid-cols-2 gap-3 mb-8 max-w-sm mx-auto">
               <div className="bg-emerald-50 border-2 border-emerald-500 p-3 rounded-xl block text-center">
-                <p className="text-xs font-bold text-emerald-800">صحيح</p>
+                <p className="text-xs font-bold text-emerald-800">إجابات صحيحة</p>
                 <p className="text-lg font-black text-emerald-900">+{currentTurnCorrect}</p>
               </div>
               <div className="bg-red-50 border-2 border-red-500 p-3 rounded-xl block text-center">
-                <p className="text-xs font-bold text-red-800">أخطاء</p>
+                <p className="text-xs font-bold text-red-800">أخطاء ومخالفات</p>
                 <p className="text-lg font-black text-red-900">-{currentTurnWrong}</p>
-              </div>
-              <div className="bg-blue-50 border-2 border-blue-500 p-3 rounded-xl block text-center">
-                <p className="text-xs font-bold text-blue-800">صافي النقاط</p>
-                <p className={`text-lg font-black ${currentTurnScore >= 0 ? 'text-green-900' : 'text-red-900'}`}>{currentTurnScore}</p>
               </div>
             </div>
 

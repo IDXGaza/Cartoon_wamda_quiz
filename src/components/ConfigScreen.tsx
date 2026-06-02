@@ -45,11 +45,11 @@ const JEOPARDY_SETS = [
 // Define base classifications
 const BASE_CATEGORY_CLASSIFICATIONS = [
   { name: "العلوم والطبيعة", icon: "🧬", color: "bg-emerald-500", categories: ['علوم', 'فضاء وتقنية', 'الفضاء', 'فضاء', 'جسم الإنسان', 'أحياء', 'كيمياء', 'فيزياء', 'طب', 'طبيعة', 'حيوانات', 'مملكة الحيوان', 'اختراعات ومخترعون'] },
-  { name: "اطلس", icon: "🌍", color: "bg-amber-500", categories: ['جغرافيا', 'تاريخ', 'التاريخ', 'العملات', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي', 'العواصم العالمية', 'الحرب العالمية الأولى والثانية', 'ما هي الدولة؟'] },
+  { name: "اطلس", icon: "🌍", color: "bg-amber-500", categories: ['اطلس', 'جغرافيا', 'تاريخ', 'التاريخ', 'العملات', 'تاريخ وثقافة', 'عواصم ومدن', 'دول', 'قارات', 'حضارات', 'تاريخ إسلامي', 'العواصم العالمية', 'الحرب العالمية الأولى والثانية', 'ما هي الدولة؟'] },
   { name: "الدين والقيم", icon: "🕌", color: "bg-teal-500", categories: ['إسلاميات', 'إسلاميات وأدعية', 'خلفاء', 'الدين', 'حياة المعصومين', 'إكمال الدعاء', 'اكمال الدعاء', 'فقه السيد السيستاني', 'القرآن', 'قصص الأنبياء'] },
-  { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم', 'فورمولا 1', 'فورميلا 1'] },
-  { name: "مسلسلات و انمي", icon: "🎬", color: "bg-purple-500", categories: ['Game of Thrones', 'ون بيس', 'هجوم العمالقة', 'كرتون', 'Breaking Bad', 'Dexter', 'hunter x hunter'] },
-  { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['رياضة', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'هاري بوتر', 'الدن رينج', 'ذكاء', 'سيارات', 'التقنية', 'مورتال كومبات', 'تكن', 'the last of us'] }
+  { name: "الرياضة", icon: "⚽", color: "bg-red-500", categories: ['الرياضة', 'المصارعة', 'كرة القدم', 'كرة السلة', 'فورمولا 1', 'فورميلا 1'] },
+  { name: "مسلسلات و انمي", icon: "🎬", color: "bg-purple-500", categories: ['Game of Thrones', 'ون بيس', 'هجوم العمالقة', 'مارفل', 'كرتون', 'Breaking Bad', 'Dexter', 'hunter x hunter', 'وادي الذئاب'] },
+  { name: "منوعات", icon: "🎮", color: "bg-rose-500", categories: ['منوعات', 'معلومات عامة', 'متنوع', 'دارك سولز', 'أوفرواتش', 'هاري بوتر', 'الدن رينج', 'ذكاء', 'سيارات', 'التقنية', 'مورتال كومبات', 'تكن', 'the last of us'] }
 ];
 
 const getDynamicCategoryClassifications = () => {
@@ -90,6 +90,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [mode, setMode] = useState<GameMode>(GameMode.HEX_GRID);
   const [questionType, setQuestionType] = useState<QuestionType>(QuestionType.OPEN);
   const [numQuestionsState, setNumQuestionsState] = useState<number>(10);
+  const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
   const [activeClassification, setActiveClassification] = useState<string>("العلوم والطبيعة");
   const [timedDuration, setTimedDuration] = useState<number>(settings.timedDuration);
   const [categories, setCategories] = useState<string[]>(['', '', '', '', '']);
@@ -102,6 +103,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [isRestrictedMode, setIsRestrictedMode] = useState<boolean>(true);
   const [inputMethod, setInputMethod] = useState<'manual' | 'bank'>('bank');
   const [tabooType, setTabooType] = useState<'local' | 'remote'>('local');
+  const [tabooTimerDuration, setTabooTimerDuration] = useState<number>(60);
+  const [tabooWordTimerDuration, setTabooWordTimerDuration] = useState<number>(0); // 0 means no limit
 
   // ... (activeFeats state removed)
 
@@ -406,7 +409,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             points: 100,
             explanation: q?.explanation,
             type: QuestionType.OPEN,
-            difficulty: Difficulty.MEDIUM,
+            difficulty,
           });
         }
       }
@@ -535,7 +538,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       numQuestions: mode === GameMode.HEX_GRID ? 28 : (mode === GameMode.GRID ? 25 : numQuestionsState), 
       mode, 
       questionTypes: mode === GameMode.TRUE_FALSE ? [QuestionType.TRUE_FALSE] : [questionType], 
-      difficulty: Difficulty.MEDIUM,
+      difficulty,
       players,
       categories: mode === GameMode.GRID ? (inputMethod === 'bank' ? Array.from(new Set(finalManualQuestions.map(q => q.category))) : categories.filter(c => c.trim() !== '')) : [],
       manualQuestions: finalManualQuestions,
@@ -543,7 +546,8 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       questionSource: inputMethod,
       hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions as any : undefined,
       buzzerTimeout: buzzerTimeout,
-      timerDuration: mode === GameMode.TIMED ? timedDuration : buzzerTimeout,
+      timerDuration: mode === GameMode.TIMED ? timedDuration : (mode === GameMode.TABOO ? tabooTimerDuration : buzzerTimeout),
+      wordTimerDuration: mode === GameMode.TABOO ? tabooWordTimerDuration : undefined,
       aiModel: settings.aiModel === 'custom' ? (settings.customModel || 'gemini-1.5-flash') : settings.aiModel,
       tabooType: mode === GameMode.TABOO ? tabooType : undefined
     });
@@ -745,6 +749,50 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                   ))}
                 </div>
               )
+            ) : mode === GameMode.TABOO ? (
+              <div className="space-y-4 md:space-y-8 animate-fade-in w-full">
+                <div className="flex flex-col md:flex-row gap-6 justify-center">
+                  <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                    <label className="text-xl font-bold text-[var(--color-ink-black)]">طريقة اللعب</label>
+                    <div className="flex gap-2">
+                       <button 
+                         type="button" 
+                         onClick={() => setTabooType('local')}
+                         className={`px-6 py-3 rounded-xl border-2 font-bold ${tabooType === 'local' ? 'bg-[var(--color-primary-gold)] border-black' : 'bg-white opacity-50'}`}
+                       >جهاز واحد</button>
+                       <button 
+                         type="button" 
+                         onClick={() => setTabooType('remote')}
+                         className={`px-6 py-3 rounded-xl border-2 font-bold ${tabooType === 'remote' ? 'bg-[var(--color-primary-gold)] border-black' : 'bg-white opacity-50'}`}
+                       >عدة أجهزة</button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                    <label className="text-xl font-bold text-[var(--color-ink-black)]">وقت الجولة (ثواني)</label>
+                    <input 
+                      type="number"
+                      min="10"
+                      max="300"
+                      value={tabooTimerDuration}
+                      onChange={(e) => setTabooTimerDuration(parseInt(e.target.value) || 60)}
+                      className="vintage-input p-4 w-40 text-center text-2xl font-bold"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                    <label className="text-xl font-bold text-[var(--color-ink-black)]">وقت الكلمة (0 = بدون)</label>
+                    <input 
+                      type="number"
+                      min="0"
+                      max="60"
+                      value={tabooWordTimerDuration}
+                      onChange={(e) => setTabooWordTimerDuration(parseInt(e.target.value) || 0)}
+                      className="vintage-input p-4 w-40 text-center text-2xl font-bold"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
             ) : [GameMode.BUZZER, GameMode.TIMED].includes(mode) ? (
               <div className="space-y-6 w-full">
                 <div className="p-8 bg-cyan-500/10 rounded-[2rem] border-4 border-dashed border-cyan-500 text-center">
@@ -1072,60 +1120,60 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           </AnimatePresence>
         </motion.div>
 
-          <div className="mt-12 flex flex-col lg:flex-row justify-center gap-6 items-start w-full max-w-5xl mx-auto">
-            {/* Players and Difficulty */}
-            <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-4 md:space-y-8 vintage-panel p-4 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl">
-              <div className="absolute top-0 right-0 w-2 h-full bg-violet-500"></div>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-violet-500/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-violet-600 font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">4</div>
-                <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">المتنافسون</label>
-              </div>
-              <div className="space-y-4">
-                {playersConfig.map((p, i) => (
-                  <div key={i} className="group/player flex gap-4 items-center bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] p-3 rounded-2xl shadow-[4px_4px_0px_var(--color-ink-black)]">
-                    {!isRestrictedMode && playersConfig.length > 2 && (
-                      <button 
-                        type="button" 
-                        onClick={() => setPlayersConfig(playersConfig.filter((_, idx) => idx !== i))} 
-                        className="w-12 h-12 rounded-xl border-4 border-[var(--color-ink-black)] bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-all shadow-[3px_3px_0px_var(--color-ink-black)] active:translate-x-1 active:translate-y-1 active:shadow-none shrink-0"
-                        title="حذف المتسابق"
-                      >
-                        <CartoonTrash className="w-6 h-6" />
-                      </button>
-                    )}
-                    <div className="relative w-14 h-14 rounded-xl overflow-hidden border-4 border-[var(--color-ink-black)] shrink-0 transition-opacity group-hover/player:opacity-90">
-                      <input 
-                        type="color"
-                        value={p.color}
-                        onChange={e => {
-                          const newPlayers = [...playersConfig];
-                          newPlayers[i].color = e.target.value;
-                          setPlayersConfig(newPlayers);
-                        }}
-                        className="absolute -top-4 -left-4 w-24 h-24 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input 
-                        value={p.name}
-                        onChange={e => {
-                          const newPlayers = [...playersConfig];
-                          newPlayers[i].name = e.target.value;
-                          setPlayersConfig(newPlayers);
-                        }}
-                        className="w-full bg-transparent border-none border-b-4 border-[var(--color-ink-black)] p-2 text-xl font-bold outline-none text-[var(--color-ink-black)] placeholder:text-slate-400"
-                        placeholder={`متسابق ${i+1}`}
-                      />
-                    </div>
+        <div className="mt-12 flex flex-col lg:flex-row justify-center gap-6 items-start w-full max-w-5xl mx-auto">
+          {/* Players Selection */}
+          <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-4 md:space-y-8 vintage-panel p-4 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl">
+            <div className="absolute top-0 right-0 w-2 h-full bg-violet-500"></div>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-xl bg-violet-500/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-violet-600 font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">4</div>
+              <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">المتنافسون</label>
+            </div>
+            <div className="space-y-4">
+              {playersConfig.map((p, i) => (
+                <div key={i} className="group/player flex gap-4 items-center bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] p-3 rounded-2xl shadow-[4px_4px_0px_var(--color-ink-black)]">
+                  {!isRestrictedMode && playersConfig.length > 2 && (
+                    <button 
+                      type="button" 
+                      onClick={() => setPlayersConfig(playersConfig.filter((_, idx) => idx !== i))} 
+                      className="w-12 h-12 rounded-xl border-4 border-[var(--color-ink-black)] bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-all shadow-[3px_3px_0px_var(--color-ink-black)] active:translate-x-1 active:translate-y-1 active:shadow-none shrink-0"
+                      title="حذف المتسابق"
+                    >
+                      <CartoonTrash className="w-6 h-6" />
+                    </button>
+                  )}
+                  <div className="relative w-14 h-14 rounded-xl overflow-hidden border-4 border-[var(--color-ink-black)] shrink-0 transition-opacity group-hover/player:opacity-90">
+                    <input 
+                      type="color"
+                      value={p.color}
+                      onChange={e => {
+                        const newPlayers = [...playersConfig];
+                        newPlayers[i].color = e.target.value;
+                        setPlayersConfig(newPlayers);
+                      }}
+                      className="absolute -top-4 -left-4 w-24 h-24 cursor-pointer"
+                    />
                   </div>
-                ))}
-                {!isRestrictedMode && (
-                  <button type="button" onClick={() => setPlayersConfig([...playersConfig, { name: `متسابق ${playersConfig.length + 1}`, color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') }])} className="vintage-button w-full flex items-center justify-center gap-3 bg-[var(--color-primary-blue)] text-[var(--color-off-white)]">
-                    <CartoonPlus className="w-6 h-6" /> إضافة منافس
-                  </button>
-                )}
-              </div>
-            </motion.div>
+                  <div className="flex-1">
+                    <input 
+                      value={p.name}
+                      onChange={e => {
+                        const newPlayers = [...playersConfig];
+                        newPlayers[i].name = e.target.value;
+                        setPlayersConfig(newPlayers);
+                      }}
+                      className="w-full bg-transparent border-none border-b-4 border-[var(--color-ink-black)] p-2 text-xl font-bold outline-none text-[var(--color-ink-black)] placeholder:text-slate-400"
+                      placeholder={`متسابق ${i+1}`}
+                    />
+                  </div>
+                </div>
+              ))}
+              {!isRestrictedMode && (
+                <button type="button" onClick={() => setPlayersConfig([...playersConfig, { name: `متسابق ${playersConfig.length + 1}`, color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') }])} className="vintage-button w-full flex items-center justify-center gap-3 bg-[var(--color-primary-blue)] text-[var(--color-off-white)]">
+                  <CartoonPlus className="w-6 h-6" /> إضافة منافس
+                </button>
+              )}
+            </div>
+          </motion.div>
 
             <AnimatePresence>
             {mode === GameMode.BUZZER && (
@@ -1146,7 +1194,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 <div className="bg-[var(--color-off-white)] p-4 md:p-6 rounded-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] space-y-6">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-lg md:text-xl text-[var(--color-ink-black)]">المهلة الزمنية</span>
-                    <span className="bg-[var(--color-primary-gold)] px-4 py-1.5 md:px-6 md:py-2 rounded-xl border-4 border-[var(--color-ink-black)] font-black text-xl md:text-2xl shadow-[3px_3px_0px_var(--color-ink-black)]">{buzzerTimeout}ث</span>
+                    <span className="bg-[var(--color-primary-gold)] px-4 py-1.5 md:px-6 md:py-2 rounded-xl border-4 border-black font-black text-xl md:text-2xl shadow-[3px_3px_0px_black]">{buzzerTimeout}ث</span>
                   </div>
                   <div className="px-1 md:px-2 py-1">
                     <input 

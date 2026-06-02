@@ -147,7 +147,13 @@ const RemoteTaboo: React.FC = () => {
       setError('');
     } catch (err: any) {
       console.error(err);
-      setError('فشل الانضمام للغرفة. تأكد من صحة الرمز.');
+      if (err.code === 'permission-denied') {
+        setError('فشل الانضمام: تأكد من رمز الغرفة أو قد تكون الجلسة قد انتهت.');
+      } else if (err.message?.includes('offline') || err.code === 'unavailable') {
+        setError('فشل الاتصال: يرجى التأكد من اتصالك بالإنترنت. (Firestore Offline)');
+      } else {
+        setError('فشل الانضمام للغرفة. تأكد من صحة الرمز.');
+      }
     }
   };
 
@@ -336,10 +342,6 @@ const RemoteTaboo: React.FC = () => {
 
                   {/* Current Active Word Card */}
                   <div className="vintage-panel bg-yellow-50/70 rounded-3xl p-6 border-4 border-black text-center relative overflow-hidden shadow-[4px_4px_0px_black]">
-                    <div className="absolute top-2 right-2 text-[10px] font-black bg-white border border-black rounded-full px-2 py-0.5 opacity-85">
-                      🏷️ {currentQuestion?.category || 'عام'}
-                    </div>
-
                     <div className="my-4">
                       <span className="text-[10px] opacity-60 uppercase font-black block mb-1">الكلمة الحالية</span>
                       {revealed ? (
@@ -445,7 +447,7 @@ const RemoteTaboo: React.FC = () => {
               <p className="text-xs text-gray-500 font-bold">بانتظار أن يقوم المضيف باختيار الدور التالي وحساب النتائج.</p>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-2 bg-white p-4 rounded-2xl border-2 border-black text-center shadow-[4px_4px_0px_black]">
+              <div className="grid grid-cols-2 gap-2 bg-white p-4 rounded-2xl border-2 border-black text-center shadow-[4px_4px_0px_black]">
                 <div className="bg-green-50 rounded-xl p-2">
                   <span className="text-[10px] font-bold text-green-700">صح</span>
                   <p className="text-lg font-black text-green-800">+{roomState.turnCorrect || 0}</p>
@@ -453,10 +455,6 @@ const RemoteTaboo: React.FC = () => {
                 <div className="bg-red-50 rounded-xl p-2">
                   <span className="text-[10px] font-bold text-red-700">خطأ</span>
                   <p className="text-lg font-black text-red-800">-{roomState.turnWrong || 0}</p>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-2 font-bold text-xs">
-                  <span className="text-[10px] font-bold text-blue-700">صافي النقاط</span>
-                  <p className="text-lg font-black text-blue-800">{roomState.turnScore || 0}</p>
                 </div>
               </div>
 

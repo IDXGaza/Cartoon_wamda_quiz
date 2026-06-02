@@ -64,7 +64,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   const [answeredMap, setAnsweredMap] = useState<Record<string, string>>({}); 
   const [revealed, setRevealed] = useState(false);
   const [showScoring, setShowScoring] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
+  const [timeLeft, setTimeLeft] = useState(config.timerDuration || 20);
   const [winner, setWinner] = useState<Player | null>(null);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
@@ -75,7 +75,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   
   // Steel/Pass state
   const [isStealTurn, setIsStealTurn] = useState(false);
-  const [timerDuration, setTimerDuration] = useState(TIMER_DURATION);
+  const [timerDuration, setTimerDuration] = useState(config.timerDuration || 20);
   
   // Question history to avoid repeats
   const [questionHistory, setQuestionHistory] = useState<string[]>([]);
@@ -308,7 +308,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     if (!activeQuestion) return;
     
     // Performance Tracking
-    const timeSpentMs = (TIMER_DURATION - timeLeft) * 1000;
+    const timeSpentMs = (timerDuration - timeLeft) * 1000;
     if (activeQuestion.id && !activeQuestion.id.startsWith('manual') && !activeQuestion.id.startsWith('custom')) {
       updateQuestionStats(activeQuestion, isCorrect, timeSpentMs).catch(err => console.error("Vault update failed", err));
     }
@@ -478,12 +478,12 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
 
   useEffect(() => {
     if (activeQuestion) {
-      setTimerDuration(TIMER_DURATION);
-      setTimeLeft(TIMER_DURATION);
+      setTimerDuration(config.timerDuration || 20);
+      setTimeLeft(config.timerDuration || 20);
       setIsStealTurn(false);
       setRevealed(false);
     }
-  }, [activeQuestion]);
+  }, [activeQuestion, config.timerDuration]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -898,7 +898,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         setActivePower(null);
         setRevealed(false);
         setShowScoring(false);
-        setTimeLeft(TIMER_DURATION);
+        setTimeLeft(config.timerDuration || 20);
         return;
       } catch (err) {
         showToast("فشل تحميل سؤال السرقة", "error");
@@ -963,7 +963,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       setActivePower(null);
       setRevealed(false);
       setShowScoring(false);
-      setTimeLeft(TIMER_DURATION);
+      setTimeLeft(config.timerDuration || 20);
     } catch (error) {
       showToast("حدث خطأ أثناء تحميل السؤال", "error");
       setActiveQuestion(null);
@@ -1023,7 +1023,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         setActiveQuestion(finalQ);
         setEditedQuestion(finalQ);
         setRevealed(false);
-        setTimeLeft(TIMER_DURATION);
+        setTimeLeft(config.timerDuration || 20);
       } else {
         showToast("لا توجد أسئلة بديلة في البنك لهذه الفئة", "warning");
       }
@@ -1044,7 +1044,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         setActiveQuestion(finalQ);
         setEditedQuestion(finalQ);
         setRevealed(false);
-        setTimeLeft(TIMER_DURATION);
+        setTimeLeft(config.timerDuration || 20);
       } catch (err) {
         showToast("فشل جلب سؤال بديل", "error");
       } finally {
