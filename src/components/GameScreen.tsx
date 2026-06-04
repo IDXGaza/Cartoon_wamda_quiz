@@ -1238,6 +1238,17 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
 
                       <div className="flex justify-center gap-4 flex-wrap">
                         <span className="px-6 py-2 bg-[var(--color-accent-sky)] text-[var(--color-ink-black)] rounded-xl font-black border-2 border-[var(--color-ink-black)] text-sm shadow-[3px_3px_0px_var(--color-ink-black)]">{activeQuestion.category}</span>
+                        
+                        {config.questionSource !== 'saved' && (
+                          <button 
+                            onClick={refreshActiveQuestion}
+                            disabled={isLoadingQuestion}
+                            className="px-6 py-2 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-xl font-black border-2 border-[var(--color-ink-black)] text-sm shadow-[3px_3px_0px_var(--color-ink-black)] hover:bg-[var(--color-primary-gold)] transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                          >
+                            <CartoonGear size={16} className={isLoadingQuestion ? 'animate-spin' : ''} />
+                            تبديل السؤال
+                          </button>
+                        )}
                         {activeQuestion.generatedBy && (
                           <span className="px-6 py-2 bg-[var(--color-primary-gold)]/30 text-[var(--color-ink-black)] rounded-xl font-bold border-2 border-[var(--color-ink-black)] text-xs shadow-[3px_3px_0px_var(--color-ink-black)] flex items-center gap-2">
                              <CartoonBot size={14} />

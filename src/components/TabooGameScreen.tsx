@@ -113,21 +113,20 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
   }, [timeLeft, isTimerRunning, turnScore, activePlayerIndex, isRemote]);
 
   // Local turn handlers
-  const getNextUnusedIndex = (currentIndex: number, used: number[]) => {
+  const getUnusedRandomIndex = (currentUsed: number[]) => {
     if (questions.length === 0) return 0;
-    if (used.length >= questions.length) {
-      // If everything is used, reset but keep the current one to avoid immediate repeat if possible
-      setUsedIndices([currentIndex]);
-      return (currentIndex + 1) % questions.length;
+    
+    // available indices
+    const available = questions.map((_, i) => i).filter(i => !currentUsed.includes(i));
+    
+    if (available.length === 0) {
+      // All questions used! Reset the session but clear the current one to avoid immediate repeat
+      // We don't want to reset COMPLETELY because we might want to know which one we just picked
+      return -1; // Special signal to reset
     }
     
-    let nextIdx = (currentIndex + 1) % questions.length;
-    let attempts = 0;
-    while (used.includes(nextIdx) && attempts < questions.length) {
-      nextIdx = (nextIdx + 1) % questions.length;
-      attempts++;
-    }
-    return nextIdx;
+    const randomIndex = Math.floor(Math.random() * available.length);
+    return available[randomIndex];
   };
 
   const handleStartTurn = () => {
@@ -141,19 +140,28 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     setIsTimerRunning(true);
     setRevealed(true);
     
-    // Initialize question index if needed or pick a random one to start fresh turn
-    const startIdx = Math.floor(Math.random() * questions.length);
-    setQuestionIndex(startIdx);
-    setUsedIndices(prev => {
-      if (prev.includes(startIdx)) return prev;
-      return [...prev, startIdx];
-    });
+    // Pick an unused random index
+    let nextIdx = getUnusedRandomIndex(usedIndices);
+    if (nextIdx === -1) {
+      // Reset if all used
+      nextIdx = Math.floor(Math.random() * questions.length);
+      setUsedIndices([nextIdx]);
+    } else {
+      setUsedIndices(prev => [...prev, nextIdx]);
+    }
+    setQuestionIndex(nextIdx);
   };
 
   const moveToNextQuestion = () => {
-    const nextIdx = getNextUnusedIndex(questionIndex, usedIndices);
+    let nextIdx = getUnusedRandomIndex(usedIndices);
+    if (nextIdx === -1) {
+      // Reset if all used
+      nextIdx = Math.floor(Math.random() * questions.length);
+      setUsedIndices([nextIdx]);
+    } else {
+      setUsedIndices(prev => [...prev, nextIdx]);
+    }
     setQuestionIndex(nextIdx);
-    setUsedIndices(prev => [...prev, nextIdx]);
   };
 
   const handleCorrect = () => {

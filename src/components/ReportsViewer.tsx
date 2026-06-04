@@ -229,8 +229,8 @@ export const ReportsViewer: React.FC = () => {
   const filteredReports = reports.filter(report => {
     const matchesFilter = reportsFilter === 'الكل' || report.problemType === reportsFilter;
     const matchesSearch = 
-      report.questionText.toLowerCase().includes(reportsSearch.toLowerCase()) ||
-      (report.details && report.details.toLowerCase().includes(reportsSearch.toLowerCase()));
+      (report.questionText || '').toLowerCase().includes(reportsSearch.toLowerCase()) ||
+      (report.details || '').toLowerCase().includes(reportsSearch.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -315,145 +315,261 @@ export const ReportsViewer: React.FC = () => {
           </div>
         </div>
 
-        {/* Dynamic Category Navigation Tabs */}
+        {/* Navigation Tabs */}
         <div className="flex border-4 border-black rounded-2xl overflow-hidden mb-8 shadow-[4px_4px_0px_black] bg-white">
           <button 
             onClick={() => { playSound('click'); setActiveTab('reports'); }}
-            className={`flex-1 py-4 font-black text-center border-l-4 border-black transition-all ${activeTab === 'reports' ? 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)]' : 'bg-white hover:bg-gray-100'}`}
+            className={`flex-1 py-4 font-black text-center border-l-4 border-black transition-all ${activeTab === 'reports' ? 'bg-[var(--color-primary-gold)] text-black' : 'bg-white hover:bg-gray-100'}`}
           >
             📋 مراجعة البلاغات ({totalCount})
           </button>
           <button 
             onClick={() => { playSound('click'); setActiveTab('questions'); }}
-            className={`flex-1 py-4 font-black text-center transition-all ${activeTab === 'questions' ? 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)]' : 'bg-white hover:bg-gray-100'}`}
+            className={`flex-1 py-4 font-black text-center transition-all ${activeTab === 'questions' ? 'bg-[var(--color-primary-gold)] text-black' : 'bg-white hover:bg-gray-100'}`}
           >
             🗂️ إدارة بنك الأسئلة ({vaultQuestions.length})
           </button>
         </div>
 
-        {activeTab === 'questions' && (
-          <div className="space-y-6 animate-fade-in">
-            {/* Quick add Question manual form */}
-            <div className="p-6 bg-white border-4 border-black rounded-[2rem] shadow-[4px_4px_0px_black]">
-              <h2 className="text-2xl font-black mb-4 text-[var(--color-ink-black)] flex items-center gap-2">
-                <span className="text-3xl">📥</span> إضافة سؤال يدوي لبنك الأسئلة المخصص
-              </h2>
-              
-              <form onSubmit={handleAddQuestion} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-black block mb-1 text-gray-700">متن السؤال</label>
-                    <input 
-                      type="text"
-                      className="w-full p-3 border-4 border-black rounded-xl font-bold focus:outline-none"
-                      placeholder="امسح هنا واكتب السؤال المبتكر..."
-                      value={newQText}
-                      onChange={(e) => setNewQText(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-black block mb-1 text-gray-700">الإجابة النموذجية (بدون ال التعريف للبداية إن وجد)</label>
-                    <input 
-                      type="text"
-                      className="w-full p-3 border-4 border-black rounded-xl font-bold focus:outline-none"
-                      placeholder="اكتب الإجابة المفتاحية هنا..."
-                      value={newQAnswer}
-                      onChange={(e) => setNewQAnswer(e.target.value)}
-                    />
-                  </div>
+        {/* Content Area */}
+        <div className="bg-white/50 rounded-2xl p-4 border-2 border-black border-dashed min-h-[300px]">
+          {activeTab === 'reports' ? (
+            <div className="space-y-6" key="reports-view">
+              {/* Stats Bar */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_black] text-center">
+                  <p className="text-xs font-black text-gray-500 mb-1">إجمالي البلاغات</p>
+                  <p className="text-2xl font-black text-blue-600">{reports.length}</p>
                 </div>
+                <div className="bg-white border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_black] text-center">
+                  <p className="text-xs font-black text-gray-500 mb-1">أخطاء أسئلة</p>
+                  <p className="text-2xl font-black text-red-500">{reports.filter(r => r.problemType === 'خطأ في السؤال').length}</p>
+                </div>
+                <div className="bg-white border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_black] text-center">
+                  <p className="text-xs font-black text-gray-500 mb-1">إجابات خاطئة</p>
+                  <p className="text-2xl font-black text-orange-500">{reports.filter(r => r.problemType === 'إجابة غير صحيحة').length}</p>
+                </div>
+                <div className="bg-white border-4 border-black p-4 rounded-2xl shadow-[4px_4px_0px_black] text-center">
+                  <p className="text-xs font-black text-gray-500 mb-1">غير مناسب</p>
+                  <p className="text-2xl font-black text-purple-500">{reports.filter(r => r.problemType === 'سؤال غير مناسب').length}</p>
+                </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-black block mb-1 text-gray-700">التصنيف أو الفئة الفنية</label>
-                    <input 
-                      type="text"
-                      className="w-full p-3 border-4 border-black rounded-xl font-bold focus:outline-none"
-                      placeholder="مثال: تاريخ، جغفرافيا، كرتون، فضائيات"
-                      value={newQCategory}
-                      onChange={(e) => setNewQCategory(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-black block mb-1 text-gray-700">مستوى الصعوبة</label>
-                    <select
-                      className="w-full p-3 border-4 border-black font-bold rounded-xl focus:outline-none bg-white"
-                      value={newQDifficulty}
-                      onChange={(e) => setNewQDifficulty(e.target.value)}
+              {/* Filters */}
+              <div className="flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative flex-1 w-full">
+                  <input 
+                    type="text"
+                    placeholder="ابحث في متن البلاغات أو الأسئلة..."
+                    className="w-full p-3 pr-10 border-4 border-black rounded-xl font-bold focus:outline-none bg-white text-black"
+                    value={reportsSearch}
+                    onChange={(e) => setReportsSearch(e.target.value)}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-lg">🔍</span>
+                </div>
+                <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                  {['الكل', 'خطأ في السؤال', 'إجابة غير صحيحة', 'سؤال غير مناسب', 'أخرى'].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => { playSound('click'); setReportsFilter(f); }}
+                      className={`whitespace-nowrap px-4 py-2 border-2 border-black rounded-xl text-sm font-bold shadow-[2px_2px_0px_black] transition-all active:translate-y-0.5 ${reportsFilter === f ? 'bg-[var(--color-primary-gold)] text-black' : 'bg-white hover:bg-gray-50 text-black'}`}
                     >
-                      <option value="EASY">سهل</option>
-                      <option value="MEDIUM">متوسط / معتاد</option>
-                      <option value="HARD">صعب / مميز</option>
-                    </select>
-                  </div>
+                      {f}
+                    </button>
+                  ))}
                 </div>
-
-                <button 
-                  type="submit"
-                  className="w-full py-3.5 bg-[var(--color-primary-green)] text-white font-bold text-lg border-4 border-black rounded-xl shadow-[4px_4px_0px_black] active:translate-y-1 transition-all"
-                >
-                  حفظ وتخزين السؤال سحابياً 💾
-                </button>
-              </form>
-            </div>
-
-            {/* List and Search */}
-            <div className="bg-yellow-400/15 border-4 border-black rounded-xl p-4 flex items-center justify-between">
-              <div className="relative w-full">
-                <input 
-                  type="text"
-                  placeholder="ابحث ببنك أسئلتك المخصص (بالكلمات أو التصنيفات)..."
-                  className="w-full p-2.5 pr-10 border-4 border-black rounded-xl font-bold bg-white"
-                  value={qSearchQuery}
-                  onChange={(e) => setQSearchQuery(e.target.value)}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-md">🔍</span>
               </div>
-            </div>
 
-            {/* Vault questions lists */}
-            {questionsLoading ? (
-              <div className="text-center py-12 space-y-3">
-                <span className="loading-spinner"></span>
-                <p className="font-bold">جاري مراجعة قائمة بنكك السحابي الخاص...</p>
-              </div>
-            ) : filteredQuestions.length === 0 ? (
-              <div className="text-center p-12 bg-white border-4 border-dashed border-black rounded-2xl">
-                <span className="text-5xl block mb-2">📥</span>
-                <p className="text-lg font-black text-gray-500">بنك الأسئلة المخصص المتطابق فارغ حالياً.</p>
-                <p className="text-sm text-gray-400 mt-1">اكتب سؤالاً بالأعلى لحفظه، أو دمر الفلاتر!</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredQuestions.map((q) => (
-                  <div key={q.id} className="p-4 bg-white border-4 border-black rounded-2xl shadow-[4px_4px_0px_black] flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
-                    <div>
-                      <div className="flex justify-between items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-yellow-100 border-2 border-black text-xs font-black rounded-lg">
-                          {q.category}
-                        </span>
-                        <span className="text-xs font-bold text-gray-400 font-mono">
-                          {q.difficulty === 'EASY' ? '🟢 سهل' : q.difficulty === 'HARD' ? '🔴 صعب' : '🟡 متوسط'}
-                        </span>
+              {/* Reports List */}
+              {reportsLoading ? (
+                <div className="text-center py-20 bg-white border-4 border-black rounded-2xl">
+                  <div className="animate-spin w-12 h-12 border-4 border-t-transparent border-[var(--color-primary-gold)] rounded-full mx-auto mb-4"></div>
+                  <p className="font-bold text-black">جاري تحميل البلاغات الجديدة...</p>
+                </div>
+              ) : filteredReports.length === 0 ? (
+                <div className="text-center py-20 bg-white border-4 border-dashed border-black rounded-[2rem]">
+                  <span className="text-6xl block mb-4">🎉</span>
+                  <p className="text-xl font-black text-gray-500">لا توجد بلاغات حالياً!</p>
+                  <p className="text-sm text-gray-400 mt-2">الجمهور سعيد ومستمتع بالأسئلة.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredReports.map((report) => (
+                    <div key={report.id} className="bg-white border-4 border-black rounded-2xl overflow-hidden shadow-[4px_4px_0px_black] hover:-translate-y-1 transition-all">
+                      <div className="p-5">
+                        <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-3 py-1 rounded-full border-2 border-black text-xs font-black shadow-[1px_1px_0px_black] ${
+                              report.problemType === 'خطأ في السؤال' ? 'bg-red-100 text-red-700 text-black' :
+                              report.problemType === 'إجابة غير صحيحة' ? 'bg-orange-100 text-orange-700 text-black' :
+                              report.problemType === 'سؤال غير مناسب' ? 'bg-purple-100 text-purple-700 text-black' : 'bg-gray-100 text-gray-700 text-black'
+                            }`}>
+                              {report.problemType}
+                            </span>
+                            <span className="text-xs font-bold text-gray-400 font-mono">
+                              ID: {report.questionId}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold text-gray-400">
+                            {report.timestamp ? new Date(report.timestamp).toLocaleString('ar-EG') : 'بدون تاريخ'}
+                          </span>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="p-4 bg-gray-100 rounded-xl border-2 border-black border-dashed">
+                            <p className="text-xs font-black text-gray-400 mb-1 uppercase tracking-wider">نص السؤال المشتكى عليه:</p>
+                            <p className="text-md font-black text-gray-800 leading-relaxed capitalize">{report.questionText || 'بدون نص'}</p>
+                            {report.questionAnswer && (
+                              <p className="text-sm font-bold text-[var(--color-primary-green)] mt-2">الإجابة الحالية: {report.questionAnswer}</p>
+                            )}
+                          </div>
+
+                          <div className="p-4 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+                            <p className="text-xs font-black text-yellow-600 mb-1 uppercase tracking-wider">تفاصيل البلاغ:</p>
+                            <p className="text-sm font-bold text-gray-700">{report.details || 'لا توجد تفاصيل إضافية.'}</p>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-md font-black text-[var(--color-ink-black)] line-clamp-3 mb-2">{q.text}</p>
-                      <p className="font-bold text-sm text-[var(--color-primary-green)] bg-green-50/50 p-2 rounded-lg border border-green-200">الإجابة: {q.answer}</p>
-                    </div>
 
-                    <div className="border-t-2 border-dashed border-gray-100 pt-3 mt-3 flex justify-end">
-                      <button 
-                        onClick={() => handleDeleteQuestion(q.id)}
-                        className="p-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 border-2 border-black text-xs font-bold rounded-lg transition-transform active:scale-95 flex items-center gap-1"
-                      >
-                        🗑️ حذف السؤال
-                      </button>
+                      <div className="bg-gray-50 p-4 border-t-4 border-black flex flex-wrap justify-end gap-3">
+                        <button 
+                          onClick={() => handleDeleteReport(report.id)}
+                          className="px-4 py-2 bg-red-100 text-red-700 border-2 border-black rounded-xl text-xs font-black shadow-[2px_2px_0px_black] hover:bg-red-200 transition-all active:translate-y-0.5 flex items-center gap-2"
+                        >
+                           🗑️ حذف البلاغ (تم الحل)
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6" key="questions-view">
+              {/* Quick add Question manual form */}
+              <div className="p-6 bg-white border-4 border-black rounded-[2rem] shadow-[4px_4px_0px_black]">
+                <h2 className="text-2xl font-black mb-4 text-[var(--color-ink-black)] flex items-center gap-2">
+                  <span className="text-3xl">📥</span> إضافة سؤال يدوي لبنك الأسئلة المخصص
+                </h2>
+                
+                <form onSubmit={handleAddQuestion} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-black block mb-1 text-gray-700">متن السؤال</label>
+                      <input 
+                        type="text"
+                        className="w-full p-3 border-4 border-black rounded-xl font-bold focus:outline-none bg-white text-black"
+                        placeholder="امسح هنا واكتب السؤال المبتكر..."
+                        value={newQText}
+                        onChange={(e) => setNewQText(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-black block mb-1 text-gray-700">الإجابة النموذجية (بدون ال التعريف للبداية إن وجد)</label>
+                      <input 
+                        type="text"
+                        className="w-full p-3 border-4 border-black rounded-xl font-bold focus:outline-none bg-white text-black"
+                        placeholder="اكتب الإجابة المفتاحية هنا..."
+                        value={newQAnswer}
+                        onChange={(e) => setNewQAnswer(e.target.value)}
+                      />
                     </div>
                   </div>
-                ))}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-black block mb-1 text-gray-700">التصنيف أو الفئة الفنية</label>
+                      <input 
+                        type="text"
+                        className="w-full p-3 border-4 border-black rounded-xl font-bold focus:outline-none bg-white text-black"
+                        placeholder="مثال: تاريخ، جغفرافيا، كرتون، فضائيات"
+                        value={newQCategory}
+                        onChange={(e) => setNewQCategory(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-black block mb-1 text-gray-700">مستوى الصعوبة</label>
+                      <select
+                        className="w-full p-3 border-4 border-black font-bold rounded-xl focus:outline-none bg-white text-black"
+                        value={newQDifficulty}
+                        onChange={(e) => setNewQDifficulty(e.target.value)}
+                      >
+                        <option value="EASY">سهل</option>
+                        <option value="MEDIUM">متوسط / معتاد</option>
+                        <option value="HARD">صعب / مميز</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    className="w-full py-3.5 bg-[var(--color-primary-green)] text-white font-bold text-lg border-4 border-black rounded-xl shadow-[4px_4px_0px_black] active:translate-y-1 transition-all"
+                  >
+                    حفظ وتخزين السؤال سحابياً 💾
+                  </button>
+                </form>
               </div>
-            )}
-          </div>
-        )}
+
+              {/* List and Search */}
+              <div className="bg-yellow-400/15 border-4 border-black rounded-xl p-4 flex items-center justify-between">
+                <div className="relative w-full">
+                  <input 
+                    type="text"
+                    placeholder="ابحث ببنك أسئلتك المخصص (بالكلمات أو التصنيفات)..."
+                    className="w-full p-2.5 pr-10 border-4 border-black rounded-xl font-bold bg-white text-black"
+                    value={qSearchQuery}
+                    onChange={(e) => setQSearchQuery(e.target.value)}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-md text-black">🔍</span>
+                </div>
+              </div>
+
+              {/* Vault questions lists */}
+              {questionsLoading ? (
+                <div className="text-center py-12 space-y-3 bg-white border-4 border-black rounded-2xl">
+                  <div className="animate-spin w-10 h-10 border-4 border-t-transparent border-[var(--color-primary-gold)] rounded-full mx-auto"></div>
+                  <p className="font-bold text-black">جاري مراجعة قائمة بنكك السحابي الخاص...</p>
+                </div>
+              ) : (filteredQuestions.length === 0) ? (
+                <div className="text-center p-12 bg-white border-4 border-dashed border-black rounded-2xl">
+                  <span className="text-5xl block mb-2">📥</span>
+                  <p className="text-lg font-black text-gray-500">بنك الأسئلة المخصص المتطابق فارغ حالياً.</p>
+                  <p className="text-sm text-gray-400 mt-1">اكتب سؤالاً بالأعلى لحفظه، أو دمر الفلاتر!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredQuestions.map((q) => (
+                    <div key={q.id} className="p-4 bg-white border-4 border-black rounded-2xl shadow-[4px_4px_0px_black] flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+                      <div>
+                        <div className="flex justify-between items-center gap-2 mb-2">
+                          <span className="px-2 py-0.5 bg-yellow-100 border-2 border-black text-xs font-black rounded-lg text-black">
+                            {q.category}
+                          </span>
+                          <span className="text-xs font-bold text-gray-400 font-mono text-black">
+                            {q.difficulty === 'EASY' ? '🟢 سهل' : q.difficulty === 'HARD' ? '🔴 صعب' : '🟡 متوسط'}
+                          </span>
+                        </div>
+                        <p className="text-md font-black text-[var(--color-ink-black)] line-clamp-3 mb-2">{q.text}</p>
+                        <p className="font-bold text-sm text-[var(--color-primary-green)] bg-green-50/50 p-2 rounded-lg border border-green-200">الإجابة: {q.answer}</p>
+                      </div>
+
+                      <div className="border-t-2 border-dashed border-gray-100 pt-3 mt-3 flex justify-end">
+                        <button 
+                          onClick={() => handleDeleteQuestion(q.id)}
+                          className="p-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 border-2 border-black text-xs font-bold rounded-lg transition-transform active:scale-95 flex items-center gap-1"
+                        >
+                          🗑️ حذف السؤال
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+
       </div>
     </div>
   );

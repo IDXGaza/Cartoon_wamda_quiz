@@ -90,6 +90,14 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [mode, setMode] = useState<GameMode>(GameMode.HEX_GRID);
   const [questionType, setQuestionType] = useState<QuestionType>(QuestionType.OPEN);
   const [numQuestionsState, setNumQuestionsState] = useState<number>(10);
+
+  React.useEffect(() => {
+    if (mode === GameMode.TABOO) {
+      setNumQuestionsState(30);
+    } else if (mode === GameMode.BUZZER || mode === GameMode.TIMED) {
+      setNumQuestionsState(15);
+    }
+  }, [mode]);
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
   const [activeClassification, setActiveClassification] = useState<string>("العلوم والطبيعة");
   const [timedDuration, setTimedDuration] = useState<number>(settings.timedDuration);
@@ -126,7 +134,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 
   React.useEffect(() => {
-    if (mode === GameMode.BUZZER || mode === GameMode.TIMED) {
+    if (mode === GameMode.BUZZER || mode === GameMode.TIMED || mode === GameMode.TABOO) {
       setTopic('عام');
     }
   }, [mode]);
@@ -787,6 +795,18 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       max="60"
                       value={tabooWordTimerDuration}
                       onChange={(e) => setTabooWordTimerDuration(parseInt(e.target.value) || 0)}
+                      className="vintage-input p-4 w-40 text-center text-2xl font-bold"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                    <label className="text-xl font-bold text-[var(--color-ink-black)]">عدد الكلمات (التكرار)</label>
+                    <input 
+                      type="number"
+                      min="5"
+                      max="200"
+                      value={numQuestionsState}
+                      onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 30)}
                       className="vintage-input p-4 w-40 text-center text-2xl font-bold"
                       required
                     />
