@@ -34,36 +34,55 @@ export const BackgroundMusic: React.FC = () => {
     if (settings.bgMusicEnabled) {
       attemptPlay();
       
-      // Global listener to "unlock" audio on first user interaction
       const unlockAudio = () => {
+        console.log("User interaction detected, unlocking audio...");
         attemptPlay();
         window.removeEventListener('click', unlockAudio);
         window.removeEventListener('keydown', unlockAudio);
         window.removeEventListener('touchstart', unlockAudio);
       };
 
-      window.addEventListener('click', unlockAudio);
-      window.addEventListener('keydown', unlockAudio);
-      window.addEventListener('touchstart', unlockAudio);
+      window.addEventListener('click', unlockAudio, { once: true });
+      window.addEventListener('keydown', unlockAudio, { once: true });
+      window.addEventListener('touchstart', unlockAudio, { once: true });
+
+      // Periodically check if it should be playing but isn't
+      const checkInterval = setInterval(() => {
+        if (settings.bgMusicEnabled && audio.paused) {
+          attemptPlay();
+        }
+      }, 3000);
 
       return () => {
         window.removeEventListener('click', unlockAudio);
         window.removeEventListener('keydown', unlockAudio);
         window.removeEventListener('touchstart', unlockAudio);
+        clearInterval(checkInterval);
       };
     } else {
       audio.pause();
     }
   }, [settings.bgMusicEnabled]);
 
-  const handleLoadError = () => {
-    if (audioRef.current) {
-      if (audioRef.current.src === PRIMARY_MUSIC_URL) {
-        console.log("Primary music URL failed, switching to fallback");
-        audioRef.current.src = DEFAULT_FALLBACK;
-        if (settings.bgMusicEnabled) {
-          audioRef.current.play().catch(e => console.warn("Audio fallback play failed", e));
-        }
+  const handleLoadError = (e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    const target = e.target as HTMLAudioElement;
+    console.error("Audio Load Error:", {
+      status: target.networkState,
+      readyState: target.readyState,
+      src: target.src,
+      error: target.error
+    });
+    
+    // If we're not already using the fallback, try it
+    if (!audio.src.includes("chosic.com")) {
+      console.log("Primary music failed. Switching to default fallback...");
+      audio.src = DEFAULT_FALLBACK;
+      audio.load();
+      if (settings.bgMusicEnabled) {
+        audio.play().catch(err => console.warn("Fallback music also failed:", err));
       }
     }
   };
@@ -73,9 +92,14 @@ export const BackgroundMusic: React.FC = () => {
       ref={audioRef}
       src={MUSIC_URL}
       onError={handleLoadError}
-      onCanPlayThrough={attemptPlay}
+      onCanPlayThrough={() => {
+        if (settings.bgMusicEnabled && audioRef.current?.paused) {
+          attemptPlay();
+        }
+      }}
       loop
       preload="auto"
+      referrerPolicy="no-referrer"
       style={{ display: 'none' }}
     />
   );
