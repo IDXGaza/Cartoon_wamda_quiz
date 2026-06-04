@@ -1248,7 +1248,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ع_ext_17', category: 'حيوانات', text: 'سلالة عريقة من الخيول العربية الأصيلة التي تشتهر بجمالها وسرعتها', answer: 'عبيية', letter: 'ع', tabooWords: ['خيل', 'عربية', 'جمال', 'أصل'], difficulty: 'hard' },
     { id: 'h_ع_ext_18', category: 'أجهزة', text: 'جهاز يقوم بعمليات حسابية وتراكمية للأرقام أو الكميات', answer: 'عداد', letter: 'ع', tabooWords: ['جهاز', 'حساب', 'أرقام', 'كميات'], difficulty: 'easy' },
     { id: 'h_ع_ext_19', category: 'جغرافيا', text: 'مدينة عراقية تقع على نهر دجلة وهي مركز محافظة ميسان', answer: 'العمارة', letter: 'ع', tabooWords: ['مدينة', 'عراقية', 'دجلة', 'ميسان'], difficulty: 'medium' },
-    { id: 'h_ع_ext_20', category: 'فيزياء', text: 'التغير في سرعة الجسم بالنسبة للزمن زيادة أو نقصاناً', answer: 'عجلة', letter: 'ع', tabooWords: ['تغير', 'سرعة', 'زمن', 'تسارع'], difficulty: 'hard' },
+    { id: 'h_ع_ext_20', category: 'فيزياء', text: 'التغير في سرعة الجسم بالنسبة للزمن زيادة أو نقصاناً', answer: 'تسارع', letter: 'ع', tabooWords: ['تغير', 'سرعة', 'زمن', 'تسارع'], difficulty: 'hard' },
     { id: 'h_ع_ext_21', category: 'عام', text: 'رد فعل طبيعي للجسم ناتج عن تهيج في الأنف يطرد فيه الهواء بقوة', answer: 'عطاس', letter: 'ع', tabooWords: ['رد فعل', 'أنف', 'هواء', 'قوة'], difficulty: 'easy' },
     { id: 'h_ع_ext_22', category: 'قانون', text: 'وثيقة قانونية تبرم بين طرفين لضمان حقوق والتزامات معينة', answer: 'عقد', letter: 'ع', tabooWords: ['وثيقة', 'قانونية', 'طرفين', 'حقوق'], difficulty: 'medium' },
     { id: 'h_ع_ext_23', category: 'حيوانات', text: 'الصوت المزعج الذي يصدره الغراب', answer: 'نعيق', letter: 'ع', tabooWords: ['صوت', 'مزعج', 'غراب'], difficulty: 'medium' },

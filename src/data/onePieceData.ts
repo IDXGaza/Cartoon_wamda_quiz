@@ -140,7 +140,7 @@ export const ONE_PIECE_QUESTIONS: BankQuestion[] = [
   { id: 'op_128', category: 'ون بيس', text: 'من هو "الفارس المقدس" الذي يرجح أنه شقيق شانكس أو قريبه؟', answer: 'فيغرلاند غارلينغ', difficulty: 'expert', points: 500 },
   { id: 'op_129', category: 'ون بيس', text: 'ما هي "البيغ بانغ" (Mother Flame)؟', answer: 'سلاح أو طاقة من صنع فيغابانك استخدمت لتدمير مملكة لولوسيا', difficulty: 'expert', points: 500 },
   { id: 'op_130', category: 'ون بيس', text: 'من هو الشخص الذي كشف لروجر عن "القرن الفارغ"؟', answer: 'كوزوكي أودين (عبر قراءة البونغليف)', difficulty: 'expert', points: 500 },
-  { id: 'op_131', category: 'ون بيس', text: 'ما اسم الجزيرة التي وقعت فيها المعركة بين روجر واللحية السوداء (القديمة)؟', answer: 'جزيرة وادي الآلهة (God Valley)', difficulty: 'expert', points: 500 },
+  { id: 'op_131', category: 'ون بيس', text: 'ما اسم الجزيرة التي وقعت فيها المعركة بين روجر واللحية البيضاء (القديمة)؟', answer: 'جزيرة وادي الآلهة (God Valley)', difficulty: 'expert', points: 500 },
   { id: 'op_132', category: 'ون بيس', text: 'من هو القرصان الذي كان يقود طاقم "روكس"؟', answer: 'روكس دي زيبيك', difficulty: 'expert', points: 500 },
   { id: 'op_133', category: 'ون بيس', text: 'من هم الأعضاء الأبرز في طاقم "روكس" قديماً؟', answer: 'اللحية البيضاء، كايدو، بيغ مام، شيكي', difficulty: 'expert', points: 500 },
   { id: 'op_134', category: 'ون بيس', text: 'ما هي قدرة الهاكي التي يمتلكها "شانكس" وتلقب بـ "قاتل هاكي الملاحظة"؟', answer: 'قدرته على منع الخصم من رؤية المستقبل', difficulty: 'expert', points: 500 },

@@ -237,6 +237,15 @@ export const CartoonSparkles: React.FC<IconProps> = ({ size = 32, className = ''
   </svg>
 );
 
+export const CartoonMusic: React.FC<IconProps> = ({ size = 32, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="16" cy="36" r="6" fill="#F5C518" stroke="#0D0D0D" strokeWidth="3"/>
+    <path d="M22 36V10L40 6V18L22 22" stroke="#0D0D0D" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="34" cy="32" r="6" fill="#F5C518" stroke="#0D0D0D" strokeWidth="3"/>
+    <path d="M40 32V6" stroke="#0D0D0D" strokeWidth="4" strokeLinecap="round"/>
+  </svg>
+);
+
 export const CartoonZap: React.FC<IconProps> = ({ size = 32, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     <path d="M30 4L10 26H22L18 44L38 22H26L30 4Z" fill="#F5C518" stroke="#0D0D0D" strokeWidth="3" strokeLinejoin="round"/>

@@ -128,8 +128,6 @@ export const OVERWATCH_QUESTIONS: BankQuestion[] = [
   { id: 'ow_117', category: 'أوفرواتش', text: 'ما اسم الخريطة التي تقع في القطب الشمالي؟', answer: 'Eco-Point: Antarctica', difficulty: 'hard', points: 400 },
   { id: 'ow_118', category: 'أوفرواتش', text: 'ما هي جنسية الشخصية التي تمتلك قدرة Petal Platform؟', answer: 'تايلاندية', answer_alt: 'Thai', difficulty: 'hard', points: 400 },
   { id: 'ow_119', category: 'أوفرواتش', text: 'ما اسم السلاح الأساسي لـ Sojourn؟', answer: 'مدفع السكك الحديدية', answer_alt: 'Railgun', difficulty: 'hard', points: 400 },
-  { id: 'ow_120', category: 'أوفرواتش', text: 'من هو الـ Tank الذي صنع درعه من حطام أومنيك؟', answer: 'دي فا', answer_alt: 'D.Va', difficulty: 'hard', points: 400 },
-
   // مستوى 5: خبير (500 points)
   { id: 'ow_121', category: 'أوفرواتش', text: 'ما هو الاسم الحقيقي لـ Sojourn؟', answer: 'Vivian Chase', difficulty: 'expert', points: 500 },
   { id: 'ow_122', category: 'أوفرواتش', text: 'من هو العضو المؤسس لـ Overwatch الذي لم يظهر كبطل حتى الآن؟', answer: 'Emre Sarioglu', difficulty: 'expert', points: 500 },

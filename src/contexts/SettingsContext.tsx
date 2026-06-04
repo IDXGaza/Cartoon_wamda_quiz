@@ -12,6 +12,8 @@ export interface AppSettings {
   aiModel: AIModel;
   customModel?: string;
   timedDuration: number;
+  bgMusicEnabled: boolean;
+  bgMusicVolume: number;
   apiKeys: {
     gemini: string;
   };
@@ -22,6 +24,8 @@ const defaultSettings: AppSettings = {
   aiModel: 'gemini-1.5-flash',
   customModel: '',
   timedDuration: 120,
+  bgMusicEnabled: true,
+  bgMusicVolume: 0.3,
   apiKeys: {
     gemini: '',
   }

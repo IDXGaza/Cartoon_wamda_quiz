@@ -27,6 +27,7 @@ import SettingsModal from './components/SettingsModal';
 import ReportScreen from './components/ReportScreen';
 import ReportsViewer from './components/ReportsViewer';
 import BankManager from './components/BankManager';
+import { BackgroundMusic } from './components/BackgroundMusic';
 // import GuideScreen from './components/GuideScreen';
 import { useSettings } from './contexts/SettingsContext';
 import { useToast } from './contexts/ToastContext';
@@ -301,6 +302,7 @@ const App: React.FC = () => {
       )}
 
       <div className="fixed inset-0 pointer-events-none z-0 halftone-bg"></div>
+      <BackgroundMusic />
       <SettingsModal />
       
       <AnimatePresence>
