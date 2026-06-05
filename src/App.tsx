@@ -314,35 +314,35 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       {gameState !== 'remote' && (
-        <header className="vintage-panel sticky top-0 z-50 relative border-x-0 border-t-0 rounded-none">
-          <div className="max-w-7xl mx-auto px-2 py-2 md:px-6 md:py-4 flex justify-between items-center">
+        <header className="vintage-panel sticky top-0 z-50 relative border-x-0 border-t-0 rounded-none w-full box-border">
+          <div className="w-full max-w-7xl mx-auto px-2 py-2 md:px-6 md:py-4 flex justify-between items-center box-border">
             <motion.div 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-4 cursor-pointer group" 
+              className="flex items-center gap-4 cursor-pointer group flex-shrink-0" 
               onClick={() => {
                 playSound('click');
                 handleReset();
               }}
             >
-              <div className="w-10 h-10 md:w-14 md:h-14 bg-[var(--color-primary-gold)] rounded-xl flex items-center justify-center text-[var(--color-ink-black)] border-2 md:border-4 border-[var(--color-ink-black)] group-hover:rotate-12 transition-transform shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">
+              <div className="w-10 h-10 md:w-14 md:h-14 bg-[var(--color-primary-gold)] rounded-xl flex items-center justify-center text-[var(--color-ink-black)] border-2 md:border-4 border-[var(--color-ink-black)] group-hover:rotate-12 transition-transform shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)] flex-shrink-0">
                 <CartoonRocket size={24} className="w-6 h-6 md:w-8 md:h-8" />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col flex-shrink-0">
                 <h1 className="text-xl md:text-3xl font-bold text-[var(--color-ink-black)] leading-none vintage-text">ومضة</h1>
               </div>
             </motion.div>
             
-            <div className="flex items-center gap-1 md:gap-3">
+            <div className="flex items-center gap-2 md:gap-3 flex-shrink-0 flex-nowrap box-border">
               {gameState !== 'config' && gameState !== 'loading' && gameState !== 'library' && gameState !== 'start' && (
                 <button 
                   onClick={() => {
                     playSound('click');
                     handleReset();
                   }} 
-                  className="vintage-button bg-[var(--color-primary-red)] text-white px-2 py-2 md:px-6 md:py-3 rounded-xl text-xs md:text-md flex items-center gap-1 md:gap-3"
+                  className="vintage-button bg-[var(--color-primary-red)] text-white px-2 py-2 md:px-6 md:py-3 rounded-xl text-xs md:text-md flex items-center gap-1 md:gap-3 flex-shrink-0"
                 >
-                  <CartoonX size={16} className="w-4 h-4 md:w-6 md:h-6" /> <span className="hidden md:inline">إلغاء</span>
+                  <CartoonX size={16} className="w-4 h-4 md:w-6 md:h-6 shrink-0" /> <span className="hidden md:inline">إلغاء</span>
                 </button>
               )}
               {gameState === 'config' && (
@@ -354,20 +354,24 @@ const App: React.FC = () => {
                   playSound('click');
                   toggleFullScreen();
                 }} 
-                className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl shrink-0"
+                className="vintage-button w-9 h-9 md:w-16 md:h-16 flex items-center justify-center rounded-xl md:rounded-2xl shrink-0"
                 title="ملء الشاشة"
               >
-                <CartoonEye size={48} className="w-full h-full" />
+                <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center flex-shrink-0">
+                  <CartoonEye className="w-full h-full" />
+                </div>
               </button>
               <button 
                 onClick={() => {
                   playSound('click');
                   setIsSettingsOpen(true);
                 }} 
-                className="vintage-button w-9 h-9 md:w-18 md:h-18 flex items-center justify-center rounded-xl md:rounded-2xl shrink-0"
+                className="vintage-button w-9 h-9 md:w-16 md:h-16 flex items-center justify-center rounded-xl md:rounded-2xl shrink-0"
                 title="الإعدادات"
               >
-                <CartoonGear size={48} className="w-full h-full animate-spin-slow" />
+                <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center flex-shrink-0">
+                  <CartoonGear className="w-full h-full animate-spin-slow" />
+                </div>
               </button>
               {/* 
               <button                
