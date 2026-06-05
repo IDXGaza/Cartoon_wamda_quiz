@@ -234,7 +234,7 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenRepo
                 <p className="text-[10px] font-mono text-[var(--color-primary-blue)] break-all select-all">{joinUrl}</p>
               </div>
 
-              <div className="bg-[var(--color-off-white)] p-4 rounded-2xl border-4 border-[var(--color-ink-black)]">
+              <div className="bg-[var(--color-off-white)] p-4 rounded-2xl border-4 border-[var(--color-ink-black)] hidden">
                 <p className="text-sm font-bold text-[var(--color-bg-dark)] mb-1">رمز الغرفة</p>
                 <p className="text-4xl font-display text-[var(--color-primary-blue)] tracking-widest">{roomId}</p>
               </div>

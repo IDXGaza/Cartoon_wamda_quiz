@@ -176,60 +176,6 @@ const SettingsModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Background Music Toggle */}
-          <div className="space-y-4">
-            <label className="text-xl font-display text-[var(--color-bg-dark)] bg-[var(--color-primary-gold)] px-4 py-1 rounded-xl border-2 border-[var(--color-ink-black)] inline-block shadow-[2px_2px_0px_var(--color-ink-black)]">الموسيقى الخلفية</label>
-            <div 
-              onClick={() => {
-                playSound('click');
-                updateSettings({ bgMusicEnabled: !settings.bgMusicEnabled });
-              }}
-              className={`w-full flex items-center justify-between bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] rounded-2xl p-4 cursor-pointer transition-all shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none ${
-                settings.bgMusicEnabled ? 'bg-green-50' : 'bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 border-black ${settings.bgMusicEnabled ? 'bg-[var(--color-primary-green)]' : 'bg-gray-300'}`}>
-                  <CartoonMusic size={24} className={settings.bgMusicEnabled ? 'text-white' : 'text-gray-600'} />
-                </div>
-                <span className="text-xl font-display text-[var(--color-ink-black)]">
-                  {settings.bgMusicEnabled ? 'الموسيقى مفعلة 🎵' : 'الموسيقى متوقفة 🔇'}
-                </span>
-              </div>
-              <div className={`w-14 h-8 rounded-full border-2 border-black relative transition-colors ${settings.bgMusicEnabled ? 'bg-[var(--color-primary-green)]' : 'bg-gray-300'}`}>
-                <motion.div 
-                  animate={{ x: settings.bgMusicEnabled ? 24 : 4 }}
-                  className="w-6 h-6 bg-white rounded-full border-2 border-black absolute top-0.5"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-[var(--color-ink-black)] opacity-60 font-medium">موسيقى كرتونية مرحة تضفي حماساً على وقت اللعب.</p>
-          </div>
-
-          {settings.bgMusicEnabled && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="space-y-4 pt-2"
-            >
-              <label className="text-sm font-display text-[var(--color-bg-dark)] block mb-2 px-2">مستوى الصوت</label>
-              <div className="flex items-center gap-4 bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] rounded-2xl p-4 shadow-[4px_4px_0px_var(--color-ink-black)]">
-                <span className="text-lg">🔈</span>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="1" 
-                  step="0.01"
-                  value={settings.bgMusicVolume}
-                  onChange={(e) => updateSettings({ bgMusicVolume: parseFloat(e.target.value) })}
-                  className="flex-1 accent-[var(--color-primary-green)] h-3 rounded-lg appearance-none bg-gray-200 border-2 border-black"
-                />
-                <span className="text-lg">🔊</span>
-                <span className="w-12 text-center font-bold text-sm">%{Math.round(settings.bgMusicVolume * 100)}</span>
-              </div>
-            </motion.div>
-          )}
-
           {/* Timed Mode Duration */}
           <div className="space-y-4">
             <label className="text-xl font-display text-[var(--color-bg-dark)] bg-[var(--color-primary-gold)] px-4 py-1 rounded-xl border-2 border-[var(--color-ink-black)] inline-block shadow-[2px_2px_0px_var(--color-ink-black)]">مدة "تحدي الوقت" (ثانية)</label>

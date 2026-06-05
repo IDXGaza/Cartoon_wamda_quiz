@@ -27,8 +27,6 @@ import SettingsModal from './components/SettingsModal';
 import ReportScreen from './components/ReportScreen';
 import ReportsViewer from './components/ReportsViewer';
 import BankManager from './components/BankManager';
-import { BackgroundMusic } from './components/BackgroundMusic';
-// import GuideScreen from './components/GuideScreen';
 import { useSettings } from './contexts/SettingsContext';
 import { useToast } from './contexts/ToastContext';
 import { playSound } from './utils/sound';
@@ -49,7 +47,6 @@ const App: React.FC = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isFirestoreOffline, setIsFirestoreOffline] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [showDebug, setShowDebug] = useState(false);
   const { settings, setIsSettingsOpen } = useSettings();
   const { showToast } = useToast();
 
@@ -210,8 +207,18 @@ const App: React.FC = () => {
         return;
       }
 
-      if (newConfig.mode === GameMode.HEX_GRID && newConfig.hexMode === 'manual') {
-        setQuestions([]);
+      if (newConfig.mode === GameMode.HEX_GRID && newConfig.hexMode === 'manual' && newConfig.hexManualQuestions) {
+        const manualArray = Object.entries(newConfig.hexManualQuestions).map(([letter, q]) => ({
+          id: `m-${letter}-${sessionId}`,
+          text: q.question,
+          answer: q.answer,
+          category: 'يدوي',
+          points: 100,
+          letter,
+          type: QuestionType.OPEN,
+          difficulty: newConfig.difficulty
+        }));
+        setQuestions(manualArray);
         setGameState('playing');
         return;
       }
@@ -276,33 +283,9 @@ const App: React.FC = () => {
     <div className="min-h-screen text-[var(--color-ink-black)] font-[var(--font-arabic)] overflow-x-hidden relative">
       {currentPath === '/reports' ? <ReportsViewer /> : (
         <>
-          {/* Debug Trigger */}
-          <button 
-            onClick={() => setShowDebug(!showDebug)}
-            className="fixed bottom-2 left-2 z-[100] opacity-20 hover:opacity-100 text-[8px] bg-black text-white p-1 rounded"
-          >
-            DEBUG
-          </button>
-
-      {showDebug && (
-        <div className="fixed inset-0 z-[100] bg-black/90 p-6 overflow-auto text-xs font-mono text-green-400 flex items-center justify-center">
-          <div className="bg-gray-900 p-6 rounded-2xl border-4 border-green-500 max-w-lg w-full shadow-[0_0_20px_rgba(34,197,94,0.3)]">
-            <h3 className="text-xl font-bold mb-4 text-green-500 border-b border-green-500 pb-2">معلومات التشخيص (Diagnostic Info)</h3>
-            <div className="space-y-2">
-              <p><span className="text-gray-500">URL:</span> {window.location.href}</p>
-              <p><span className="text-gray-500">Auth Ready:</span> {isAuthReady ? "YES" : "NO"}</p>
-              <p><span className="text-gray-500">User ID:</span> {auth.currentUser?.uid || "NONE"}</p>
-              <p><span className="text-gray-500">Auth Error:</span> {authError || "NONE"}</p>
-              <p><span className="text-gray-500">Game State:</span> {gameState}</p>
-              <p><span className="text-gray-500">Firestore Offline:</span> {isFirestoreOffline ? "YES" : "NO"}</p>
-            </div>
-            <button onClick={() => setShowDebug(false)} className="mt-6 w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-colors">إغلاق</button>
-          </div>
-        </div>
-      )}
 
       <div className="fixed inset-0 pointer-events-none z-0 halftone-bg"></div>
-      <BackgroundMusic />
+
       <SettingsModal />
       
       <AnimatePresence>

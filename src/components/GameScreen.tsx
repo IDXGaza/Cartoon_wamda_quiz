@@ -156,7 +156,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
 
   // Initialize grid when questions or config change
   useEffect(() => {
-    if (!players || players.length === 0 || questions.length === 0) return;
+    if (!players || players.length === 0 || (questions.length === 0 && config.mode !== GameMode.HEX_GRID)) return;
     
     if (config.mode === GameMode.HEX_GRID) {
       const rowSizes = [6, 5, 6, 5, 6];
@@ -418,8 +418,13 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     // Switch turn if it's HEX_GRID mode and turn is over - ONLY if not in no-turns mode
     // (User requested removing turns, so we disable automatic switching)
     if (config.mode === GameMode.HEX_GRID && (isCorrect || !isCorrect || !playerId)) {
-      // setCurrentPlayerIndex(prev => (prev + 1) % players.length);
+      if (config.inputMethod !== 'manual') {
+        // Only switch turns if not in manual mode (user requested turn control but essentially we use indices)
+        // Wait, standard HEX_GRID does have turns. The user previously asked to remove forced turns 
+        // logic that was blocking clicks. Actually, keeping it simple:
+      }
       setActivePower(null);
+
       setPowerInUse(null);
       
       setFrozenCells(prev => {
@@ -581,8 +586,10 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   }, [questions, config.mode, config.categories]);
 
   const fetchAndSetQuestion = async (q: Question) => {
+    if (config.inputMethod === 'manual') return;
     try {
       // Use the local bank
+
       const bank = QUESTION_BANK[config.mode] || [];
       const targetDifficulty = q.points <= 100 ? 'beginner' : q.points <= 200 ? 'easy' : q.points <= 300 ? 'medium' : q.points <= 400 ? 'hard' : 'expert';
       
@@ -729,11 +736,29 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     const diff = forceDifficulty || config.difficulty;
     const cacheKey = forceDifficulty ? `${letter}-steal-${Date.now()}` : letter;
 
-    if (!forceDifficulty && questionCache.current[cacheKey] && questionCache.current[cacheKey].text?.trim()) {
-      return questionCache.current[cacheKey];
+    const normTarget = normalizeLetter(letter);
+    const cached = questionCache.current[letter] || questionCache.current[normTarget];
+
+    if (!forceDifficulty && cached && cached.text?.trim()) {
+      return cached;
+    }
+    
+    // If we are in manual mode and item missing from cache, don't fetch from bank
+    if (config.inputMethod === 'manual') {
+      return {
+        id: `manual-missing-${letter}-${Date.now()}`,
+        text: `سؤال الحرف (${letter}) غير متوفر في الإدخال اليدوي`,
+        answer: 'يرجى مراجعة الإدخال اليدوي',
+        category: 'يدوي',
+        points: 100,
+        letter: letter,
+        type: QuestionType.OPEN,
+        difficulty: Difficulty.MEDIUM
+      };
     }
 
     // New Bank-first logic for HEX_GRID
+
     if (config.mode === GameMode.HEX_GRID) {
       const bank = QUESTION_BANK[GameMode.HEX_GRID] || [];
       // Try to find by specific letter
@@ -978,78 +1003,53 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     // Track current question to avoid repeating it immediately
     const currentText = activeQuestion.text;
     
-    if (config.inputMethod === 'bank') {
-      const mode = config.mode === GameMode.HEX_GRID ? GameMode.HEX_GRID : GameMode.GRID;
-      const bank = QUESTION_BANK[mode] || [];
-      
-      const targetDifficulty = (activeQuestion.points || 100) <= 200 ? 'easy' : (activeQuestion.points || 100) <= 400 ? 'medium' : 'hard';
-      
-      // Exclude questions already in history, answered, or currently visible on board
-      const usedTexts = new Set([
-        ...questionHistory, 
-        ...Object.values(finalAnswers), 
-        currentText,
-        ...grid.flat().map(q => q.text).filter(Boolean)
-      ]);
+    // Use bank logic exclusively as requested
+    const mode = config.mode === GameMode.HEX_GRID ? GameMode.HEX_GRID : GameMode.GRID;
+    const bank = QUESTION_BANK[mode] || [];
+    
+    const targetDifficulty = (activeQuestion.points || 100) <= 200 ? 'easy' : (activeQuestion.points || 100) <= 400 ? 'medium' : 'hard';
+    
+    // Exclude questions already in history, answered, or currently visible on board
+    const usedTexts = new Set([
+      ...questionHistory, 
+      ...Object.values(finalAnswers), 
+      currentText,
+      ...grid.flat().map(q => q.text).filter(Boolean)
+    ]);
 
-      let matches = bank.filter(bq => 
+    let matches = bank.filter(bq => 
+      (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : getMainCategory(bq.category) === getMainCategory(activeQuestion.category)) && 
+      !usedTexts.has(bq.text) &&
+      bq.difficulty === targetDifficulty
+    );
+    
+    if (matches.length === 0) {
+      matches = bank.filter(bq => 
         (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : getMainCategory(bq.category) === getMainCategory(activeQuestion.category)) && 
-        !usedTexts.has(bq.text) &&
-        bq.difficulty === targetDifficulty
+        !usedTexts.has(bq.text)
       );
-      
-      if (matches.length === 0) {
-        matches = bank.filter(bq => 
-          (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : getMainCategory(bq.category) === getMainCategory(activeQuestion.category)) && 
-          !usedTexts.has(bq.text)
-        );
-      }
-
-      // Final fallback: any category from bank not on board
-      if (matches.length === 0) {
-        matches = bank.filter(bq => !usedTexts.has(bq.text));
-      }
-      
-      if (matches.length > 0) {
-        const randomQ = matches[Math.floor(Math.random() * matches.length)];
-        addPlayedQuestionHashes([randomQ]);
-        const finalQ = { 
-          ...activeQuestion, 
-          text: randomQ.text, 
-          answer: randomQ.answer, 
-          id: `bank-refreshed-${randomQ.id}-${Date.now()}`,
-          explanation: randomQ.explanation
-        };
-        setActiveQuestion(finalQ);
-        setEditedQuestion(finalQ);
-        setRevealed(false);
-        setTimeLeft(config.timerDuration || 20);
-      } else {
-        showToast("لا توجد أسئلة بديلة في البنك لهذه الفئة", "warning");
-      }
+    }
+    
+    if (matches.length > 0) {
+      const randomQ = matches[Math.floor(Math.random() * matches.length)];
+      addPlayedQuestionHashes([randomQ]);
+      const finalQ = { 
+        ...activeQuestion, 
+        text: randomQ.text, 
+        answer: randomQ.answer, 
+        id: `bank-refreshed-${randomQ.id}-${Date.now()}`,
+        explanation: randomQ.explanation,
+        generatedBy: undefined
+      };
+      setActiveQuestion(finalQ);
+      setEditedQuestion(finalQ);
+      setRevealed(false);
+      setTimeLeft(config.timerDuration || 20);
     } else {
-      setIsLoadingQuestion(true);
-      try {
-        const generated = await generateQuestions(
-          config.topic || 'عام', 
-          1, 
-          [QuestionType.OPEN], 
-          config.mode, 
-          config.difficulty, 
-          settings.aiModel, 
-          [activeQuestion.category], 
-          [...questionHistory, ...Object.values(finalAnswers), currentText]
-        );
-        const finalQ = { ...activeQuestion, ...generated[0], id: `${activeQuestion.id}-refreshed-${Date.now()}` };
-        setActiveQuestion(finalQ);
-        setEditedQuestion(finalQ);
-        setRevealed(false);
-        setTimeLeft(config.timerDuration || 20);
-      } catch (err) {
-        showToast("فشل جلب سؤال بديل", "error");
-      } finally {
-        setIsLoadingQuestion(false);
-      }
+      const errorMsg = mode === GameMode.HEX_GRID 
+        ? `لا توجد أسئلة بديلة في البنك للحرف (${activeQuestion.letter})`
+        : `لا توجد أسئلة بديلة في البنك لهذه الفئة (${activeQuestion.category})`;
+      showToast(errorMsg, "warning");
     }
   };
 
@@ -1239,9 +1239,10 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                       <div className="flex justify-center gap-4 flex-wrap">
                         <span className="px-6 py-2 bg-[var(--color-accent-sky)] text-[var(--color-ink-black)] rounded-xl font-black border-2 border-[var(--color-ink-black)] text-sm shadow-[3px_3px_0px_var(--color-ink-black)]">{activeQuestion.category}</span>
                         
-                        {config.questionSource !== 'saved' && (
+                        {config.questionSource !== 'saved' && config.questionSource !== 'manual' && config.mode !== GameMode.HEX_GRID && (
                           <button 
                             onClick={refreshActiveQuestion}
+
                             disabled={isLoadingQuestion}
                             className="px-6 py-2 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-xl font-black border-2 border-[var(--color-ink-black)] text-sm shadow-[3px_3px_0px_var(--color-ink-black)] hover:bg-[var(--color-primary-gold)] transition-all active:translate-y-1 active:shadow-none flex items-center gap-2 cursor-pointer disabled:opacity-50"
                           >

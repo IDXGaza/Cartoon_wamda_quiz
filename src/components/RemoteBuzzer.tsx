@@ -160,7 +160,7 @@ const RemoteBuzzer: React.FC = () => {
           </div>
 
           <form onSubmit={handleJoin} className="space-y-6">
-            <div className="bg-[var(--color-primary-gold)]/10 p-4 rounded-2xl border-2 border-dashed border-[var(--color-primary-gold)] text-center mb-4">
+            <div className="bg-[var(--color-primary-gold)]/10 p-4 rounded-2xl border-2 border-dashed border-[var(--color-primary-gold)] text-center mb-4 hidden">
               <p className="text-xs font-bold text-[var(--color-bg-dark)]">رمز الغرفة</p>
               <input 
                 value={roomId}
@@ -236,7 +236,7 @@ const RemoteBuzzer: React.FC = () => {
           <div className="w-8 h-8 rounded-lg border-2 border-[var(--color-ink-black)]" style={{ backgroundColor: playerColor }} />
           <span className="font-bold text-lg">{playerName}</span>
         </div>
-        <div className="bg-[var(--color-off-white)] px-4 py-1 rounded-full border-2 border-[var(--color-ink-black)] font-bold">
+        <div className="hidden bg-[var(--color-off-white)] px-4 py-1 rounded-full border-2 border-[var(--color-ink-black)] font-bold">
           الغرفة: {roomId}
         </div>
       </div>

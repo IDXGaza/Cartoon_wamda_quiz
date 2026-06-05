@@ -393,12 +393,12 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       } else if (mode === GameMode.GRID) {
         JEOPARDY_STRUCTURE.forEach((cat, i) => {
           cat.points.forEach((p, j) => {
-            const q = manualQuestions[`j-${i}-${j}`];
+            const q = manualQuestions[`j-${i}-${j}`] || { question: '', answer: '' };
             finalManualQuestions.push({
               id: `m-${i}-${j}`,
-              text: q.question,
-              answer: q.answer,
-              category: q.category || cat.category,
+              text: q.question || `سؤال ${p} نقطة`,
+              answer: q.answer || 'لم يتم إدخال إجابة',
+              category: manualQuestions[`cat-${i}`]?.category || cat.category,
               points: p,
               type: QuestionType.OPEN,
               difficulty: Difficulty.MEDIUM
@@ -566,9 +566,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       <div className="vintage-panel rounded-3xl md:rounded-[3rem] p-3 md:p-12 max-w-5xl mx-auto animate-fade-up relative">
         
         <div className="text-center mb-8 md:mb-16 relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-[var(--color-primary-gold)] rounded-2xl md:rounded-3xl mb-4 md:mb-6 border-2 md:border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)]">
-            <CartoonGear className="w-8 h-8 md:w-12 md:h-12 animate-spin-slow" />
-          </div>
           <h1 className="text-3xl md:text-7xl font-bold mb-4 text-[var(--color-ink-black)] vintage-text">إعداد المسابقة</h1>
           
           {/* Active Features indicators indicator dynamically loaded */}
@@ -580,7 +577,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-indigo-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-              <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-primary-gold)] border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-ink-black)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">1</div>
               <label className="text-xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">نمط اللعب</label>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -620,7 +616,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6">
-              <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-accent-sky)] border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-ink-black)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">2</div>
               <label className="text-xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">
                 {mode === GameMode.GRID ? 'اختيار الفئات الجاهزة' : 'موضوع المسابقة الرئيسي'}
               </label>
@@ -761,21 +756,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               <div className="space-y-4 md:space-y-8 animate-fade-in w-full">
                 <div className="flex flex-col md:flex-row gap-6 justify-center">
                   <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
-                    <label className="text-xl font-bold text-[var(--color-ink-black)]">طريقة اللعب</label>
-                    <div className="flex gap-2">
-                       <button 
-                         type="button" 
-                         onClick={() => setTabooType('local')}
-                         className={`px-6 py-3 rounded-xl border-2 font-bold ${tabooType === 'local' ? 'bg-[var(--color-primary-gold)] border-black' : 'bg-white opacity-50'}`}
-                       >جهاز واحد</button>
-                       <button 
-                         type="button" 
-                         onClick={() => setTabooType('remote')}
-                         className={`px-6 py-3 rounded-xl border-2 font-bold ${tabooType === 'remote' ? 'bg-[var(--color-primary-gold)] border-black' : 'bg-white opacity-50'}`}
-                       >عدة أجهزة</button>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
                     <label className="text-xl font-bold text-[var(--color-ink-black)]">وقت الجولة (ثواني)</label>
                     <input 
                       type="number"
@@ -815,11 +795,10 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               </div>
             ) : [GameMode.BUZZER, GameMode.TIMED].includes(mode) ? (
               <div className="space-y-6 w-full">
-                <div className="p-8 bg-cyan-500/10 rounded-[2rem] border-4 border-dashed border-cyan-500 text-center">
+                <div className="hidden">
                   <p className="text-2xl font-bold text-[var(--color-ink-black)]">موضوع المسابقة:</p>
                   <p className="text-4xl font-bold text-cyan-600 mt-2 vintage-text">عشوائي 🎲</p>
                   <p className="text-sm text-gray-600 mt-3 font-bold leading-relaxed">
-                    تم اختيار وضبط موضوع المسابقة على عشوائي تلقائياً لهذه اللعبة، لتنعموا بمنافسة ممتعة وغير متوقعة تشمل جميع مجالات المعرفة!
                   </p>
                 </div>
                 
@@ -870,12 +849,12 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                   </div>
                 )}
                 {mode === GameMode.HEX_GRID ? (
-                  <div className="p-6 bg-[var(--color-primary-gold)]/10 rounded-[2rem] border-4 border-dashed border-[var(--color-primary-gold)] text-center">
+                  <div className="hidden">
                     <p className="text-2xl font-display text-[var(--color-ink-black)]">موضوع مسابقة الشبكة:</p>
                     <p className="text-4xl font-display text-[var(--color-primary-gold)] mt-2">معلومات عامة</p>
                   </div>
                 ) : (
-                  <div className="p-8 bg-blue-50 rounded-[2rem] border-4 border-blue-200 text-center">
+                  <div className="hidden">
                     <p className="text-2xl font-display text-blue-900">
                       {mode === GameMode.TRUE_FALSE 
                         ? "سيتم جلب معلومات مذهلة ومضللة لهذا الوضع." 
@@ -946,7 +925,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-green)]"></div>
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-xl bg-[var(--color-primary-green)] border-4 border-[var(--color-ink-black)] flex items-center justify-center text-white font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">3</div>
               <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">طريقة الإدخال</label>
             </div>
             
@@ -1040,21 +1018,22 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       ans = ans.substring(2);
                     }
                     const isValid = q.answer.trim() === '' || ans.startsWith(letter) || q.answer.trimStart().startsWith(letter);
+                    const isMissing = !q.question.trim() || !q.answer.trim();
                     return (
-                      <div key={letter} className={`flex flex-col md:flex-row gap-4 items-start p-4 md:p-5 rounded-2xl border transition-all ${!isValid ? 'bg-rose-500/10 border-rose-500/30' : 'bg-white/5 border-white/10'}`}>
-                        <div className="w-12 h-12 md:w-14 md:h-14 shrink-0 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center text-xl md:text-3xl font-bold border border-amber-500/30">
+                      <div key={letter} className={`flex flex-col md:flex-row gap-4 items-start p-4 md:p-5 rounded-2xl border transition-all ${(!isValid || isMissing) ? 'bg-rose-500/10 border-rose-600 border-2 shadow-[0_0_15px_rgba(225,29,72,0.2)]' : 'bg-white/5 border-white/10'}`}>
+                        <div className={`w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-xl flex items-center justify-center text-xl md:text-3xl font-bold border transition-colors ${(!isValid || isMissing) ? 'bg-rose-500/20 text-rose-400 border-rose-500' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
                           {letter}
                         </div>
                         <div className="flex-1 space-y-3 w-full">
                           <input 
                             type="text" placeholder="نص السؤال..." value={q.question}
                             onChange={e => handleManualChange(letter, 'question', e.target.value)}
-                            className="vintage-input w-full p-3 md:p-4 text-sm"
+                            className={`vintage-input w-full p-3 md:p-4 text-sm ${!q.question.trim() ? 'border-rose-600 border-2' : ''}`}
                           />
                           <input 
                             type="text" placeholder={`الإجابة (تبدأ بـ ${letter})`} value={q.answer}
                             onChange={e => handleManualChange(letter, 'answer', e.target.value)}
-                            className={`vintage-input w-full p-3 md:p-4 text-sm ${!isValid ? 'border-rose-500/50 text-rose-300 focus:border-rose-400' : ''}`}
+                            className={`vintage-input w-full p-3 md:p-4 text-sm ${(!isValid || !q.answer.trim()) ? 'border-rose-600 border-2 text-rose-300 focus:border-rose-400' : ''}`}
                           />
                         </div>
                       </div>
@@ -1072,19 +1051,20 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       {cat.points.map((p, pIdx) => {
                         const key = `j-${catIdx}-${pIdx}`;
                         const q = manualQuestions[key] || { question: '', answer: '' };
+                        const isMissing = !q.question.trim() || !q.answer.trim();
                         return (
-                          <div key={p} className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-black/20 p-4 rounded-xl border border-white/5">
-                            <div className="w-auto md:w-20 text-right md:text-center font-bold text-amber-400 text-lg bg-amber-500/10 py-2 px-3 rounded-lg border border-amber-500/20">{p}</div>
+                          <div key={p} className={`flex flex-col md:flex-row gap-4 items-start md:items-center p-4 rounded-xl border transition-all ${isMissing ? 'bg-rose-500/10 border-rose-600/50 border-2' : 'bg-black/20 border-white/5'}`}>
+                            <div className={`w-auto md:w-20 text-right md:text-center font-bold text-lg py-2 px-3 rounded-lg border transition-colors ${isMissing ? 'bg-rose-500/20 text-rose-400 border-rose-600' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'}`}>{p}</div>
                             <div className="flex-1 space-y-2 w-full">
                               <input 
                                 type="text" placeholder="السؤال..." value={q.question}
                                 onChange={e => handleManualChange(key, 'question', e.target.value)}
-                                className="vintage-input w-full p-3 text-sm"
+                                className={`vintage-input w-full p-3 text-sm ${!q.question.trim() ? 'border-rose-600 border-2' : ''}`}
                               />
                               <input 
                                 type="text" placeholder="الإجابة..." value={q.answer}
                                 onChange={e => handleManualChange(key, 'answer', e.target.value)}
-                                className="vintage-input w-full p-3 text-sm"
+                                className={`vintage-input w-full p-3 text-sm ${!q.answer.trim() ? 'border-rose-600 border-2' : ''}`}
                               />
                             </div>
                           </div>
@@ -1145,7 +1125,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-4 md:space-y-8 vintage-panel p-4 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl">
             <div className="absolute top-0 right-0 w-2 h-full bg-violet-500"></div>
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-xl bg-violet-500/20 border-4 border-[var(--color-ink-black)] flex items-center justify-center text-violet-600 font-bold text-3xl shadow-[4px_4px_0px_var(--color-ink-black)]">4</div>
               <label className="text-2xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">المتنافسون</label>
             </div>
             <div className="space-y-4">
@@ -1207,7 +1186,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               >
                 <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-gold)]"></div>
                 <div className="flex items-center gap-3 md:gap-4 mb-4">
-                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-[var(--color-primary-gold)]/20 border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-[var(--color-primary-gold)] font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">6</div>
                   <label className="text-xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">سرعة الإجابة</label>
                 </div>
                 
@@ -1248,7 +1226,6 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               >
                 <div className="absolute top-0 right-0 w-2 h-full bg-rose-500"></div>
                 <div className="flex items-center gap-3 md:gap-4 mb-4">
-                  <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-rose-500/20 border-2 md:border-4 border-[var(--color-ink-black)] flex items-center justify-center text-rose-500 font-bold text-xl md:text-3xl shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]">6</div>
                   <label className="text-xl md:text-3xl font-bold text-[var(--color-ink-black)] vintage-text">طريقة لعب "قول بس لا تقول"</label>
                 </div>
                 

@@ -214,7 +214,7 @@ const RemoteTaboo: React.FC = () => {
           </div>
 
           <form onSubmit={handleJoin} className="space-y-6">
-            <div className="bg-rose-50 p-4 rounded-2xl border-2 border-dashed border-rose-200 text-center mb-4">
+            <div className="bg-rose-50 p-4 rounded-2xl border-2 border-dashed border-rose-200 text-center mb-4 hidden">
               <p className="text-xs font-bold text-gray-500">رمز الغرفة</p>
               <input 
                 value={roomId}
@@ -272,7 +272,7 @@ const RemoteTaboo: React.FC = () => {
           <div className="w-6 h-6 rounded-full border border-black" style={{ backgroundColor: playerColor }} />
           <span className="font-bold">{playerName}</span>
         </div>
-        <div className="bg-rose-50 px-4 py-1 rounded-full border border-black font-extrabold text-sm text-rose-700">
+        <div className="hidden bg-rose-50 px-4 py-1 rounded-full border border-black font-extrabold text-sm text-rose-700">
           الغرفة: {roomId}
         </div>
       </div>

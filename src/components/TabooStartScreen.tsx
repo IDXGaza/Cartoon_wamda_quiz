@@ -91,7 +91,7 @@ const TabooStartScreen: React.FC<Props> = ({ config, questions = [], roomId, onS
           <QRCodeSVG value={joinUrl} size={200} />
           
           <div className="w-full bg-[var(--color-off-white)] p-4 rounded-xl border-2 border-black flex flex-col gap-2 items-center">
-             <p className="font-bold text-sm">رمز الغرفة: <span className="text-rose-600 font-extrabold text-lg select-all">{roomId}</span></p>
+             <p className="font-bold text-sm hidden">رمز الغرفة: <span className="text-rose-600 font-extrabold text-lg select-all">{roomId}</span></p>
              <button 
                onClick={() => {
                  navigator.clipboard.writeText(joinUrl).then(() => showToast("تم نسخ رابط الانضمام!", "success"));
