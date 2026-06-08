@@ -163,7 +163,7 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
       </div>
 
       {/* Question Card */}
-      <div className="w-full max-w-3xl mt-2 md:mt-8">
+      <div className="w-full max-w-5xl mt-2 md:mt-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
@@ -199,7 +199,7 @@ const TrueFalseScreen: React.FC<Props> = ({ config, questions = [], players: ini
               </span>
             </div>
 
-            <h2 className="text-base sm:text-2xl md:text-5xl font-black text-[var(--color-ink-black)] leading-tight mb-6 sm:mb-12 vintage-text text-center w-full px-4">
+            <h2 className="text-base sm:text-xl md:text-3xl lg:text-4xl font-black text-[var(--color-ink-black)] leading-tight mb-6 sm:mb-12 vintage-text text-center w-full px-4">
               <span>{currentQuestion.text}</span>
             </h2>
 

@@ -34,6 +34,7 @@ import { ATLAS_QUESTIONS } from './atlasData';
 import { MORTAL_KOMBAT_QUESTIONS } from './mortalKombatData';
 import { TEKKEN_QUESTIONS } from './tekkenData';
 import { THE_LAST_OF_US_QUESTIONS } from './theLastOfUsData';
+import { UNCHARTED_QUESTIONS } from './unchartedData';
 import { PROPHETS_QUESTIONS } from './prophetsData';
 import { FORMULA_ONE_QUESTIONS } from './formulaOneData';
 import { HUNTER_QUESTIONS } from './hunterData';
@@ -42,6 +43,7 @@ import { VALLEY_OF_WOLVES_QUESTIONS } from './valleyOfWolvesData';
 import { BASKETBALL_QUESTIONS } from './basketballData';
 import { MARVEL_QUESTIONS } from './marvelData';
 import { GHOST_OF_TSUSHIMA_QUESTIONS } from './ghostOfTsushimaData';
+import { HOLLOW_KNIGHT_QUESTIONS } from './hollowKnightData';
 import { LETTER_GRID_QUESTIONS } from './letterGridData';
 import { TABOO_QUESTIONS_BANK } from './tabooData';
 
@@ -67,7 +69,7 @@ export const GEOGRAPHY_QUESTIONS: BankQuestion[] = getDeduplicatedGeographyQuest
 
 
 export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
-  [GameMode.GRID]: [...DARK_SOULS_QUESTIONS, ...OVERWATCH_QUESTIONS, ...SCIENCE_QUESTIONS, ...ISLAMIC_QUESTIONS, ...DUA_QUESTIONS, ...HUMAN_BODY_QUESTIONS, ...ONE_PIECE_QUESTIONS, ...SPORTS_QUESTIONS, ...GEOGRAPHY_QUESTIONS, ...WRESTLING_QUESTIONS, ...HARRY_POTTER_QUESTIONS, ...HISTORY_GEOGRAPHY_QUESTIONS, ...NEW_HISTORY_QUESTIONS, ...CAPITAL_CITIES_QUESTIONS, ...ELDEN_RING_QUESTIONS, ...SISTANI_QUESTIONS, ...AOT_QUESTIONS, ...QURAN_QUESTIONS, ...SPACE_QUESTIONS, ...SPACE_SCIENCE_QUESTIONS, ...CARTOON_QUESTIONS, ...ANIMAL_QUESTIONS, ...CARS_QUESTIONS, ...GOT_QUESTIONS, ...BREAKING_BAD_QUESTIONS, ...DEXTER_QUESTIONS, ...CURRENCIES_QUESTIONS, ...WORLD_WAR_QUESTIONS, ...TECHNOLOGY_QUESTIONS, ...ATLAS_QUESTIONS, ...MORTAL_KOMBAT_QUESTIONS, ...TEKKEN_QUESTIONS, ...THE_LAST_OF_US_QUESTIONS, ...PROPHETS_QUESTIONS, ...FORMULA_ONE_QUESTIONS, ...HUNTER_QUESTIONS, ...INVENTIONS_QUESTIONS, ...VALLEY_OF_WOLVES_QUESTIONS, ...BASKETBALL_QUESTIONS, ...MARVEL_QUESTIONS, ...GHOST_OF_TSUSHIMA_QUESTIONS],
+  [GameMode.GRID]: [...DARK_SOULS_QUESTIONS, ...OVERWATCH_QUESTIONS, ...SCIENCE_QUESTIONS, ...ISLAMIC_QUESTIONS, ...DUA_QUESTIONS, ...HUMAN_BODY_QUESTIONS, ...ONE_PIECE_QUESTIONS, ...SPORTS_QUESTIONS, ...GEOGRAPHY_QUESTIONS, ...WRESTLING_QUESTIONS, ...HARRY_POTTER_QUESTIONS, ...HISTORY_GEOGRAPHY_QUESTIONS, ...NEW_HISTORY_QUESTIONS, ...CAPITAL_CITIES_QUESTIONS, ...ELDEN_RING_QUESTIONS, ...SISTANI_QUESTIONS, ...AOT_QUESTIONS, ...QURAN_QUESTIONS, ...SPACE_QUESTIONS, ...SPACE_SCIENCE_QUESTIONS, ...CARTOON_QUESTIONS, ...ANIMAL_QUESTIONS, ...CARS_QUESTIONS, ...GOT_QUESTIONS, ...BREAKING_BAD_QUESTIONS, ...DEXTER_QUESTIONS, ...CURRENCIES_QUESTIONS, ...WORLD_WAR_QUESTIONS, ...TECHNOLOGY_QUESTIONS, ...ATLAS_QUESTIONS, ...MORTAL_KOMBAT_QUESTIONS, ...TEKKEN_QUESTIONS, ...THE_LAST_OF_US_QUESTIONS, ...UNCHARTED_QUESTIONS, ...PROPHETS_QUESTIONS, ...FORMULA_ONE_QUESTIONS, ...HUNTER_QUESTIONS, ...INVENTIONS_QUESTIONS, ...VALLEY_OF_WOLVES_QUESTIONS, ...BASKETBALL_QUESTIONS, ...MARVEL_QUESTIONS, ...GHOST_OF_TSUSHIMA_QUESTIONS, ...HOLLOW_KNIGHT_QUESTIONS],
   [GameMode.POINTS]: [],
   [GameMode.TRUE_FALSE]: TRUE_FALSE_QUESTIONS,
   [GameMode.SILENT_GUESS]: SHUFFLED_SILENT_GUESS_QUESTIONS,
@@ -426,7 +428,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ج_ext_l39ze', category: 'ثقافة عامة', text: 'جبال في سلطنة عمان تمتاز بطبيعتها الخضراء والمدرجات الزراعية', answer: 'جبل أخضر', letter: 'ج', tabooWords: ['جبال', 'سلطنة', 'عمان', 'تمتاز', 'بطبيعتها'], difficulty: 'medium' },
     { id: 'h_ج_ext_cv01a', category: 'ثقافة عامة', text: 'مدينة سويسرية تعتبر مركزاً دبلوماسياً عالمياً وتستضيف المقر الأوروبي للأمم المتحدة والصليب الأحمر', answer: 'جنيف', letter: 'ج', tabooWords: ['سويسرية', 'تعتبر', 'مركزاً', 'دبلوماسياً', 'عالمياً'], difficulty: 'medium' },
     { id: 'h_ج_ext_enu3h', category: 'ثقافة عامة', text: 'عاصمة دولة إندونيسيا وتقع على الساحل الشمالي الغربي لجزيرة جاوة المكتظة بالسكان', answer: 'جاكرتا', letter: 'ج', tabooWords: ['إندونيسيا', 'وتقع', 'الساحل', 'الشمالي', 'الغربي'], difficulty: 'medium' },
-    { id: 'h_ج_ext_jbgfi', category: 'ثقافة عامة', text: 'عاصمة دولة جيبوتي في القرن الإفريقي وتحمل نفس اسم الدولة وتعتبر ميناءً استراتيجياً', answer: 'جيبوتي', letter: 'ج', tabooWords: ['جيبوتي', 'القرن', 'الإفريقي', 'وتحمل', 'نفس'], difficulty: 'medium' },
+    { id: 'h_ج_ext_jbgfi', category: 'ثقافة عامة', text: 'عاصمة دولة تقع في منطقة القرن الإفريقي وتحمل اسماً يطابق اسم الدولة ذاتها', answer: 'جيبوتي', letter: 'ج', tabooWords: ['عاصمة', 'أفريقيا', 'دولة', 'اسم', 'مدينة'], difficulty: 'medium' },
     { id: 'h_ج_ext_7s38z', category: 'ثقافة عامة', text: 'دولة تقع في منطقة القوقاز عند نقطة التقاء أوروبا الشرقية بآسيا الغربية وعاصمتها تبليسي', answer: 'جورجيا', letter: 'ج', tabooWords: ['تقع', 'منطقة', 'القوقاز', 'عند', 'نقطة'], difficulty: 'medium' },
     { id: 'h_ج_ext_sl047', category: 'ثقافة عامة', text: 'مضيق بحري يفصل جغرافياً بين شبه الجزيرة الأيبيرية في أوروبا والمغرب في إفريقيا ويربط المتوسط بالأطلسي', answer: 'جبل طارق', letter: 'ج', tabooWords: ['مضيق', 'بحري', 'يفصل', 'جغرافياً', 'بين'], difficulty: 'medium' },
     { id: 'h_ج_ext_94374', category: 'ثقافة عامة', text: 'نهر ينبع من المرتفعات الإثيوبية ويتدفق عبر الصومال ليصب في المحيط الهندي', answer: 'جوبا', letter: 'ج', tabooWords: ['نهر', 'ينبع', 'المرتفعات', 'الإثيوبية', 'ويتدفق'], difficulty: 'medium' },
@@ -471,7 +473,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ج_ext_l623u', category: 'ثقافة عامة', text: 'وحدة قياس لسعة التخزين الرقمية في أجهزة الحاسوب تعادل 1024 ميجابايت', answer: 'جيجابايت', letter: 'ج', tabooWords: ['وحدة', 'قياس', 'لسعة', 'التخزين', 'الرقمية'], difficulty: 'medium' },
     { id: 'h_ج_ext_47kqv', category: 'ثقافة عامة', text: 'مستشعر تكنولوجي يوجد في الهواتف الذكية والأجهزة الملاحية يستخدم لقياس وتحديد زوايا الميل والدوران والاتجاه', answer: 'جيروسكوب', letter: 'ج', tabooWords: ['مستشعر', 'تكنولوجي', 'الهواتف', 'الذكية', 'والأجهزة'], difficulty: 'medium' },
     { id: 'h_ز_ext_2xupg', category: 'ثقافة عامة', text: 'كوكب يلقب بـ "الكوكب ذو الحلقات" وهو ثاني أكبر كوكب في المجموعة الشمسية', answer: 'زحل', letter: 'ز', tabooWords: ['كوكب', 'يلقب', '"الكوكب', 'الحلقات"', 'وهو'], difficulty: 'medium' },
-    { id: 'h_ز_ext_2xr20', category: 'ثقافة عامة', text: 'زواحف من ذوات الدم البارد، بعضها سام وبعضها يعصر فريسته', answer: 'زواحف', letter: 'ز', tabooWords: ['زواحف', 'ذوات', 'الدم', 'البارد،', 'بعضها'], difficulty: 'medium' },
+    { id: 'h_ز_ext_2xr20', category: 'ثقافة عامة', text: 'طائفة من الحيوانات الفقارية ذوات الدم البارد، تشمل الثعابين والسحالي', answer: 'زواحف', letter: 'ز', tabooWords: ['حيوانات', 'دم', 'بارد', 'ثعبان', 'سحلية'], difficulty: 'medium' },
     { id: 'h_ز_ext_1wy9z', category: 'ثقافة عامة', text: 'زهرة برية صفراء أو بيضاء تشتهر برائحتها العطرية وتنمو في الربيع', answer: 'زنبق', letter: 'ز', tabooWords: ['زهرة', 'برية', 'صفراء', 'بيضاء', 'تشتهر'], difficulty: 'medium' },
     { id: 'h_ز_ext_dvvd6', category: 'ثقافة عامة', text: 'معدن فلزي رمزه الكيميائي Zn يستخدم في حماية الحديد من الصدأ', answer: 'زنك', letter: 'ز', tabooWords: ['معدن', 'فلزي', 'رمزه', 'الكيميائي', 'يستخدم'], difficulty: 'medium' },
     { id: 'h_ز_ext_tdxty', category: 'ثقافة عامة', text: 'مرض فيروسي يصيب الجهاز التنفسي ويسبب الحمى والقشعريرة', answer: 'زكام', letter: 'ز', tabooWords: ['مرض', 'فيروسي', 'يصيب', 'الجهاز', 'التنفسي'], difficulty: 'medium' },
@@ -486,7 +488,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ز_ext_qmpmp', category: 'ثقافة عامة', text: 'أداة زجاجية توضع فيها الزهور للزينة', answer: 'زهرية', letter: 'ز', tabooWords: ['أداة', 'زجاجية', 'توضع', 'فيها', 'الزهور'], difficulty: 'medium' },
     { id: 'h_ز_ext_vnqq9', category: 'ثقافة عامة', text: 'بروتين يوجد في بذور الذرة', answer: 'زيين', letter: 'ز', tabooWords: ['بروتين', 'بذور', 'الذرة', 'زيين'], difficulty: 'medium' },
     { id: 'h_ز_ext_hkyc8', category: 'ثقافة عامة', text: 'التهاب معوي يسبب إسهالاً حاداً', answer: 'زحار', letter: 'ز', tabooWords: ['التهاب', 'معوي', 'يسبب', 'إسهالاً', 'حاداً'], difficulty: 'medium' },
-    { id: 'h_ز_ext_071b0', category: 'ثقافة عامة', text: 'اسم يطلق على ذكر الزرافة', answer: 'زراف', letter: 'ز', tabooWords: ['يطلق', 'ذكر', 'الزرافة', 'زراف'], difficulty: 'medium' },
+    { id: 'h_ز_ext_071b0', category: 'ثقافة عامة', text: 'اسم يطلق على ذكر الحيوان الذي يتميز برقبة طويلة جداً ورجلين طويلتين', answer: 'زراف', letter: 'ز', tabooWords: ['ذكر', 'رقبة', 'طويلة', 'حيوان'], difficulty: 'medium' },
     { id: 'h_ز_ext_bo64e', category: 'ثقافة عامة', text: 'أداة تستخدم لتكبير الصور البعيدة', answer: 'زوم', letter: 'ز', tabooWords: ['أداة', 'تستخدم', 'لتكبير', 'الصور', 'البعيدة'], difficulty: 'medium' },
     { id: 'h_ز_ext_37dn3', category: 'ثقافة عامة', text: 'مدينة ليبية تقع على ساحل البحر المتوسط', answer: 'زوارة', letter: 'ز', tabooWords: ['ليبية', 'تقع', 'ساحل', 'البحر', 'المتوسط'], difficulty: 'medium' },
     { id: 'h_ز_ext_5wjsd', category: 'ثقافة عامة', text: 'مصطلح فيزيائي يشير إلى الفاصل بين حدثين', answer: 'زمن', letter: 'ز', tabooWords: ['مصطلح', 'فيزيائي', 'يشير', 'الفاصل', 'بين'], difficulty: 'medium' },
@@ -518,7 +520,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ز_ext_47ng4', category: 'ثقافة عامة', text: 'عملية غرس البذور في التربة لإنتاج النبات', answer: 'زراعة', letter: 'ز', tabooWords: ['عملية', 'غرس', 'البذور', 'التربة', 'لإنتاج'], difficulty: 'medium' },
     { id: 'h_ز_ext_doygv', category: 'ثقافة عامة', text: 'خيوط ذهبية أو فضية', answer: 'زري', letter: 'ز', tabooWords: ['خيوط', 'ذهبية', 'فضية', 'زري'], difficulty: 'medium' },
     { id: 'h_ز_ext_57ng5', category: 'ثقافة عامة', text: 'تلون الجلد باللون الأزرق نتيجة نقص الأكسجين', answer: 'زرقة', letter: 'ز', tabooWords: ['تلون', 'الجلد', 'باللون', 'الأزرق', 'نتيجة'], difficulty: 'medium' },
-    { id: 'h_ز_ext_wlhrg', category: 'ثقافة عامة', text: 'اسم يطلق على الشخص الذي يصنع الزجاج', answer: 'زجاج', letter: 'ز', tabooWords: ['يطلق', 'الشخص', 'يصنع', 'الزجاج', 'زجاج'], difficulty: 'medium' },
+    { id: 'h_ز_ext_wlhrg', category: 'ثقافة عامة', text: 'الحرفي الذي يقوم بتشكيل المصهورات الرملية لصنع الأواني والتحف الشفافة', answer: 'زجاج', letter: 'ز', tabooWords: ['حرفي', 'تشكيل', 'رمل', 'أواني', 'شفاف'], difficulty: 'medium' },
     { id: 'h_ز_ext_tqk3o', category: 'ثقافة عامة', text: 'أداة تشغيل', answer: 'زر', letter: 'ز', tabooWords: ['أداة', 'تشغيل'], difficulty: 'medium' },
     { id: 'h_س_ext_dna0z', category: 'ثقافة عامة', text: 'نظام حكم يترأسه سلطان', answer: 'سلطنة', letter: 'س', tabooWords: ['نظام', 'حكم', 'يترأسه', 'سلطان', 'سلطنة'], difficulty: 'medium' },
     { id: 'h_س_ext_wij4v', category: 'ثقافة عامة', text: 'كائنات حية بحرية تتنفس عبر الخياشيم', answer: 'سمك', letter: 'س', tabooWords: ['كائنات', 'حية', 'بحرية', 'تتنفس', 'عبر'], difficulty: 'medium' },
@@ -567,14 +569,14 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_س_ext_ttqgf', category: 'ثقافة عامة', text: 'مادة تضاف للتربة لتحسين نمو النبات', answer: 'سماد', letter: 'س', tabooWords: ['مادة', 'تضاف', 'للتربة', 'لتحسين', 'نمو'], difficulty: 'medium' },
     { id: 'h_س_ext_6swnb', category: 'ثقافة عامة', text: 'عملية استقبال الصوت عبر الأوساط المادية', answer: 'سماع', letter: 'س', tabooWords: ['عملية', 'استقبال', 'الصوت', 'عبر', 'الأوساط'], difficulty: 'medium' },
     { id: 'h_س_ext_24k9a', category: 'ثقافة عامة', text: 'قماش ناعم جداً', answer: 'ستان', letter: 'س', tabooWords: ['قماش', 'ناعم', 'جداً', 'ستان'], difficulty: 'medium' },
-    { id: 'h_س_ext_f3eoz', category: 'ثقافة عامة', text: 'سكتة دماغية أو قلبية', answer: 'سكتة', letter: 'س', tabooWords: ['سكتة', 'دماغية', 'قلبية'], difficulty: 'medium' },
+    { id: 'h_س_ext_f3eoz', category: 'ثقافة عامة', text: 'توقف مفاجئ في تروية الدماغ أو القلب نتيجة انسداد أو ضيق في الأوعية', answer: 'سكتة', letter: 'س', tabooWords: ['توقف', 'دماغ', 'قلب', 'مفاجئ'], difficulty: 'medium' },
     { id: 'h_س_ext_vrxw1', category: 'ثقافة عامة', text: 'اسم يطلق على الشخص الذي يصنع السيوف', answer: 'سياف', letter: 'س', tabooWords: ['يطلق', 'الشخص', 'يصنع', 'السيوف', 'سياف'], difficulty: 'medium' },
     { id: 'h_س_ext_0wuxx', category: 'ثقافة عامة', text: 'ممر تحت الأرض', answer: 'سرداب', letter: 'س', tabooWords: ['ممر', 'تحت', 'الأرض', 'سرداب'], difficulty: 'medium' },
     { id: 'h_ش_ext_6b5pl', category: 'ثقافة عامة', text: 'جمهورية تابعة لروسيا تقع في القوقاز', answer: 'شيشان', letter: 'ش', tabooWords: ['جمهورية', 'تابعة', 'لروسيا', 'تقع', 'القوقاز'], difficulty: 'medium' },
     { id: 'h_ش_ext_966lb', category: 'ثقافة عامة', text: 'نوع من القردة العليا يتميز بذكاء كبير', answer: 'شيمبانزي', letter: 'ش', tabooWords: ['نوع', 'القردة', 'العليا', 'يتميز', 'بذكاء'], difficulty: 'medium' },
     { id: 'h_ش_ext_xguxo', category: 'ثقافة عامة', text: 'أزهار برية حمراء', answer: 'شقائق النعمان', letter: 'ش', tabooWords: ['أزهار', 'برية', 'حمراء', 'شقائق', 'النعمان'], difficulty: 'medium' },
     { id: 'h_ش_ext_3ic80', category: 'ثقافة عامة', text: 'مركب كيميائي يستخدم في دباغة الجلود وتنقية المياه', answer: 'شبة', letter: 'ش', tabooWords: ['مركب', 'كيميائي', 'يستخدم', 'دباغة', 'الجلود'], difficulty: 'medium' },
-    { id: 'h_ش_ext_9xa3l', category: 'ثقافة عامة', text: 'مرض فيروسي يصيب الأطفال ويسبب شللاً في الأطراف', answer: 'شلل الأطفال', letter: 'ش', tabooWords: ['مرض', 'فيروسي', 'يصيب', 'الأطفال', 'ويسبب'], difficulty: 'medium' },
+    { id: 'h_ش_ext_9xa3l', category: 'ثقافة عامة', text: 'مرض فيروسي معدٍ قد يؤدي إلى فقدان القدرة الدائمة على الحركة عند الصغار', answer: 'شلل الأطفال', letter: 'ش', tabooWords: ['مرض', 'فيروس', 'حركة', 'صغار', 'عجز'], difficulty: 'medium' },
     { id: 'h_ش_ext_2nkcc', category: 'ثقافة عامة', text: 'إمارة من إمارات الدولة السبع', answer: 'شارقة', letter: 'ش', tabooWords: ['إمارة', 'إمارات', 'الدولة', 'السبع', 'شارقة'], difficulty: 'medium' },
     { id: 'h_ش_ext_pfoug', category: 'ثقافة عامة', text: 'وصف للجبل المرتفع جداً', answer: 'شاهق', letter: 'ش', tabooWords: ['وصف', 'للجبل', 'المرتفع', 'جداً', 'شاهق'], difficulty: 'medium' },
     { id: 'h_ش_ext_m0btt', category: 'ثقافة عامة', text: 'قطعة صغيرة متطايرة من جسم منفجر', answer: 'شظية', letter: 'ش', tabooWords: ['قطعة', 'صغيرة', 'متطايرة', 'جسم', 'منفجر'], difficulty: 'medium' },
@@ -596,7 +598,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ش_ext_btnw3', category: 'ثقافة عامة', text: 'حالة نفسية يشعر فيها الفرد بالبهجة لمصيبة غيره', answer: 'شماتة', letter: 'ش', tabooWords: ['حالة', 'نفسية', 'يشعر', 'فيها', 'الفرد'], difficulty: 'medium' },
     { id: 'h_ش_ext_8qy7t', category: 'ثقافة عامة', text: 'ابن الذئب والكلبة', answer: 'شيب', letter: 'ش', tabooWords: ['ابن', 'الذئب', 'والكلبة', 'شيب'], difficulty: 'medium' },
     { id: 'h_ش_ext_bw5gw', category: 'ثقافة عامة', text: 'لقب يطلق على قائد القبيلة', answer: 'شيخ', letter: 'ش', tabooWords: ['لقب', 'يطلق', 'قائد', 'القبيلة', 'شيخ'], difficulty: 'medium' },
-    { id: 'h_ش_ext_gq81p', category: 'ثقافة عامة', text: 'مدينة سعودية تقع في منطقة الرياض وتلقب بـ "الشقراء"', answer: 'شقراء', letter: 'ش', tabooWords: ['سعودية', 'تقع', 'منطقة', 'الرياض', 'وتلقب'], difficulty: 'medium' },
+    { id: 'h_ش_ext_gq81p', category: 'ثقافة عامة', text: 'مدينة سعودية قديمة في منطقة الوشم تتبع منطقة الرياض حالياً واشتهرت بمكانتها العلمية', answer: 'شقراء', letter: 'ش', tabooWords: ['مدينة', 'سعودية', 'منطقة', 'الوشم', 'الرياض'], difficulty: 'medium' },
     { id: 'h_ش_ext_b89gt', category: 'ثقافة عامة', text: 'عصب الشم في الأنف', answer: 'شمي', letter: 'ش', tabooWords: ['عصب', 'الشم', 'الأنف', 'شمي'], difficulty: 'medium' },
     { id: 'h_ش_ext_9igqh', category: 'ثقافة عامة', text: 'أداة بمقبض خشبي ورأس حديدي', answer: 'شاكوش', letter: 'ش', tabooWords: ['أداة', 'بمقبض', 'خشبي', 'ورأس', 'حديدي'], difficulty: 'medium' },
     { id: 'h_ش_ext_2kcz1', category: 'ثقافة عامة', text: 'مادة صلبة قابلة للذوبان تفرزها بعض الحشرات والنباتات', answer: 'شمع', letter: 'ش', tabooWords: ['مادة', 'صلبة', 'قابلة', 'للذوبان', 'تفرزها'], difficulty: 'medium' },
@@ -604,7 +606,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ش_ext_rlr8v', category: 'ثقافة عامة', text: 'قطعة من القماش تستخدم لتحريك السفينة بالرياح', answer: 'شراع', letter: 'ش', tabooWords: ['قطعة', 'القماش', 'تستخدم', 'لتحريك', 'السفينة'], difficulty: 'medium' },
     { id: 'h_ش_ext_p35iy', category: 'ثقافة عامة', text: 'وعاء دموي دقيق جداً يتم فيه تبادل الغازات', answer: 'شعيرة', letter: 'ش', tabooWords: ['وعاء', 'دموي', 'دقيق', 'جداً', 'يتم'], difficulty: 'medium' },
     { id: 'h_ش_ext_8ivd7', category: 'ثقافة عامة', text: 'نظام سياسي يقوم على الاشتراك في الممتلكات', answer: 'شيوعية', letter: 'ش', tabooWords: ['نظام', 'سياسي', 'يقوم', 'الاشتراك', 'الممتلكات'], difficulty: 'medium' },
-    { id: 'h_ش_ext_j6wgh', category: 'ثقافة عامة', text: 'مصطلح يطلق على الشخص الذي يشاهد الأحداث', answer: 'شاهد', letter: 'ش', tabooWords: ['مصطلح', 'يطلق', 'الشخص', 'يشاهد', 'الأحداث'], difficulty: 'medium' },
+    { id: 'h_ش_ext_j6wgh', category: 'ثقافة عامة', text: 'من يحضر الواقعة ويُدلي بما رآه بصدق أمام القضاء للإثبات', answer: 'شاهد', letter: 'ش', tabooWords: ['حضور', 'واقعة', 'إدلاء', 'قضاء', 'رؤية'], difficulty: 'medium' },
     { id: 'h_ش_ext_eyckv', category: 'ثقافة عامة', text: 'بطل خارق يحصل على قوته بكلمة سحرية', answer: 'شزام', letter: 'ش', tabooWords: ['بطل', 'خارق', 'يحصل', 'قوته', 'بكلمة'], difficulty: 'medium' },
     { id: 'h_ش_ext_knofc', category: 'ثقافة عامة', text: 'أبرد فصول السنة الأربعة', answer: 'شتاء', letter: 'ش', tabooWords: ['أبرد', 'فصول', 'السنة', 'الأربعة', 'شتاء'], difficulty: 'medium' },
     { id: 'h_ش_ext_mqge8', category: 'ثقافة عامة', text: 'مجموعة من الأشجار الخشبية', answer: 'شجر', letter: 'ش', tabooWords: ['مجموعة', 'الأشجار', 'الخشبية', 'شجر'], difficulty: 'medium' },
@@ -615,7 +617,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ش_ext_51drl', category: 'ثقافة عامة', text: 'صحابي جليل وأحد قادة الفتح', answer: 'شرحبيل بن حسنة', letter: 'ش', tabooWords: ['صحابي', 'جليل', 'وأحد', 'قادة', 'الفتح'], difficulty: 'medium' },
     { id: 'h_ش_ext_dk24d', category: 'ثقافة عامة', text: 'جزء بارز من المبنى يطل على الخارج', answer: 'شرفة', letter: 'ش', tabooWords: ['جزء', 'بارز', 'المبنى', 'يطل', 'الخارج'], difficulty: 'medium' },
     { id: 'h_ش_ext_5n020', category: 'ثقافة عامة', text: 'جسم صخري يحترق عند دخوله الغلاف الجوي', answer: 'شهاب', letter: 'ش', tabooWords: ['جسم', 'صخري', 'يحترق', 'عند', 'دخوله'], difficulty: 'medium' },
-    { id: 'h_ش_ext_x9kn9', category: 'ثقافة عامة', text: 'إشارة عصبية تنقل المعلومات', answer: 'شارة', letter: 'ش', tabooWords: ['إشارة', 'عصبية', 'تنقل', 'المعلومات', 'شارة'], difficulty: 'medium' },
+    { id: 'h_ش_ext_x9kn9', category: 'ثقافة عامة', text: 'رسالة كهربائية تنتقل عبر الخلايا لتنفيذ وظائف محددة في الجسم', answer: 'شارة', letter: 'ش', tabooWords: ['رسالة', 'كهرباء', 'خلايا', 'جسم', 'وظيفة'], difficulty: 'medium' },
     { id: 'h_ش_ext_ks8ul', category: 'ثقافة عامة', text: 'نسيج مصنوع من شعر الحيوانات', answer: 'شملة', letter: 'ش', tabooWords: ['نسيج', 'مصنوع', 'شعر', 'الحيوانات', 'شملة'], difficulty: 'medium' },
     { id: 'h_ش_ext_7hwte', category: 'ثقافة عامة', text: 'حالة طبية تتميز بجفاف الجلد وتشققه', answer: 'شقاق', letter: 'ش', tabooWords: ['حالة', 'طبية', 'تتميز', 'بجفاف', 'الجلد'], difficulty: 'medium' },
     { id: 'h_ش_ext_64dcf', category: 'ثقافة عامة', text: 'الشخص الذي ينظم الشعر', answer: 'شاعر', letter: 'ش', tabooWords: ['الشخص', 'ينظم', 'الشعر', 'شاعر'], difficulty: 'medium' },
@@ -634,7 +636,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ص_ext_vnsbz', category: 'ثقافة عامة', text: 'فولاذ عالي المتانة', answer: 'صلب', letter: 'ص', tabooWords: ['فولاذ', 'عالي', 'المتانة', 'صلب'], difficulty: 'medium' },
     { id: 'h_ص_ext_4ptsx', category: 'ثقافة عامة', text: 'اهتزاز الأوساط المادية', answer: 'صوت', letter: 'ص', tabooWords: ['اهتزاز', 'الأوساط', 'المادية', 'صوت'], difficulty: 'medium' },
     { id: 'h_ص_ext_29f6s', category: 'ثقافة عامة', text: 'مادة كيميائية تستخدم للتنظيف', answer: 'صابون', letter: 'ص', tabooWords: ['مادة', 'كيميائية', 'تستخدم', 'للتنظيف', 'صابون'], difficulty: 'medium' },
-    { id: 'h_ص_ext_h8edb', category: 'ثقافة عامة', text: 'الحبوب الناتجة عن نبات الصويا', answer: 'صويا', letter: 'ص', tabooWords: ['الحبوب', 'الناتجة', 'نبات', 'الصويا', 'صويا'], difficulty: 'medium' },
+    { id: 'h_ص_ext_h8edb', category: 'ثقافة عامة', text: 'بقوليات مشهورة تستخدم عالمياً كبديل نباتي للحوم والألبان', answer: 'صويا', letter: 'ص', tabooWords: ['بقوليات', 'بديل', 'نباتي', 'لحم', 'لبن'], difficulty: 'medium' },
     { id: 'h_ص_ext_v1ik8', category: 'ثقافة عامة', text: 'آلام تصيب الرأس', answer: 'صداع', letter: 'ص', tabooWords: ['آلام', 'تصيب', 'الرأس', 'صداع'], difficulty: 'medium' },
     { id: 'h_ص_ext_zeaqr', category: 'ثقافة عامة', text: 'ناقة لم يتم ركوبها', answer: 'صعبة', letter: 'ص', tabooWords: ['ناقة', 'يتم', 'ركوبها', 'صعبة'], difficulty: 'medium' },
     { id: 'h_ص_ext_kjtfc', category: 'ثقافة عامة', text: 'أداة تتحكم في تدفق السوائل أو الغازات', answer: 'صمام', letter: 'ص', tabooWords: ['أداة', 'تتحكم', 'تدفق', 'السوائل', 'الغازات'], difficulty: 'medium' },
@@ -685,7 +687,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ض_ext_6nn51', category: 'ثقافة عامة', text: 'شدة انتشار النور', answer: 'ضياء', letter: 'ض', tabooWords: ['شدة', 'انتشار', 'النور', 'ضياء'], difficulty: 'medium' },
     { id: 'h_ض_ext_eogaf', category: 'ثقافة عامة', text: 'أداة تستخدم لضغط السوائل أو الغازات', answer: 'ضغاط', letter: 'ض', tabooWords: ['أداة', 'تستخدم', 'لضغط', 'السوائل', 'الغازات'], difficulty: 'medium' },
     { id: 'h_ض_ext_ta2rh', category: 'ثقافة عامة', text: 'إحدى العظام المنحنية التي تشكل القفص الصدري', answer: 'ضلع', letter: 'ض', tabooWords: ['إحدى', 'العظام', 'المنحنية', 'تشكل', 'القفص'], difficulty: 'medium' },
-    { id: 'h_ض_ext_saqje', category: 'ثقافة عامة', text: 'ضيق التنفس', answer: 'ضيق', letter: 'ض', tabooWords: ['ضيق', 'التنفس'], difficulty: 'medium' },
+    { id: 'h_ض_ext_saqje', category: 'ثقافة عامة', text: 'الشعور بالاختناق أو عدم القدرة على استنشاق الهواء بشكل طبيعي نتيجة أسباب طبية أو نفسية', answer: 'ضيق', letter: 'ض', tabooWords: ['اختناق', 'هواء', 'تنفس', 'صعوبة'], difficulty: 'medium' },
     { id: 'h_ض_ext_r71gu', category: 'ثقافة عامة', text: 'أنثى الضفدع', answer: 'ضفدعة', letter: 'ض', tabooWords: ['أنثى', 'الضفدع', 'ضفدعة'], difficulty: 'medium' },
     { id: 'h_ض_ext_vpskk', category: 'ثقافة عامة', text: 'أداة تتحكم في سرعة أو عمل الآلة', answer: 'ضابط', letter: 'ض', tabooWords: ['أداة', 'تتحكم', 'سرعة', 'عمل', 'الآلة'], difficulty: 'medium' },
     { id: 'h_ض_ext_520e9', category: 'ثقافة عامة', text: 'مدين يمنية قديمة تابعه لمحافظة اب', answer: 'ضمد', letter: 'ض', tabooWords: ['مدين', 'يمنية', 'قديمة', 'تابعه', 'لمحافظة'], difficulty: 'medium' },
@@ -1143,7 +1145,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ط_ext_14', category: 'حيوانات', text: 'كائن حي يمتلك ريشاً ومنقاراً ويضع بيضاً', answer: 'طائر', letter: 'ط', tabooWords: ['ريش', 'منقار', 'بيض', 'طيران'], difficulty: 'easy' },
     { id: 'h_ط_ext_15', category: 'تاريخ', text: 'مدينة تاريخية اشتهرت بحصانها الخشبي في الأساطير اليونانية', answer: 'طروادة', letter: 'ط', tabooWords: ['مدينة', 'تاريخية', 'حصان', 'خشبي'], difficulty: 'medium' },
     { id: 'h_ط_ext_16', category: 'طب', text: 'مجموعة من الاضطرابات النمائية التي تؤثر على التواصل والتفاعل الاجتماعي', answer: 'طيف التوحد', letter: 'ط', tabooWords: ['اضطرابات', 'نمائية', 'تواصل', 'اجتماعي'], difficulty: 'hard' },
-    { id: 'h_ط_ext_17', category: 'عام', text: 'اسم يطلق على الطعام المعد للأكل', answer: 'طعام', letter: 'ط', tabooWords: ['اسم', 'أكل', 'وجبة', 'غذاء'], difficulty: 'easy' },
+    { id: 'h_ط_ext_17', category: 'عام', text: 'كل ما يتغذى عليه الكائن الحي للبقاء والنمو وتوفير الطاقة للجسم', answer: 'طعام', letter: 'ط', tabooWords: ['أكل', 'وجبة', 'غذاء', 'مائدة'], difficulty: 'easy' },
     { id: 'h_ط_ext_18', category: 'تقنية', text: 'جهاز يصدر صوتاً رنيناً للتنبيه أو الاتصال', answer: 'طنان', letter: 'ط', tabooWords: ['جهاز', 'صوت', 'رنين', 'تنبيه'], difficulty: 'medium' },
     { id: 'h_ط_ext_19', category: 'جغرافيا', text: 'مدينة مغربية تقع على مضيق جبل طارق', answer: 'طنجة', letter: 'ط', tabooWords: ['مدينة', 'مغربية', 'مضيق', 'جبل طارق'], difficulty: 'medium' },
     { id: 'h_ط_ext_20', category: 'فيزياء', text: 'قوة تدفع الجسم بعيداً عن المركز في الحركة الدائرية', answer: 'طرد مركزي', letter: 'ط', tabooWords: ['قوة', 'دفع', 'مركز', 'حركة'], difficulty: 'hard' },
@@ -1179,7 +1181,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ط_ext_50', category: 'أدب', text: 'ما تبقى من آثار الديار بعد رحيل أهلها وتغنى به الشعراء قديماً', answer: 'طلل', letter: 'ط', tabooWords: ['آثار', 'ديار', 'رحيل', 'شعراء'], difficulty: 'hard' },
     // ظ
     { id: 'h_ظ_ext_1', category: 'حيوانات', text: 'حيوان بري سريع الجري من فصيلة البقريات يمتاز بجمال عينيه', answer: 'ظبي', letter: 'ظ', tabooWords: ['سريع', 'جري', 'بقريات', 'غزال'], difficulty: 'medium' },
-    { id: 'h_ظ_ext_2', category: 'علوم', text: 'منطقة مظلمة تتكون خلف الجسم المعتم عند سقوط الضوء عليه', answer: 'ظل', letter: 'ظ', tabooWords: ['منطقة', 'مظلمة', 'معتم', 'ضوء'], difficulty: 'easy' },
+    { id: 'h_ظ_ext_2', category: 'علوم', text: 'عتمة تظهر خلف الأجسام المعتمة عند اعتراضها لمسار الأشعة الضوئية', answer: 'ظل', letter: 'ظ', tabooWords: ['منطقة', 'مظلمة', 'معتم', 'ضوء'], difficulty: 'easy' },
     { id: 'h_ظ_ext_3', category: 'زمن', text: 'وقت زوال الشمس ومنتصف النهار وصلاة تؤدى في هذا الوقت', answer: 'ظهر', letter: 'ظ', tabooWords: ['شمس', 'نهار', 'صلاة', 'وقت'], difficulty: 'easy' },
     { id: 'h_ظ_ext_4', category: 'جسم الإنسان', text: 'مادة صلبة تغطي أطراف أصابع الإنسان وتحميها', answer: 'ظفر', letter: 'ظ', tabooWords: ['صلبة', 'أطراف', 'أصابع', 'إنسان'], difficulty: 'easy' },
     { id: 'h_ظ_ext_5', category: 'طب', text: 'نسيج يغطي سطح الجسم الخارجي ويبطن تجاويفه الداخلية', answer: 'ظهارة', letter: 'ظ', tabooWords: ['نسيج', 'سطح', 'يبطن', 'تجاويف'], difficulty: 'hard' },
@@ -1306,7 +1308,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_غ_ext_24', category: 'عام', text: 'حالة انفعالية قوية تتسم بالاستياء والعدائية ناتجة عن استفزاز أو ظلم', answer: 'غضب', letter: 'غ', tabooWords: ['حالة', 'انفعال', 'استياء', 'استفزاز'], difficulty: 'easy' },
     { id: 'h_غ_ext_25', category: 'حيوانات', text: 'اسم يطلق على ولد الغزال أو الظبي في اللغة العربية', answer: 'غفر', letter: 'غ', tabooWords: ['ولد', 'غزال', 'ظبي', 'لغة'], difficulty: 'hard' },
     { id: 'h_غ_ext_26', category: 'عام', text: 'صفة تطلق على الشخص الذي يملك ثروة طائلة وأموالاً طائلة', answer: 'غني', letter: 'غ', tabooWords: ['شخص', 'ثروة', 'أموال', 'فقير'], difficulty: 'easy' },
-    { id: 'h_غ_ext_27', category: 'جغرافيا', text: 'مدينة فلسطينية تاريخية وأكبر مدن قطاع غزة وتطل على البحر المتوسط', answer: 'غزة', letter: 'غ', tabooWords: ['مدينة', 'فلسطينية', 'قطاع', 'بحر'], difficulty: 'easy' },
+    { id: 'h_غ_ext_27', category: 'جغرافيا', text: 'أكبر مدينة في القطاع الساحلي الفلسطيني المطل على البحر المتوسط وتعتبر من أقدم مدن العالم', answer: 'غزة', letter: 'غ', tabooWords: ['مدينة', 'فلسطينية', 'قطاع', 'بحر'], difficulty: 'easy' },
     { id: 'h_غ_ext_28', category: 'جسم الإنسان', text: 'النسيج الرقيق الذي يبطن المسالك التنفسية والهضمية ويفرز مادة لزجة', answer: 'غشاء مخاطي', letter: 'غ', tabooWords: ['نسيج', 'يبطن', 'تنفسي', 'مخاط'], difficulty: 'hard' },
     { id: 'h_غ_ext_29', category: 'أدوات', text: 'جهاز منزلي يستخدم لتسخين الماء لدرجات عالية بسرعة لتحضير المشروبات', answer: 'غلاية', letter: 'غ', tabooWords: ['جهاز', 'تسخين', 'ماء', 'مشروبات'], difficulty: 'easy' },
     { id: 'h_غ_ext_30', category: 'جسم الإنسان', text: 'تجمعات صغيرة من الخلايا تفرز الهرمونات مباشرة في مجرى الدم (جمع غدة)', answer: 'غدد', letter: 'غ', tabooWords: ['تجمعات', 'خلايا', 'هرمونات', 'دم'], difficulty: 'medium' },
@@ -1369,7 +1371,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ف_ext_36', category: 'جغرافيا', text: 'دولة في شمال أوروبا تشتهر بالطبيعة الخلابة والألف بحيرة عاصمتها هلسنكي', answer: 'فنلندا', letter: 'ف', tabooWords: ['دولة', 'أوروبا', 'هلسنكي', 'بحيرات'], difficulty: 'medium' },
     { id: 'h_ف_ext_37', category: 'حيوانات', text: 'حشرة طائرة جميلة تمتاز بألوان جناحيها الزاهية ودورة حياتها المثيرة', answer: 'فراشة', letter: 'ف', tabooWords: ['حشرة', 'طائرة', 'جناحين', 'ألوان'], difficulty: 'easy' },
     { id: 'h_ف_ext_38', category: 'أدوات', text: 'قطعة معدنية رفيعة وطويلة تستخدم في الخياطة لربط الأقمشة ببعضها', answer: 'فتلة / خيط', letter: 'ف', tabooWords: ['قطعة', 'معدنية', 'خياطة', 'أقمشة'], difficulty: 'medium' },
-    { id: 'h_ف_ext_39', category: 'جغرافيا', text: 'أحد أكبر المطارات في العالم ويقع في مدينة فرانكفورت الألمانية', answer: 'فرانكفورت', letter: 'ف', tabooWords: ['مطار', 'ألمانيا', 'مدينة', 'طيران'], difficulty: 'medium' },
+    { id: 'h_ف_ext_39', category: 'جغرافيا', text: 'أحد أكبر مطارات أوروبا ويقع في قلب ألمانيا ويعتبر مركزاً عالمياً رئيسياً للطيران', answer: 'فرانكفورت', letter: 'ف', tabooWords: ['مطار', 'ألمانيا', 'مدينة', 'طيران'], difficulty: 'medium' },
     { id: 'h_ف_ext_40', category: 'بناء', text: 'نوع من أنواع الصخور البركانية الخفيفة التي تستخدم في التشطيبات والبناء', answer: 'فولكانيت', letter: 'ف', tabooWords: ['صخور', 'بركانية', 'خفيفة', 'بناء'], difficulty: 'hard' },
     { id: 'h_ف_ext_41', category: 'أحياء', text: 'الوحدة البنائية والوظيفية الأساسية في الكلية التي تنقي الدم', answer: 'فرون (نفرون)', letter: 'ف', tabooWords: ['وحدة', 'كلية', 'دم', 'تنقية'], difficulty: 'hard' },
     { id: 'h_ف_ext_42', category: 'جيولوجيا', text: 'اسم يطلق على الصدوع أو الشقوق الكبيرة في القشرة الأرضية', answer: 'فالق', letter: 'ف', tabooWords: ['صدع', 'شقوق', 'قشرة', 'أرضية'], difficulty: 'hard' },
@@ -1431,13 +1433,13 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ل_ext_15', category: 'جغرافيا', text: 'دولة تقع في جنوب شرق آسيا لا تطل على بحار', answer: 'لاوس', letter: 'ل', tabooWords: ['دولة', 'آسيا', 'بحر', 'جنوب شرق'], difficulty: 'hard' },
     { id: 'h_ل_ext_16', category: 'كيمياء', text: 'عنصر كيميائي فلزي رمزه La عدده الذري 57', answer: 'لانثانيوم', letter: 'ل', tabooWords: ['عنصر', 'فلزي', 'عدد ذري', 'كيمياء'], difficulty: 'hard' },
     { id: 'h_ل_ext_17', category: 'كيمياء', text: 'عنصر كيميائي اصطناعي مشع رمزه Lr', answer: 'لورنسيوم', letter: 'ل', tabooWords: ['عنصر', 'اصطناعي', 'مشع', 'كيمياء'], difficulty: 'hard' },
-    { id: 'h_ل_ext_18', category: 'نباتات', text: 'نوع من المكسرات ينمو على شجر اللوز', answer: 'لوز', letter: 'ل', tabooWords: ['مكسرات', 'شجر', 'طعام', 'قشور'], difficulty: 'easy' },
+    { id: 'h_ل_ext_18', category: 'نباتات', text: 'ثمار شجرية بيضاوية صلبة القشرة تؤكل جافة أو خضراء وتدخل في صناعة الحلويات', answer: 'لوز', letter: 'ل', tabooWords: ['مكسرات', 'شجر', 'طعام', 'قشور'], difficulty: 'easy' },
     { id: 'h_ل_ext_19', category: 'نباتات', text: 'ثمرة حمضية صفراء غنية بفيتامين C', answer: 'ليمون', letter: 'ل', tabooWords: ['ثمرة', 'حمضية', 'صفراء', 'فيتامين'], difficulty: 'easy' },
     { id: 'h_ل_ext_20', category: 'نباتات', text: 'نبات متسلق يستخدم غالباً لتغطية الجدران', answer: 'لبلاب', letter: 'ل', tabooWords: ['نبات', 'متسلق', 'جدران', 'أخضر'], difficulty: 'medium' },
     { id: 'h_ل_ext_21', category: 'صحة', text: 'مادة بيولوجية تحفز الجهاز المناعي للوقاية من الأمراض', answer: 'لقاح', letter: 'ل', tabooWords: ['مادة', 'مناعة', 'وقاية', 'أمراض'], difficulty: 'medium' },
     { id: 'h_ل_ext_22', category: 'جسم الإنسان', text: 'السائل الذي تفرزه الغدد في الفم للمساعدة في الهضم', answer: 'لعاب', letter: 'ل', tabooWords: ['سائل', 'غدد', 'فم', 'هضم'], difficulty: 'medium' },
     { id: 'h_ل_ext_23', category: 'نباتات', text: 'مادة نسيجية توجد في النباتات أو عضلات الحيوانات', answer: 'ليف', letter: 'ل', tabooWords: ['مادة', 'نسيجية', 'نبات', 'عضلات'], difficulty: 'medium' },
-    { id: 'h_ل_ext_24', category: 'جسم الإنسان', text: 'سائل شفاف يدور في الجهاز اللمفاوي للمناعة', answer: 'لمف', letter: 'ل', tabooWords: ['سائل', 'شفاف', 'جهاز', 'مناعة'], difficulty: 'hard' },
+    { id: 'h_ل_ext_24', category: 'جسم الإنسان', text: 'سائل قلوي عديم اللون ينقل خلايا الدم البيضاء ومقومات المناعة في الجسم', answer: 'لمف', letter: 'ل', tabooWords: ['سائل', 'شفاف', 'جهاز', 'مناعة'], difficulty: 'hard' },
     { id: 'h_ل_ext_25', category: 'جسم الإنسان', text: 'النسيج اللحمي الذي يحيط بقواعد الأسنان', answer: 'لثة', letter: 'ل', tabooWords: ['نسيج', 'لحمي', 'أسنان', 'فم'], difficulty: 'medium' },
     { id: 'h_ل_ext_26', category: 'صحة', text: 'تجمع من البكتيريا أو الدهون على سطح السن أو الشريان', answer: 'لويحة', letter: 'ل', tabooWords: ['تجمع', 'بكتيريا', 'دهون', 'سطح'], difficulty: 'hard' },
     { id: 'h_ل_ext_27', category: 'عام', text: 'قطعة مسطحة من الخشب أو المعدن أو الأجهزة الإلكترونية', answer: 'لوح', letter: 'ل', tabooWords: ['قطعة', 'مسطحة', 'خشب', 'إلكتروني'], difficulty: 'easy' },
@@ -1511,7 +1513,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_م_ext_31', category: 'كيمياء', text: 'خليط متجانس من مادتين أو أكثر', answer: 'محلول', letter: 'م', tabooWords: ['خليط', 'متجانس', 'مادتين', 'ماء'], difficulty: 'medium' },
     { id: 'h_م_ext_32', category: 'كيمياء', text: 'مادة كيميائية تتكون من اتحاد عنصرين أو أكثر بنسب ثابتة', answer: 'مركب', letter: 'م', tabooWords: ['مادة', 'كيميائية', 'اتحاد', 'عنصر'], difficulty: 'medium' },
     { id: 'h_م_ext_33', category: 'فيزياء', text: 'اضطراب ينتقل في المادة أو الفراغ وينقل الطاقة', answer: 'موجة', letter: 'م', tabooWords: ['اضطراب', 'انتقال', 'مادة', 'طاقة'], difficulty: 'medium' },
-    { id: 'h_م_ext_34', category: 'فيزياء', text: 'الحيز المحيط بالجسم الذي تظهر فيه قوته (مثل المجال الكهربائي)', answer: 'مجال', letter: 'م', tabooWords: ['حيز', 'محيط', 'قوة', 'فيزياء'], difficulty: 'hard' },
+    { id: 'h_م_ext_34', category: 'فيزياء', text: 'نطاق تأثير قوة معينة تحيط بمركز صدورها وقدرتها (مثل القوة الكهربائية)', answer: 'مجال', letter: 'م', tabooWords: ['حيز', 'محيط', 'قوة', 'فيزياء'], difficulty: 'hard' },
     { id: 'h_م_ext_35', category: 'قياس', text: 'مقدار البعد بين نقطتين', answer: 'مسافة', letter: 'م', tabooWords: ['مقدار', 'بعد', 'نقطتين', 'طول'], difficulty: 'easy' },
     { id: 'h_م_ext_36', category: 'قياس', text: 'وحدة قياس الطول الأساسية في النظام الدولي', answer: 'متر', letter: 'م', tabooWords: ['وحدة', 'طول', 'دولي', 'قياس'], difficulty: 'easy' },
     { id: 'h_م_ext_37', category: 'قياس', text: 'وحدة قياس كمية المادة في النظام الدولي', answer: 'مول', letter: 'م', tabooWords: ['وحدة', 'كمية', 'مادة', 'كيمياء'], difficulty: 'hard' },
@@ -1736,7 +1738,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ي_ext_18', category: 'صحة', text: 'حالة مرضية ناتجة عن خلل الكبد', answer: 'يرقان', letter: 'ي', tabooWords: ['حالة', 'مرضية', 'كبد', 'أصفر'], difficulty: 'hard' },
     { id: 'h_ي_ext_19', category: 'أحياء', text: 'المادة الخضراء في النبات', answer: 'يخضور', letter: 'ي', tabooWords: ['مادة', 'خضراء', 'نبات', 'كلوروفيل'], difficulty: 'medium' },
     { id: 'h_ي_ext_21', category: 'طبيعة', text: 'مكان خروج الماء طبيعياً من الأرض', answer: 'ينابيع', letter: 'ي', tabooWords: ['مكان', 'خروج', 'ماء', 'أرض'], difficulty: 'easy' },
-    { id: 'h_ي_ext_22', category: 'عام', text: 'مفكرة لتسجيل الأحداث اليومية', answer: 'يومية', letter: 'ي', tabooWords: ['مفكرة', 'تسجيل', 'أحداث', 'دفتر'], difficulty: 'medium' },
+    { id: 'h_ي_ext_22', category: 'عام', text: 'سجل شخصي يدون فيه المرء وقائع حياته ومشاعره بصفة مستمرة ومنتظمة', answer: 'يومية', letter: 'ي', tabooWords: ['مفكرة', 'تسجيل', 'أحداث', 'دفتر'], difficulty: 'medium' },
     { id: 'h_ي_ext_23', category: 'حيوانات', text: 'نوع من الحمام البري', answer: 'يمام', letter: 'ي', tabooWords: ['نوع', 'حمام', 'بري', 'طائر'], difficulty: 'medium' },
     { id: 'h_ي_ext_24', category: 'أخلاق', text: 'القنوط وفقدان الرجاء', answer: 'يأس', letter: 'ي', tabooWords: ['قنوط', 'فقدان', 'رجاء', 'أمل'], difficulty: 'medium' },
     { id: 'h_ي_ext_26', category: 'عام', text: 'من فقد أباه قبل البلوغ', answer: 'يتيم', letter: 'ي', tabooWords: ['من', 'فقد', 'أب', 'بلوغ'], difficulty: 'easy' },
@@ -1757,7 +1759,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_ي_ext_47', category: 'ثقافة', text: 'اسم نبي ابتلعه الحوت', answer: 'يونس', letter: 'ي', tabooWords: ['اسم', 'نبي', 'ابتلع', 'حوت'], difficulty: 'easy' },
     { id: 'h_ي_ext_48', category: 'زمن', text: 'الشهر الأول من السنة الميلادية', answer: 'يناير', letter: 'ي', tabooWords: ['شهر', 'أول', 'سنة', 'ميلادية'], difficulty: 'easy' },
     { id: 'h_ي_ext_49', category: 'ثقافة', text: 'اسم نبي (ابن زكريا)', answer: 'يحيى', letter: 'ي', tabooWords: ['اسم', 'نبي', 'ابن زكريا', 'تعميد'], difficulty: 'medium' },
-    { id: 'h_ي_ext_50', category: 'عقل', text: 'الانتباه واليقظة الذهنية', answer: 'يقظة', letter: 'ي', tabooWords: ['انتباه', 'يقظة', 'ذهنية', 'تركيز'], difficulty: 'medium' },
+    { id: 'h_ي_ext_50', category: 'عقل', text: 'حالة من الوعي التام والتركيز والنشاط المعرفي والرد السريع على المؤثرات', answer: 'يقظة', letter: 'ي', tabooWords: ['انتباه', 'يقظة', 'ذهنية', 'تركيز'], difficulty: 'medium' },
     
     { id: 'h_y1', category: 'جغرافيا', text: 'دولة عاصمتها صنعاء؟', answer: 'اليمن', tabooWords: ['دولة', 'عاصمة', 'صنعاء', 'عربية'], letter: 'ي', difficulty: 'easy' },
     { id: 'h_y2', category: 'جغرافيا', text: 'دولة آسيوية عاصمتها طوكيو؟', answer: 'اليابان', tabooWords: ['دولة', 'آسيا', 'عاصمة', 'طوكيو'], letter: 'ي', difficulty: 'easy' },
@@ -2162,7 +2164,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_add_21', category: 'طبيعة', text: 'الغلاف الخارجي الصلب المحيط بالبيض أو حبات الجوز ويجب كسرها لاستخراج ما بداخلها؟', answer: 'قشرة', letter: 'ق', difficulty: 'easy' },
     { id: 'h_add_22', category: 'جسم الإنسان', text: 'الجزء الخلفي المستدير من القدم الواقع أسفل الساق مباشرة ويتحمل وزن الجسم؟', answer: 'كعب', letter: 'ك', difficulty: 'easy' },
     { id: 'h_add_23', category: 'حيوانات', text: 'الشعر الكثيف المحيط بوجه الأسد، أو الشعر المسترسل النازل على رقبة الحصان؟', answer: 'لبدة', letter: 'ل', difficulty: 'medium' },
-    { id: 'h_add_24', category: 'جغرافيا', text: 'الممر المائي الضيق الطبيعي الذي يصل بين بحرين واسعين كالمضيق البحري؟', answer: 'مضيق', letter: 'م', difficulty: 'easy' },
+    { id: 'h_add_24', category: 'جغرافيا', text: 'قناة مائية ضيقة تربط بين مسطحين مائيين كبيرين كالبحار والمحيطات وتتحكم في حركة الملاحة العالمية؟', answer: 'مضيق', letter: 'م', difficulty: 'easy' },
     { id: 'h_add_25', category: 'ثقافة عامة', text: 'طريقة الأداء الصوتي وكيفية نطق الكلمات التي تعبر عن مشاعر المتكلم؟', answer: 'نبرة', letter: 'ن', difficulty: 'medium' },
     { id: 'h_add_26', category: 'ثقافة عامة', text: 'الغرفة الخشبية الصغيرة المغطاة بالثياب التي كانت توضع فوق ظهر الجمل لتركبها النساء؟', answer: 'هودج', letter: 'هـ', difficulty: 'hard' },
     { id: 'h_add_27', category: 'طبيعة', text: 'القطيفة القطنية الدقيقة المدببة التي تحمي أوراق بعض النباتات أو تكون على أسطح الأقمشة؟', answer: 'وبر', letter: 'و', difficulty: 'medium' },
@@ -2183,7 +2185,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_add_42', category: 'طبيعة', text: 'الغلاف الكلسي الصلب الذي يحمي أجسام الرخويات البحرية وتجده ملقى على الشواطئ؟', answer: 'صدفة', letter: 'ص', difficulty: 'easy' },
     { id: 'h_add_43', category: 'جسم الإنسان', text: 'الأسنان العريضة القوية الواقعة في مؤخرة الفم وتستخدم لطحن الطعام وتفتيته؟', answer: 'ضرس', letter: 'ض', difficulty: 'easy' },
     { id: 'h_add_44', category: 'جيولوجيا', text: 'الجزء أو المستوى الأفقي الممتد فوق غيره، مثل مستويات القشرة الأرضية؟', answer: 'طبقة', letter: 'ط', difficulty: 'medium' },
-    { id: 'h_add_45', category: 'طبيعة', text: 'مساحة الظلمة المؤقتة المتكونة على الأرض نتيجة حجب الجسم لضوء المصباح أو الشمس؟', answer: 'ظل', letter: 'ظ', difficulty: 'easy' },
+    { id: 'h_add_45', category: 'طبيعة', text: 'المساحة المعتمة التي تتبع الشخص أو الجسم عند اعتراضه للأشعة الضوئية المباشرة من الشمس أو المصباح؟', answer: 'ظل', letter: 'ظ', difficulty: 'easy' },
     { id: 'h_add_46', category: 'جسم الإنسان', text: 'المادة الهلامية الشفافة المرنة التي تصنع منها العدسات وتوجد في تجويف العين؟', answer: 'عدسة', letter: 'ع', difficulty: 'easy' },
     { id: 'h_add_47', category: 'طبيعة', text: 'السحب الكثيفة البيضاء أو الرمادية السابحة في السماء المحملة بقطرات المطر؟', answer: 'غيمة', letter: 'غ', difficulty: 'easy' },
     { id: 'h_add_48', category: 'طبيعة', text: 'المادة الكاربونية السوداء الناتجة عن احتراق الخشب بمعزل عن الهواء وتستخدم للشواء؟', answer: 'فحم', letter: 'ف', difficulty: 'easy' },
@@ -2193,8 +2195,8 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_add_52', category: 'أدوات', text: 'الأداة المعدنية الصغيرة ذات الأسنان الدقيقة المتنوعة التي تستخدم لترتيب وتصفيف شعر الرأس؟', answer: 'مشط', letter: 'م', difficulty: 'easy' },
     { id: 'h_add_53', category: 'طبيعة', text: 'الجزء الصلب الصغير الموجود في مركز الثمرة كالتمر والزيتون، وتنبأ منها الشجرة؟', answer: 'نواة', letter: 'ن', difficulty: 'medium' },
     { id: 'h_add_54', category: 'طبيعة', text: 'الغبار الدقيق الخفيف جداً السابح في الهواء ولا يرى إلا في ضوء الشمس النافذ؟', answer: 'هباء', letter: 'هـ', difficulty: 'easy' },
-    { id: 'h_add_55', category: 'ثقافة عامة', text: 'الورقة المالية أو الوثيقة الرسمية الإثباتية التي تسجل الحقوق والمعاملات التجارية؟', answer: 'وثيقة', letter: 'و', difficulty: 'easy' },
-    { id: 'h_add_56', category: 'طبيعة', text: 'الينبوع الطبيعي التدفيقي الذي تخرج منه المياه الجوفية الساخنة أو الباردة من الأرض؟', answer: 'ينبوع', letter: 'ي', difficulty: 'easy' },
+    { id: 'h_add_55', category: 'ثقافة عامة', text: 'محرر رسمي أو ورقة مالية تستخدم للإثبات في المعاملات التجارية أو القانونية بين الأطراف؟', answer: 'وثيقة', letter: 'و', difficulty: 'easy' },
+    { id: 'h_add_56', category: 'طبيعة', text: 'تدفق طبيعي فجائي للمياه من باطن الأرض إلى سطحها نتيجة الضغط الهيدروليكي؟', answer: 'ينبوع', letter: 'ي', difficulty: 'easy' },
     ...LETTER_GRID_QUESTIONS
   ]
 };

@@ -485,7 +485,15 @@ const App: React.FC = () => {
               )}
 
               {gameState === 'playing' && config && (
-                <GameScreen config={config} questions={questions} players={players} onFinish={handleFinishGame} onOpenReport={(q) => setReportedQuestion(q)} setGameState={setGameState} />
+                <GameScreen 
+                  config={config} 
+                  questions={questions} 
+                  players={players} 
+                  onFinish={handleFinishGame} 
+                  onOpenReport={(q) => setReportedQuestion(q)} 
+                  setQuestions={setQuestions}
+                  setGameState={setGameState} 
+                />
               )}
               
               {gameState === 'summary' && config && <SummaryScreen config={config} questions={questions} players={players} onRestart={handleReset} />}

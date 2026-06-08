@@ -41,6 +41,7 @@ interface Props {
   players: Player[];
   onFinish: (players: Player[]) => void;
   onOpenReport: (q: Question) => void;
+  setQuestions: React.Dispatch<React.SetStateAction<Question[]>>;
   setGameState: (s: any) => void;
 }
 
@@ -55,9 +56,11 @@ const LETTERS_FLAT = [
   'ل', 'م', 'ن', 'ه', 'و', 'ي'
 ];
 
-const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayers, onFinish, onOpenReport, setGameState }) => {
+const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayers, onFinish, onOpenReport, setQuestions, setGameState }) => {
   const { settings } = useSettings();
   const { showToast } = useToast();
+
+  const normalizeStr = (s: string) => (s || '').trim().toLowerCase().replace(/[\u0640]/g, '').replace(/\s+/g, ' ');
 
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [activeQuestion, setActiveQuestion] = useState<Question | null>(null);
@@ -598,12 +601,18 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
 
       // Try to find matches based on category or letter
       const playedHashes = new Set(getPlayedQuestionHashes());
+      const qCatNorm = normalizeStr(q.category || '');
+
       const matches = bank.filter(bq => {
         // In Jeopardy mode (GRID), we want strict matches for the column
+        const bqCatNorm = normalizeStr(bq.category);
         const catMatch = config.mode === GameMode.GRID 
-            ? bq.category === q.category 
+            ? bqCatNorm === qCatNorm 
             : getMainCategory(bq.category) === getMainCategory(q.category);
         
+        // Match points if possible
+        const pointMatch = bq.points === q.points;
+
         // Looser difficulty matching
         const diffMatch = bq.difficulty.toLowerCase().includes(targetDifficulty.toLowerCase()) || 
                           (targetDifficulty === 'beginner' && bq.difficulty.toLowerCase() === 'easy') ||
@@ -612,7 +621,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         // Filter out played questions
         const alreadyPlayed = playedHashes.has(getQuestionHash(bq));
 
-        if (catMatch && diffMatch && !alreadyPlayed) {
+        if (catMatch && (pointMatch || diffMatch) && !alreadyPlayed) {
             return true;
         }
         return false;
@@ -637,10 +646,14 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
           id: q.id,
           explanation: randomQ.explanation
         };
+        
+        // Update global questions list so board stays in sync
+        setQuestions(prev => prev.map(item => item.id === q.id ? finalQ : item));
+        
         setActiveQuestion(finalQ);
         setEditedQuestion(finalQ);
       } else {
-        showToast(`عذراً، لا توجد أسئلة بهذا المستوى في البنك (cat: ${q.category}, diff: ${targetDifficulty}).`, "warning");
+        showToast("عذراً، لم نتمكن من العثور على أسئلة أخرى لهذه الفئة حالياً. جرب فئة أخرى.", "warning");
       }
     } catch (err) {
       showToast("خطأ في جلب السؤال", "error");
@@ -666,68 +679,73 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     }
 
     return (
-      <div className="w-full max-w-5xl mx-auto vintage-panel p-0.5 sm:p-2 md:p-3 overflow-x-auto relative shadow-2xl">
-        <div 
-          className="grid gap-0.5 sm:gap-1.5 md:gap-2 min-w-max md:min-w-0 relative z-10 justify-center mx-auto" 
-          style={{ gridTemplateColumns: `repeat(${displayCategories.length}, minmax(36px, 1fr))` }}
-        >
-          {displayCategories.map((cat, i) => (
-            <div key={i} className="flex flex-col gap-0.5 sm:gap-1.5 md:gap-2 min-w-[36px] sm:min-w-[70px] md:min-w-[100px]">
-              <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-0.5 sm:p-1 md:p-2 rounded-md sm:rounded-lg md:rounded-xl text-center h-8 sm:h-12 md:h-16 flex items-center justify-center backdrop-blur-md shadow-md transition-all duration-300 hover:border-white/40">
-                <h3 className="font-bold text-[7px] sm:text-[10px] md:text-base xl:text-lg leading-tight text-white drop-shadow-md">{cat}</h3>
-              </div>
-              {(jeopardyGrid[cat] || Array(5).fill(null)).map((q, qIdx) => {
-                if (!q) {
-                  return (
-                    <div key={qIdx} className="w-full h-8 sm:h-12 md:h-20 lg:h-auto md:aspect-[4/3] bg-black/20 rounded-md md:rounded-lg border border-dashed border-white/10 flex items-center justify-center">
-                      <span className="text-white/20 text-[5px] sm:text-[8px] md:text-xs">لا أسئلة</span>
-                    </div>
-                  );
-                }
-                const isAnswered = !!answeredMap[q.id];
-                return (
-                  <button
-                    key={q.id}
-                    disabled={isAnswered && config.mode !== GameMode.GRID}
-                    onClick={() => {
-                      if (isAnswered) {
-                        setIsEditingCell(q);
-                        return;
-                      }
-                      if (q.id.startsWith('missing') || skippedIds.has(q.id)) {
-                        fetchAndSetQuestion(q);
-                      } else {
-                        setActiveQuestion(q);
-                        setEditedQuestion(q);
-                      }
-                      setIsEditing(false);
-                    }}
-                    className={`w-full h-8 sm:h-12 md:h-16 lg:h-auto md:aspect-[4/3] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[1px_1px_0px_var(--color-ink-black)] active:translate-y-[1px] ${
-                      isAnswered 
-                        ? 'opacity-80' 
-                        : 'hover:-translate-y-[1px] hover:shadow-[2px_2px_0px_var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)]'
-                    }`}
-                    style={isAnswered ? { backgroundColor: answeredMap[q.id], borderColor: 'var(--color-ink-black)', opacity: 0.8, transform: 'scale(0.95)' } : {}}
-                  >
-                    {!isAnswered && (
-                      <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150"></div>
-                    )}
-                    {isAnswered ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <CartoonCheck className="mb-0.5 text-white opacity-80 w-3 h-3 sm:w-5 sm:h-5 md:w-8 md:h-8" />
-                        <span className="text-[4px] sm:text-[8px] md:text-xs bg-black/60 px-0.5 sm:px-2 md:px-3 py-0.5 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
-                      </div>
-                    ) : (
-                      <span className="vintage-text text-[9px] sm:text-xs md:text-2xl xl:text-4xl text-[var(--color-primary-gold)] drop-shadow-[1px_1px_0px_var(--color-ink-black)] font-black">
-                        {q.points}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+      <div className="flex flex-col h-full w-full">
+        <div className="flex-grow flex items-center justify-center p-4">
+          <div className="w-full max-w-7xl mx-auto vintage-panel p-2 sm:p-4 md:p-6 overflow-hidden relative shadow-2xl flex justify-center">
+            <div 
+              className="grid gap-1 sm:gap-2 md:gap-3 relative z-10 w-full" 
+              style={{ gridTemplateColumns: `repeat(${displayCategories.length}, minmax(0, 1fr))` }}
+            >
+              {displayCategories.map((cat, i) => (
+                <div key={i} className="flex flex-col gap-1 sm:gap-2 md:gap-3 w-full">
+                  <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-0.5 sm:p-1 md:p-2 rounded-md sm:rounded-lg md:rounded-xl text-center h-8 sm:h-12 md:h-16 flex items-center justify-center backdrop-blur-md shadow-md transition-all duration-300 hover:border-white/40">
+                    <h3 className="font-bold text-[10px] sm:text-[14px] md:text-base xl:text-lg leading-tight text-white drop-shadow-md">{cat}</h3>
+                  </div>
+                  {(jeopardyGrid[cat] || Array(5).fill(null)).map((q, qIdx) => {
+                    if (!q) {
+                      return (
+                        <div key={qIdx} className="w-full h-8 sm:h-12 md:h-20 lg:h-auto md:aspect-[4/3] bg-black/20 rounded-md md:rounded-lg border border-dashed border-white/10 flex items-center justify-center">
+                          <span className="text-white/20 text-[5px] sm:text-[8px] md:text-xs">لا أسئلة</span>
+                        </div>
+                      );
+                    }
+                    const isAnswered = !!answeredMap[q.id];
+                    return (
+                      <button
+                        key={q.id}
+                        disabled={isAnswered && config.mode !== GameMode.GRID}
+                        onClick={() => {
+                          if (isAnswered) {
+                            setIsEditingCell(q);
+                            return;
+                          }
+                          if (q.id.startsWith('missing') || skippedIds.has(q.id)) {
+                            fetchAndSetQuestion(q);
+                          } else {
+                            setActiveQuestion(q);
+                            setEditedQuestion(q);
+                          }
+                          setIsEditing(false);
+                        }}
+                        className={`w-full h-8 sm:h-12 md:h-16 lg:h-auto md:aspect-[4/3] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[1px_1px_0px_var(--color-ink-black)] active:translate-y-[1px] ${
+                          isAnswered 
+                            ? 'opacity-80' 
+                            : 'hover:-translate-y-[1px] hover:shadow-[2px_2px_0px_var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)]'
+                        }`}
+                        style={isAnswered ? { backgroundColor: answeredMap[q.id], borderColor: 'var(--color-ink-black)', opacity: 0.8, transform: 'scale(0.95)' } : {}}
+                      >
+                        {!isAnswered && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150"></div>
+                        )}
+                        {isAnswered ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <CartoonCheck className="mb-0.5 text-white opacity-80 w-3 h-3 sm:w-5 sm:h-5 md:w-8 md:h-8" />
+                            <span className="text-[4px] sm:text-[8px] md:text-xs bg-black/60 px-0.5 sm:px-2 md:px-3 py-0.5 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
+                          </div>
+                        ) : (
+                          <span className="vintage-text text-[9px] sm:text-xs md:text-2xl xl:text-4xl text-[var(--color-primary-gold)] drop-shadow-[1px_1px_0px_var(--color-ink-black)] font-black">
+                            {q.points}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
+        <div className="h-6" /> {/* Space at the bottom */}
       </div>
     );
   };
@@ -1007,27 +1025,77 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     const mode = config.mode === GameMode.HEX_GRID ? GameMode.HEX_GRID : GameMode.GRID;
     const bank = QUESTION_BANK[mode] || [];
     
-    const targetDifficulty = (activeQuestion.points || 100) <= 200 ? 'easy' : (activeQuestion.points || 100) <= 400 ? 'medium' : 'hard';
+    // Improved difficulty targeting based on points
+    const points = activeQuestion.points || 100;
+    const targetDifficulty = 
+      points <= 100 ? 'beginner' : 
+      points <= 200 ? 'easy' : 
+      points <= 300 ? 'medium' : 
+      points <= 400 ? 'hard' : 'expert';
     
     // Exclude questions already in history, answered, or currently visible on board
     const usedTexts = new Set([
       ...questionHistory, 
       ...Object.values(finalAnswers), 
       currentText,
-      ...grid.flat().map(q => q.text).filter(Boolean)
+      ...grid.flat().map(q => q.text).filter(Boolean),
+      ...questions.map(q => q.text).filter(Boolean)
     ]);
 
-    let matches = bank.filter(bq => 
-      (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : getMainCategory(bq.category) === getMainCategory(activeQuestion.category)) && 
-      !usedTexts.has(bq.text) &&
-      bq.difficulty === targetDifficulty
-    );
-    
+    const activeCatNorm = normalizeStr(activeQuestion.category || '');
+    const activeLetterNorm = normalizeLetter(activeQuestion.letter || '');
+
+    // First attempt: Strict category/letter match AND strict point value match
+    let matches = bank.filter(bq => {
+      const categoryMatch = mode === GameMode.GRID ? normalizeStr(bq.category) === activeCatNorm : true;
+      const letterMatch = mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === activeLetterNorm : true;
+      const pointMatch = bq.points === points;
+      const notUsedMatch = !usedTexts.has(bq.text);
+      
+      return categoryMatch && letterMatch && pointMatch && notUsedMatch;
+    });
+
+    // Second attempt: Strict category/letter match AND difficulty mapping match
     if (matches.length === 0) {
-      matches = bank.filter(bq => 
-        (mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === normalizeLetter(activeQuestion.letter || '') : getMainCategory(bq.category) === getMainCategory(activeQuestion.category)) && 
-        !usedTexts.has(bq.text)
-      );
+      matches = bank.filter(bq => {
+        const categoryMatch = mode === GameMode.GRID ? normalizeStr(bq.category) === activeCatNorm : true;
+        const letterMatch = mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === activeLetterNorm : true;
+        const diffMatch = bq.difficulty === targetDifficulty;
+        const notUsedMatch = !usedTexts.has(bq.text);
+        
+        return categoryMatch && letterMatch && diffMatch && notUsedMatch;
+      });
+    }
+
+    // Third attempt: Strict category/letter match, any points
+    if (matches.length === 0) {
+      matches = bank.filter(bq => {
+        const categoryMatch = mode === GameMode.GRID ? normalizeStr(bq.category) === activeCatNorm : true;
+        const letterMatch = mode === GameMode.HEX_GRID ? normalizeLetter(bq.letter || '') === activeLetterNorm : true;
+        const notUsedMatch = !usedTexts.has(bq.text);
+        return categoryMatch && letterMatch && notUsedMatch;
+      });
+    }
+
+    // Fourth attempt: Fallback to main category (for GRID) AND same points
+    if (matches.length === 0 && mode === GameMode.GRID) {
+      const activeMainCat = getMainCategory(activeQuestion.category);
+      matches = bank.filter(bq => {
+        const mainCatMatch = getMainCategory(bq.category) === activeMainCat;
+        const pointMatch = bq.points === points;
+        const notUsedMatch = !usedTexts.has(bq.text);
+        return mainCatMatch && pointMatch && notUsedMatch;
+      });
+    }
+
+    // Fifth attempt: Fallback to main category (for GRID) if still no matches
+    if (matches.length === 0 && mode === GameMode.GRID) {
+      const activeMainCat = getMainCategory(activeQuestion.category);
+      matches = bank.filter(bq => {
+        const mainCatMatch = getMainCategory(bq.category) === activeMainCat;
+        const notUsedMatch = !usedTexts.has(bq.text);
+        return mainCatMatch && notUsedMatch;
+      });
     }
     
     if (matches.length > 0) {
@@ -1037,10 +1105,14 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         ...activeQuestion, 
         text: randomQ.text, 
         answer: randomQ.answer, 
-        id: `bank-refreshed-${randomQ.id}-${Date.now()}`,
+        id: activeQuestion.id, // Keep original ID to maintain board tracking
         explanation: randomQ.explanation,
         generatedBy: undefined
       };
+      
+      // Update global questions list so board stays in sync
+      setQuestions(prev => prev.map(item => item.id === activeQuestion.id ? finalQ : item));
+      
       setActiveQuestion(finalQ);
       setEditedQuestion(finalQ);
       setRevealed(false);
@@ -1150,7 +1222,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className={`w-full max-w-[90vw] sm:max-w-3xl rounded-2xl md:rounded-[2.5rem] p-2 sm:p-6 md:p-12 vintage-panel relative overflow-visible my-auto text-center border-4 md:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] ${
+              className={`w-full max-w-[95vw] lg:max-w-6xl rounded-2xl md:rounded-[2.5rem] p-2 sm:p-6 md:p-12 vintage-panel relative overflow-visible my-auto text-center border-4 md:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] ${
                 powerInUse === PowerType.STEAL ? 'ring-4 md:ring-8 ring-[var(--color-primary-red)]' : ''
               }`}
             >
@@ -1223,9 +1295,9 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                         </div>
                       </div>
 
-                      <div className="relative p-2 sm:p-12 rounded-xl sm:rounded-3xl bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)]">
+                      <div className="relative p-6 sm:p-12 rounded-xl sm:rounded-3xl bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)]">
                         <ReportButton className="!-top-8 !right-2" question={activeQuestion} onReport={onOpenReport} />
-                        <h3 className="text-base sm:text-3xl md:text-5xl font-black leading-tight text-[var(--color-ink-black)] vintage-text text-center w-full pt-6 md:pt-4">
+                        <h3 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight text-[var(--color-ink-black)] vintage-text text-center w-full pt-6 md:pt-4">
                           <span>{activeQuestion.text}</span>
                         </h3>
                         {/* تلميح عدد الكلمات */}
@@ -1305,7 +1377,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 sm:space-y-8">
                             <div className="p-4 sm:p-12 rounded-2xl sm:rounded-3xl bg-[var(--color-primary-green)]/10 border-4 border-[var(--color-ink-black)] relative shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)]">
                               <p className="absolute -top-4 sm:-top-5 left-1/2 -translate-x-1/2 bg-[var(--color-ink-black)] text-[var(--color-primary-gold)] px-4 sm:px-6 py-1 sm:py-2 rounded-lg sm:rounded-xl text-sm sm:text-lg font-black border-2 border-[var(--color-primary-gold)]">الإجابة</p>
-                              <p className="text-xl sm:text-4xl md:text-7xl font-black text-[var(--color-ink-black)] mt-2 sm:mt-4 vintage-text">{activeQuestion.answer}</p>
+                              <p className="text-3xl sm:text-5xl md:text-8xl font-black text-[var(--color-ink-black)] mt-2 sm:mt-4 vintage-text">{activeQuestion.answer}</p>
                             </div>
 
                             {!showScoring ? (
@@ -1445,7 +1517,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     <div className="flex flex-col items-center gap-4 md:gap-8 p-2 md:p-8 relative">
       
       {/* Scoreboard */}
-      <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-8 relative z-10">
+      <div className="w-full max-w-[95vw] grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-8 relative z-10">
         {players.map((p, idx) => (
           <motion.div 
             key={p.id} 
@@ -1555,7 +1627,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       </div>
 
       {/* لوحة اللعب الرئيسية */}
-      <div className="w-full mt-4 md:mt-8">
+      <div className="w-full mt-8 md:mt-16 relative">
         {config.mode === GameMode.GRID ? (
           renderJeopardyBoard()
         ) : (
@@ -1563,7 +1635,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
             className="relative group animate-fade-in w-full flex justify-center px-4" 
             style={{ '--current-player-color': players[currentPlayerIndex].color } as React.CSSProperties}
           >
-            <div className="game-board-area relative z-10 transition-transform duration-700 hover:scale-[1.01] w-full max-w-5xl">
+            <div className="game-board-area relative z-10 transition-transform duration-700 hover:scale-[1.01] w-full max-w-[95vw]">
               <div className="board-wrapper flex justify-center">
                 <div className="hex-grid-center w-full">
                   <Suspense fallback={<div className="flex items-center justify-center p-20 text-cyan-400 font-bold animate-pulse">جاري تحميل الشبكة...</div>}>

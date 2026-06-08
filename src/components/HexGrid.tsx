@@ -33,11 +33,11 @@ const HexGrid: React.FC<HexGridProps> = ({
     const handleResize = () => {
       const width = window.innerWidth;
       if (width < 640) {
-        setScale(0.4);
-      } else if (width < 1024) {
         setScale(0.5);
-      } else {
+      } else if (width < 1024) {
         setScale(0.7);
+      } else {
+        setScale(0.9);
       }
     };
     handleResize();
@@ -55,8 +55,11 @@ const HexGrid: React.FC<HexGridProps> = ({
   // Calculate viewBox based on grid dimensions + borders
   const rowSizes = [6, 5, 6, 5, 6];
   const maxCols = 6;
-  const viewBoxWidth = (maxCols + 1) * hexHorizontalSpacing;
-  const viewBoxHeight = (rowSizes.length + 1) * hexVerticalSpacing + (40 * scale);
+  const viewBoxPadding = 1.2; // Extra padding for borders
+  const viewBoxWidth = (maxCols + viewBoxPadding * 2) * hexHorizontalSpacing;
+  const viewBoxHeight = (rowSizes.length + viewBoxPadding * 2) * hexVerticalSpacing;
+  const viewBoxX = -hexHorizontalSpacing * viewBoxPadding;
+  const viewBoxY = -hexVerticalSpacing * viewBoxPadding;
 
   const points = `${hexHalfWidth},0 ${hexWidth},${hexHeight * 0.25} ${hexWidth},${hexHeight * 0.75} ${hexHalfWidth},${hexHeight} 0,${hexHeight * 0.75} 0,${hexHeight * 0.25}`;
 
@@ -66,10 +69,10 @@ const HexGrid: React.FC<HexGridProps> = ({
   }, [handleHexClick]);
 
   return (
-    <div className="relative w-full max-w-[min(95vw,900px)] mx-auto overflow-visible">
+    <div className="flex justify-center items-center w-full h-full overflow-visible">
       <svg 
-        viewBox={`-${80 * scale} -${100 * scale} ${viewBoxWidth + (160 * scale)} ${viewBoxHeight + (200 * scale)}`} 
-        className="w-full h-auto hex-svg-container drop-shadow-2xl overflow-visible"
+        viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`} 
+        className="w-full max-w-[1240px] h-auto hex-svg-container drop-shadow-2xl overflow-visible translate-y-4"
       >
         <defs>
           <filter id="scribble-filter" x="-20%" y="-20%" width="140%" height="140%">
