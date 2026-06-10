@@ -41,7 +41,6 @@ interface Props {
   players: Player[];
   onFinish: (players: Player[]) => void;
   onOpenReport: (q: Question) => void;
-  setQuestions: React.Dispatch<React.SetStateAction<Question[]>>;
   setGameState: (s: any) => void;
 }
 
@@ -56,11 +55,9 @@ const LETTERS_FLAT = [
   'ل', 'م', 'ن', 'ه', 'و', 'ي'
 ];
 
-const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayers, onFinish, onOpenReport, setQuestions, setGameState }) => {
+const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayers, onFinish, onOpenReport, setGameState }) => {
   const { settings } = useSettings();
   const { showToast } = useToast();
-
-  const normalizeStr = (s: string) => (s || '').trim().toLowerCase().replace(/[\u0640]/g, '').replace(/\s+/g, ' ');
 
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [activeQuestion, setActiveQuestion] = useState<Question | null>(null);
@@ -601,18 +598,12 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
 
       // Try to find matches based on category or letter
       const playedHashes = new Set(getPlayedQuestionHashes());
-      const qCatNorm = normalizeStr(q.category || '');
-
       const matches = bank.filter(bq => {
         // In Jeopardy mode (GRID), we want strict matches for the column
-        const bqCatNorm = normalizeStr(bq.category);
         const catMatch = config.mode === GameMode.GRID 
-            ? bqCatNorm === qCatNorm 
+            ? bq.category === q.category 
             : getMainCategory(bq.category) === getMainCategory(q.category);
         
-        // Match points if possible
-        const pointMatch = bq.points === q.points;
-
         // Looser difficulty matching
         const diffMatch = bq.difficulty.toLowerCase().includes(targetDifficulty.toLowerCase()) || 
                           (targetDifficulty === 'beginner' && bq.difficulty.toLowerCase() === 'easy') ||
@@ -621,7 +612,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         // Filter out played questions
         const alreadyPlayed = playedHashes.has(getQuestionHash(bq));
 
-        if (catMatch && (pointMatch || diffMatch) && !alreadyPlayed) {
+        if (catMatch && diffMatch && !alreadyPlayed) {
             return true;
         }
         return false;
@@ -646,10 +637,6 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
           id: q.id,
           explanation: randomQ.explanation
         };
-        
-        // Update global questions list so board stays in sync
-        setQuestions(prev => prev.map(item => item.id === q.id ? finalQ : item));
-        
         setActiveQuestion(finalQ);
         setEditedQuestion(finalQ);
       } else {
@@ -679,23 +666,23 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     }
 
     return (
-      <div className="flex flex-col h-full w-full">
-        <div className="flex-grow flex items-center justify-center p-4">
-          <div className="w-full max-w-7xl mx-auto vintage-panel p-2 sm:p-4 md:p-6 overflow-hidden relative shadow-2xl flex justify-center">
+      <div className="flex flex-col h-auto w-full select-none">
+        <div className="flex-grow flex items-center justify-center p-1 sm:p-2 md:p-3">
+          <div className="w-full max-w-full mx-auto vintage-panel p-2 sm:p-4 md:p-6 overflow-hidden relative shadow-md flex justify-center max-h-[85vh] sm:max-h-[90vh] xl:max-h-[95vh] overflow-y-auto">
             <div 
-              className="grid gap-1 sm:gap-2 md:gap-3 relative z-10 w-full" 
+              className="grid gap-2 sm:gap-3 md:gap-4 relative z-10 w-full" 
               style={{ gridTemplateColumns: `repeat(${displayCategories.length}, minmax(0, 1fr))` }}
             >
               {displayCategories.map((cat, i) => (
-                <div key={i} className="flex flex-col gap-1 sm:gap-2 md:gap-3 w-full">
-                  <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-0.5 sm:p-1 md:p-2 rounded-md sm:rounded-lg md:rounded-xl text-center h-8 sm:h-12 md:h-16 flex items-center justify-center backdrop-blur-md shadow-md transition-all duration-300 hover:border-white/40">
-                    <h3 className="font-bold text-[10px] sm:text-[14px] md:text-base xl:text-lg leading-tight text-white drop-shadow-md">{cat}</h3>
+                <div key={i} className="flex flex-col gap-2 sm:gap-3 md:gap-4 w-full">
+                  <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 border border-white/20 text-white p-1 sm:p-2 rounded-lg sm:rounded-xl text-center h-8 sm:h-12 md:h-14 lg:h-16 flex items-center justify-center backdrop-blur-md shadow-md transition-all duration-300 hover:border-white/40">
+                    <h3 className="font-bold text-[9px] sm:text-[11px] md:text-sm xl:text-[1.1rem] leading-tight text-white drop-shadow-md">{cat}</h3>
                   </div>
                   {(jeopardyGrid[cat] || Array(5).fill(null)).map((q, qIdx) => {
                     if (!q) {
                       return (
-                        <div key={qIdx} className="w-full h-8 sm:h-12 md:h-20 lg:h-auto md:aspect-[4/3] bg-black/20 rounded-md md:rounded-lg border border-dashed border-white/10 flex items-center justify-center">
-                          <span className="text-white/20 text-[5px] sm:text-[8px] md:text-xs">لا أسئلة</span>
+                        <div key={qIdx} className="w-full h-10 sm:h-14 md:h-20 lg:h-24 xl:h-[7.5rem] bg-black/20 rounded-[1rem] border border-dashed border-white/10 flex items-center justify-center">
+                          <span className="text-white/20 text-[6px] sm:text-[8px] md:text-[11px]">لا أسئلة</span>
                         </div>
                       );
                     }
@@ -710,17 +697,17 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                             return;
                           }
                           if (q.id.startsWith('missing') || skippedIds.has(q.id)) {
-                            fetchAndSetQuestion(q);
+                             fetchAndSetQuestion(q);
                           } else {
                             setActiveQuestion(q);
                             setEditedQuestion(q);
                           }
                           setIsEditing(false);
                         }}
-                        className={`w-full h-8 sm:h-12 md:h-16 lg:h-auto md:aspect-[4/3] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[1px_1px_0px_var(--color-ink-black)] active:translate-y-[1px] ${
+                        className={`w-full h-10 sm:h-14 md:h-20 lg:h-24 xl:h-[7.5rem] vintage-card flex items-center justify-center relative overflow-hidden group select-none touch-manipulation cursor-pointer transition-all duration-75 active:shadow-[1px_1px_0px_var(--color-ink-black)] active:translate-y-[1px] ${
                           isAnswered 
                             ? 'opacity-80' 
-                            : 'hover:-translate-y-[1px] hover:shadow-[2px_2px_0px_var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)]'
+                            : 'hover:-translate-y-[2px] hover:shadow-[3px_3px_0px_var(--color-ink-black)] md:hover:shadow-[5px_5px_0px_var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)]'
                         }`}
                         style={isAnswered ? { backgroundColor: answeredMap[q.id], borderColor: 'var(--color-ink-black)', opacity: 0.8, transform: 'scale(0.95)' } : {}}
                       >
@@ -729,11 +716,11 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                         )}
                         {isAnswered ? (
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <CartoonCheck className="mb-0.5 text-white opacity-80 w-3 h-3 sm:w-5 sm:h-5 md:w-8 md:h-8" />
-                            <span className="text-[4px] sm:text-[8px] md:text-xs bg-black/60 px-0.5 sm:px-2 md:px-3 py-0.5 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
+                            <CartoonCheck className="mb-1 text-white opacity-80 w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+                            <span className="text-[6px] sm:text-[9px] md:text-xs bg-black/60 px-1 sm:px-2 py-0.5 rounded-full backdrop-blur-sm text-white font-bold tracking-wider">مكتمل</span>
                           </div>
                         ) : (
-                          <span className="vintage-text text-[9px] sm:text-xs md:text-2xl xl:text-4xl text-[var(--color-primary-gold)] drop-shadow-[1px_1px_0px_var(--color-ink-black)] font-black">
+                          <span className="vintage-text text-sm sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl text-[var(--color-primary-gold)] drop-shadow-[1.5px_1.5px_0px_var(--color-ink-black)] md:drop-shadow-[2.5px_2.5px_0px_var(--color-ink-black)] font-black">
                             {q.points}
                           </span>
                         )}
@@ -745,7 +732,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
             </div>
           </div>
         </div>
-        <div className="h-6" /> {/* Space at the bottom */}
+        <div className="h-1" /> {/* Compact bottom spacing */}
       </div>
     );
   };
@@ -1033,13 +1020,15 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       points <= 300 ? 'medium' : 
       points <= 400 ? 'hard' : 'expert';
     
+    // Helper to normalize strings for comparison
+    const normalizeStr = (s: string) => (s || '').trim().toLowerCase().replace(/[\u0640]/g, '').replace(/\s+/g, ' ');
+
     // Exclude questions already in history, answered, or currently visible on board
     const usedTexts = new Set([
       ...questionHistory, 
       ...Object.values(finalAnswers), 
       currentText,
-      ...grid.flat().map(q => q.text).filter(Boolean),
-      ...questions.map(q => q.text).filter(Boolean)
+      ...grid.flat().map(q => q.text).filter(Boolean)
     ]);
 
     const activeCatNorm = normalizeStr(activeQuestion.category || '');
@@ -1105,14 +1094,10 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         ...activeQuestion, 
         text: randomQ.text, 
         answer: randomQ.answer, 
-        id: activeQuestion.id, // Keep original ID to maintain board tracking
+        id: `bank-refreshed-${randomQ.id}-${Date.now()}`,
         explanation: randomQ.explanation,
         generatedBy: undefined
       };
-      
-      // Update global questions list so board stays in sync
-      setQuestions(prev => prev.map(item => item.id === activeQuestion.id ? finalQ : item));
-      
       setActiveQuestion(finalQ);
       setEditedQuestion(finalQ);
       setRevealed(false);
@@ -1216,13 +1201,13 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-[100] flex items-start justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto py-8 sm:py-12 lg:py-16"
           >
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className={`w-full max-w-[95vw] lg:max-w-6xl rounded-2xl md:rounded-[2.5rem] p-2 sm:p-6 md:p-12 vintage-panel relative overflow-visible my-auto text-center border-4 md:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] ${
+              className={`w-full max-w-[95vw] lg:max-w-6xl rounded-2xl md:rounded-[2.5rem] p-3 sm:p-6 md:p-10 vintage-panel relative overflow-visible my-auto text-center border-4 md:border-8 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] ${
                 powerInUse === PowerType.STEAL ? 'ring-4 md:ring-8 ring-[var(--color-primary-red)]' : ''
               }`}
             >
@@ -1295,9 +1280,9 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                         </div>
                       </div>
 
-                      <div className="relative p-6 sm:p-12 rounded-xl sm:rounded-3xl bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)]">
+                      <div className="relative p-4 sm:p-8 md:p-10 rounded-xl sm:rounded-3xl bg-[var(--color-off-white)] border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)]">
                         <ReportButton className="!-top-8 !right-2" question={activeQuestion} onReport={onOpenReport} />
-                        <h3 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black leading-tight text-[var(--color-ink-black)] vintage-text text-center w-full pt-6 md:pt-4">
+                        <h3 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black leading-tight text-[var(--color-ink-black)] vintage-text text-center w-full pt-6 md:pt-4">
                           <span>{activeQuestion.text}</span>
                         </h3>
                         {/* تلميح عدد الكلمات */}
@@ -1344,13 +1329,13 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
 
                       <div className="flex flex-col gap-4 sm:gap-6 pt-4 sm:pt-6">
                         {!revealed ? (
-                          <div className="flex flex-col gap-3 sm:gap-4">
+                          <div className="flex flex-col gap-2.5 sm:gap-3.5">
                             <motion.button 
                               onClick={() => setRevealed(true)}
                               whileTap={{ scale: 0.98 }}
-                              className="vintage-button w-full py-3 sm:py-6 rounded-xl sm:rounded-2xl text-xl sm:text-3xl font-black flex items-center justify-center gap-2 sm:gap-4 bg-[var(--color-primary-gold)] touch-manipulation cursor-pointer"
+                              className="vintage-button w-full py-2.5 sm:py-4 rounded-xl sm:rounded-2xl text-lg sm:text-2xl font-black flex items-center justify-center gap-2 sm:gap-4 bg-[var(--color-primary-gold)] touch-manipulation cursor-pointer"
                             >
-                              إظهار الإجابة <CartoonEye size={24} className="sm:w-8 sm:h-8" />
+                              إظهار الإجابة <CartoonEye size={20} className="sm:w-6 sm:h-6" />
                             </motion.button>
                             
                             
@@ -1358,7 +1343,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                               <motion.button 
                                 onClick={handlePass}
                                 whileTap={{ scale: 0.98 }}
-                                className="w-full py-4 mb-2 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] rounded-2xl font-black text-xl border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] touch-manipulation cursor-pointer"
+                                className="w-full py-2.5 sm:py-3.5 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] rounded-2xl font-black text-lg sm:text-xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)] touch-manipulation cursor-pointer"
                               >
                                 {isStealTurn ? "الفريق الثاني، اجب!" : "نقل السؤال للفريق الآخر"}
                               </motion.button>
@@ -1367,26 +1352,26 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                               <motion.button 
                                 onClick={() => handleAnswer(null, false)}
                                 whileTap={{ scale: 0.98 }}
-                                className="w-full py-4 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-2xl font-black text-xl border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)] touch-manipulation cursor-pointer"
+                                className="w-full py-2.5 sm:py-3.5 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-2xl font-black text-lg sm:text-xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)] touch-manipulation cursor-pointer"
                               >
                                 تخطي السؤال
                               </motion.button>
                             )}
                           </div>
                         ) : (
-                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 sm:space-y-8">
-                            <div className="p-4 sm:p-12 rounded-2xl sm:rounded-3xl bg-[var(--color-primary-green)]/10 border-4 border-[var(--color-ink-black)] relative shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[8px_8px_0px_var(--color-ink-black)]">
-                              <p className="absolute -top-4 sm:-top-5 left-1/2 -translate-x-1/2 bg-[var(--color-ink-black)] text-[var(--color-primary-gold)] px-4 sm:px-6 py-1 sm:py-2 rounded-lg sm:rounded-xl text-sm sm:text-lg font-black border-2 border-[var(--color-primary-gold)]">الإجابة</p>
-                              <p className="text-3xl sm:text-5xl md:text-8xl font-black text-[var(--color-ink-black)] mt-2 sm:mt-4 vintage-text">{activeQuestion.answer}</p>
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 sm:space-y-6">
+                            <div className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-[var(--color-primary-green)]/10 border-4 border-[var(--color-ink-black)] relative shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[6px_6px_0px_var(--color-ink-black)]">
+                              <p className="absolute -top-4 sm:-top-5 left-1/2 -translate-x-1/2 bg-[var(--color-ink-black)] text-[var(--color-primary-gold)] px-4 sm:px-6 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs sm:text-base font-black border-2 border-[var(--color-primary-gold)]">الإجابة</p>
+                              <p className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[var(--color-ink-black)] mt-2 sm:mt-4 vintage-text">{activeQuestion.answer}</p>
                             </div>
 
                             {!showScoring ? (
                               <motion.button 
                                 onClick={() => setShowScoring(true)}
                                 whileTap={{ scale: 0.98 }}
-                                className="vintage-button w-full py-3 sm:py-6 rounded-xl sm:rounded-2xl text-xl sm:text-3xl font-black flex items-center justify-center gap-2 sm:gap-4 bg-[var(--color-primary-green)] text-white touch-manipulation cursor-pointer"
+                                className="vintage-button w-full py-2 sm:py-4 rounded-xl sm:rounded-2xl text-lg sm:text-2xl font-black flex items-center justify-center gap-2 sm:gap-4 bg-[var(--color-primary-green)] text-white touch-manipulation cursor-pointer"
                               >
-                                رصد الدرجات <CartoonCheck className="w-6 h-6 sm:w-10 sm:h-10" />
+                                رصد الدرجات <CartoonCheck className="w-5 h-5 sm:w-8 sm:h-8" />
                               </motion.button>
                             ) : (
                               <div className="w-full space-y-3 sm:space-y-4">
@@ -1396,7 +1381,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                                       <button 
                                         key={p.id}
                                         onClick={() => handleAnswer(p.id, true)}
-                                        className={`flex-1 py-3 sm:py-6 rounded-xl sm:rounded-2xl font-black text-sm sm:text-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[6px_6px_0px_var(--color-ink-black)] active:translate-y-[2px] active:shadow-[2px_2px_0px_var(--color-ink-black)] transition-all duration-75 select-none touch-manipulation cursor-pointer ${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`}
+                                        className={`flex-1 py-2 sm:py-4 rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl border-4 border-[var(--color-ink-black)] shadow-[3px_3px_0px_var(--color-ink-black)] sm:shadow-[5px_5px_0px_var(--color-ink-black)] active:translate-y-[2px] active:shadow-[1px_1px_0px_var(--color-ink-black)] transition-all duration-75 select-none touch-manipulation cursor-pointer ${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`}
                                         style={{ backgroundColor: p.color }}
                                       >
                                         {p.name} صح
@@ -1404,7 +1389,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                                     ))}
                                     <button 
                                       onClick={() => handleAnswer(null, false)}
-                                      className="flex-1 py-3 sm:py-6 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-xl sm:rounded-2xl font-black text-sm sm:text-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[6px_6px_0px_var(--color-ink-black)] active:translate-y-[2px] active:shadow-[2px_2px_0px_var(--color-ink-black)] transition-all duration-75 select-none touch-manipulation cursor-pointer"
+                                      className="flex-1 py-2 sm:py-4 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-xl sm:rounded-2xl font-black text-sm sm:text-xl border-4 border-[var(--color-ink-black)] shadow-[3px_3px_0px_var(--color-ink-black)] sm:shadow-[5px_5px_0px_var(--color-ink-black)] active:translate-y-[2px] active:shadow-[1px_1px_0px_var(--color-ink-black)] transition-all duration-75 select-none touch-manipulation cursor-pointer"
                                     >
                                       لم يجب أحد
                                     </button>
@@ -1514,34 +1499,42 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 md:gap-8 p-2 md:p-8 relative">
+    <div className="flex flex-col xl:flex-row gap-4 xl:gap-8 p-1 sm:p-2 xl:pl-0 xl:py-1 items-stretch justify-center w-full max-w-full select-none overflow-hidden h-auto min-h-0 relative">
       
       {/* Scoreboard */}
-      <div className="w-full max-w-[95vw] grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-8 relative z-10">
+      <div className={`w-full shrink-0 grid grid-cols-1 sm:grid-cols-2 xl:flex xl:flex-col gap-4 sm:gap-5 relative z-10 ${
+        config.mode === GameMode.GRID 
+          ? 'xl:w-[350px] xl:mt-8 lg:mt-6 md:mt-4 mt-2' 
+          : 'xl:w-[460px] xl:mt-20 lg:mt-16 md:mt-12 mt-8'
+      }`}>
         {players.map((p, idx) => (
           <motion.div 
             key={p.id} 
             initial={{ x: idx === 0 ? -50 : 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className={`flex items-center gap-2 sm:gap-4 md:gap-6 p-2 sm:p-4 md:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl vintage-panel transition-all border-4 border-[var(--color-ink-black)] shadow-[3px_3px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)] relative overflow-hidden ${
+            className={`flex items-center transition-all border-4 border-[var(--color-ink-black)] relative overflow-hidden ${
+              config.mode === GameMode.GRID
+                ? 'gap-3 p-3 sm:p-4 rounded-[1.5rem] md:rounded-[2rem] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)]'
+                : 'gap-5 sm:gap-6 md:gap-8 p-5 sm:p-7 md:p-9 rounded-[2.25rem] md:rounded-[3rem] shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[10px_10px_0px_var(--color-ink-black)]'
+            } ${
               config.mode === GameMode.HEX_GRID 
                 ? 'bg-[var(--color-off-white)]' 
                 : (currentPlayerIndex === idx 
-                   ? (activePower ? 'bg-[var(--color-primary-gold)]/40 scale-[1.02] md:scale-105 z-10 ring-4 ring-[var(--color-primary-gold)] ring-offset-4 ring-offset-[var(--color-bg-cream)]' : 'bg-[var(--color-primary-gold)]/20 scale-[1.02] md:scale-105 z-10') 
+                   ? (activePower ? 'bg-[var(--color-primary-gold)]/40 scale-[1.01] z-10 ring-2 ring-[var(--color-primary-gold)]' : 'bg-[var(--color-primary-gold)]/20 scale-[1.01] z-10') 
                    : 'bg-[var(--color-off-white)] opacity-90')
-            }`}
+            } vintage-panel`}
           >
             {config.mode === GameMode.HEX_GRID ? (
               activePower?.playerId === p.id && (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="absolute -top-2 -right-2 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] px-4 py-2 rounded-2xl font-black text-xs border-2 border-[var(--color-ink-black)] shadow-[3px_3px_0px_var(--color-ink-black)] z-20 flex items-center gap-2 animate-bounce"
+                  className="absolute top-1 right-1 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] px-3 py-1 rounded-xl font-black text-xs border-2 border-[var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)] z-20 flex items-center gap-1 animate-bounce"
                 >
-                  {activePower.type === PowerType.FREEZE && <CartoonSnowflake className="w-4 h-4" />}
-                  {activePower.type === PowerType.SHIELD && <CartoonShield className="w-4 h-4" />}
-                  {activePower.type === PowerType.STEAL && <CartoonGhost className="w-4 h-4" />}
-                  قدرة مفعلة!
+                  {activePower.type === PowerType.FREEZE && <CartoonSnowflake className="w-3.5 h-3.5" />}
+                  {activePower.type === PowerType.SHIELD && <CartoonShield className="w-3.5 h-3.5" />}
+                  {activePower.type === PowerType.STEAL && <CartoonGhost className="w-3.5 h-3.5" />}
+                  مفعلة!
                 </motion.div>
               )
             ) : (
@@ -1549,16 +1542,19 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="absolute -top-2 -right-2 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] px-4 py-2 rounded-2xl font-black text-xs border-2 border-[var(--color-ink-black)] shadow-[3px_3px_0px_var(--color-ink-black)] z-20 flex items-center gap-2 animate-bounce"
+                  className="absolute top-1 right-1 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] px-3 py-1 rounded-xl font-black text-xs border-2 border-[var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)] z-20 flex items-center gap-1 animate-bounce"
                 >
-                  {/* non-hex-grid power icon here if any */}
-                  قدرة مفعلة!
+                  مفعلة!
                 </motion.div>
               )
             )}
             
             <div 
-              className={`w-10 h-10 sm:w-14 sm:h-14 md:w-20 md:h-20 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center text-lg sm:text-2xl md:text-4xl font-black border-[3px] sm:border-4 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)] relative ${
+              className={`flex items-center justify-center font-black border-4 border-[var(--color-ink-black)] relative shrink-0 ${
+                config.mode === GameMode.GRID
+                  ? 'w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-[1rem] md:rounded-[1.25rem] text-2xl sm:text-3xl md:text-4xl lg:text-5xl shadow-[3px_3px_0px_var(--color-ink-black)] md:shadow-[5px_5px_0px_var(--color-ink-black)]'
+                  : 'w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-[2rem] md:rounded-[2.5rem] text-4xl sm:text-5xl md:text-6xl lg:text-7xl shadow-[5px_5px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)]'
+              } ${
                 isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'
               }`} 
               style={{backgroundColor: p.color}}
@@ -1568,24 +1564,30 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                 <motion.div 
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                   transition={{ repeat: Infinity, duration: 2 }}
-                  className="absolute inset-0 rounded-2xl bg-white/30"
+                  className={`absolute inset-0 bg-white/30 ${
+                    config.mode === GameMode.GRID ? 'rounded-[1rem] md:rounded-[1.25rem]' : 'rounded-[2rem] md:rounded-[2.5rem]'
+                  }`}
                 />
               )}
             </div>
             <div className="flex flex-col flex-1 min-w-0">
               <div className="flex items-center justify-between gap-1 w-full">
-                <span className="text-[var(--color-bg-dark)] text-[9px] sm:text-xs font-black uppercase tracking-widest truncate">
+                <span className="text-[var(--color-bg-dark)] text-xs sm:text-sm font-black uppercase tracking-widest truncate">
                   {config.mode === GameMode.HEX_GRID ? (idx === 0 ? 'أفقي' : 'عمودي') : `لاعب ${idx + 1}`}
                 </span>
                 {config.mode !== GameMode.HEX_GRID && currentPlayerIndex === idx && (
-                  <span className="bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] border border-[var(--color-ink-black)] text-[8px] sm:text-xs font-black px-1.5 sm:px-2 py-0.5 rounded-full animate-wobble shrink-0">دورك الآن!</span>
+                  <span className="bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] border border-[var(--color-ink-black)] text-xxs sm:text-xs font-black px-2 py-0.5 rounded-full animate-wobble shrink-0">دورك!</span>
                 )}
               </div>
-              <span className="text-sm sm:text-xl md:text-3xl font-black text-[var(--color-ink-black)] truncate vintage-text">{p.name}</span>
+              <span className={`font-black text-[var(--color-ink-black)] truncate vintage-text leading-tight mt-1 ${
+                config.mode === GameMode.GRID
+                  ? 'text-lg sm:text-xl md:text-2xl'
+                  : 'text-xl sm:text-2xl md:text-4xl'
+              }`}>{p.name}</span>
               
               {/* Powers Display */}
               {config.mode === GameMode.HEX_GRID && (
-                <div className="flex flex-wrap gap-1 sm:gap-2 mt-1.5 md:mt-4">
+                <div className="flex flex-wrap gap-2 mt-3 sm:mt-4">
                   {Object.entries(p.powers).map(([type, count]) => (
                     <button 
                       key={type} 
@@ -1603,20 +1605,20 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                           playSound('power');
                         }
                       }}
-                      className={`flex items-center gap-0.5 sm:gap-1.5 md:gap-3 px-1 sm:px-3 md:px-5 py-1 sm:py-2 md:py-3 rounded-lg sm:rounded-2xl border-2 sm:border-4 border-[var(--color-ink-black)] text-[9px] sm:text-xs md:text-sm font-black transition-all shadow-[1px_1px_0px_var(--color-ink-black)] sm:shadow-[3px_3px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)] active:translate-y-[1px] active:shadow-none ${
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border-[3px] border-[var(--color-ink-black)] text-xs font-black transition-all shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-[1px] active:shadow-none ${
                         (count as number) > 0 
                           ? (activePower?.type === (type as PowerType) && activePower?.playerId === p.id
-                              ? 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] scale-105 -translate-y-1 ring-1 sm:ring-2 md:ring-4 ring-white/50' 
-                              : 'bg-white text-[var(--color-ink-black)] hover:bg-[var(--color-primary-gold)] hover:-translate-y-0.5 md:hover:shadow-[4px_6px_0px_var(--color-ink-black)]') 
+                              ? 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] scale-105 ring-1 ring-white/50' 
+                              : 'bg-white text-[var(--color-ink-black)] hover:bg-[var(--color-primary-gold)] hover:-translate-y-0.5') 
                           : 'bg-slate-100 text-slate-400 cursor-not-allowed grayscale border-slate-300'
                       }`}
                     >
-                      <div className="p-0.5 md:p-1 bg-white/20 rounded-md sm:rounded-lg">
-                        {type === PowerType.FREEZE && <CartoonSnowflake className="w-3 h-3 sm:w-5 sm:h-5 md:w-6 md:h-6" />}
-                        {type === PowerType.SHIELD && <CartoonShield className="w-3 h-3 sm:w-5 sm:h-5 md:w-6 md:h-6" />}
-                        {type === PowerType.STEAL && <CartoonGhost className="w-3 h-3 sm:w-5 sm:h-5 md:w-6 md:h-6" />}
+                      <div className="p-0.5 bg-white/20 rounded">
+                        {type === PowerType.FREEZE && <CartoonSnowflake className="w-4 h-4" />}
+                        {type === PowerType.SHIELD && <CartoonShield className="w-4 h-4" />}
+                        {type === PowerType.STEAL && <CartoonGhost className="w-4 h-4" />}
                       </div>
-                      <span className="text-[10px] sm:text-sm md:text-lg">{count}</span>
+                      <span className="text-xs sm:text-sm">{count}</span>
                     </button>
                   ))}
                 </div>
@@ -1627,18 +1629,22 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       </div>
 
       {/* لوحة اللعب الرئيسية */}
-      <div className="w-full mt-8 md:mt-16 relative">
+      <div className={`flex-1 w-full mt-1 xl:mt-0 relative min-w-0 max-w-full flex items-center ${
+        config.mode === GameMode.GRID 
+          ? 'justify-center xl:justify-center' 
+          : 'justify-center xl:justify-end rtl:xl:justify-end ltr:xl:justify-start'
+      }`}>
         {config.mode === GameMode.GRID ? (
           renderJeopardyBoard()
         ) : (
           <div 
-            className="relative group animate-fade-in w-full flex justify-center px-4" 
+            className="relative group animate-fade-in w-full flex justify-center xl:justify-end rtl:xl:justify-end ltr:xl:justify-start px-0" 
             style={{ '--current-player-color': players[currentPlayerIndex].color } as React.CSSProperties}
           >
-            <div className="game-board-area relative z-10 transition-transform duration-700 hover:scale-[1.01] w-full max-w-[95vw]">
-              <div className="board-wrapper flex justify-center">
-                <div className="hex-grid-center w-full">
-                  <Suspense fallback={<div className="flex items-center justify-center p-20 text-cyan-400 font-bold animate-pulse">جاري تحميل الشبكة...</div>}>
+            <div className="game-board-area relative z-10 transition-transform duration-700 hover:scale-[1.01] w-full max-w-full flex justify-center xl:justify-end rtl:xl:justify-end ltr:xl:justify-start">
+              <div className="board-wrapper flex justify-center xl:justify-end rtl:xl:justify-end ltr:xl:justify-start w-full">
+                <div className="hex-grid-center w-full flex justify-center xl:justify-end rtl:xl:justify-end ltr:xl:justify-start">
+                  <Suspense fallback={<div className="flex items-center justify-center p-12 text-cyan-400 font-bold animate-pulse">جاري تحميل الشبكة...</div>}>
                     <HexGrid 
                       grid={grid}
                       players={players}

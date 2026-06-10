@@ -390,7 +390,7 @@ const App: React.FC = () => {
         </header>
       )}
 
-      <main className={`${gameState === 'remote' ? 'w-full h-full' : 'container mx-auto px-2 md:px-4 pt-2 pb-2 md:pt-8 md:pb-12 max-w-7xl'} relative z-10`}>
+      <main className={`${gameState === 'remote' ? 'w-full h-full' : (gameState === 'playing' ? 'w-full px-0 pt-0 pb-1 max-w-none' : 'container mx-auto px-2 md:px-4 pt-2 pb-2 md:pt-8 md:pb-12 max-w-7xl')} relative z-10`}>
         <AnimatePresence mode="wait">
           {!isAuthReady ? (
             <motion.div 
@@ -485,15 +485,7 @@ const App: React.FC = () => {
               )}
 
               {gameState === 'playing' && config && (
-                <GameScreen 
-                  config={config} 
-                  questions={questions} 
-                  players={players} 
-                  onFinish={handleFinishGame} 
-                  onOpenReport={(q) => setReportedQuestion(q)} 
-                  setQuestions={setQuestions}
-                  setGameState={setGameState} 
-                />
+                <GameScreen config={config} questions={questions} players={players} onFinish={handleFinishGame} onOpenReport={(q) => setReportedQuestion(q)} setGameState={setGameState} />
               )}
               
               {gameState === 'summary' && config && <SummaryScreen config={config} questions={questions} players={players} onRestart={handleReset} />}

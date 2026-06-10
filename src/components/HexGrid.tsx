@@ -27,17 +27,19 @@ const HexGrid: React.FC<HexGridProps> = ({
   stolenCells,
   handleHexClick,
 }) => {
-  const [scale, setScale] = React.useState(0.7);
+  const [scale, setScale] = React.useState(0.6);
 
   React.useLayoutEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
       if (width < 640) {
-        setScale(0.5);
+        setScale(0.4);
       } else if (width < 1024) {
-        setScale(0.7);
+        setScale(0.55);
+      } else if (width < 1280) {
+        setScale(0.65);
       } else {
-        setScale(0.9);
+        setScale(0.7);
       }
     };
     handleResize();
@@ -51,15 +53,20 @@ const HexGrid: React.FC<HexGridProps> = ({
   const hexVerticalSpacing = 110 * scale;    
   const hexHalfWidth = hexWidth / 2;
   const hexHalfHeight = hexHeight / 2;
-
-  // Calculate viewBox based on grid dimensions + borders
   const rowSizes = [6, 5, 6, 5, 6];
-  const maxCols = 6;
-  const viewBoxPadding = 1.2; // Extra padding for borders
-  const viewBoxWidth = (maxCols + viewBoxPadding * 2) * hexHorizontalSpacing;
-  const viewBoxHeight = (rowSizes.length + viewBoxPadding * 2) * hexVerticalSpacing;
-  const viewBoxX = -hexHorizontalSpacing * viewBoxPadding;
-  const viewBoxY = -hexVerticalSpacing * viewBoxPadding;
+
+  // Calculate viewBox based on exact grid boundaries to make the letters grid touch the screen borders
+  const minX = -hexHorizontalSpacing;
+  const maxX = 6 * hexHorizontalSpacing + hexWidth;
+  const minY = -hexVerticalSpacing;
+  const maxY = 5 * hexVerticalSpacing + hexHeight;
+
+  // Small margin to avoid stroke/shadow clipping
+  const margin = 8 * scale;
+  const viewBoxX = minX - margin;
+  const viewBoxY = minY - margin;
+  const viewBoxWidth = maxX - minX + (margin * 2);
+  const viewBoxHeight = maxY - minY + (margin * 2);
 
   const points = `${hexHalfWidth},0 ${hexWidth},${hexHeight * 0.25} ${hexWidth},${hexHeight * 0.75} ${hexHalfWidth},${hexHeight} 0,${hexHeight * 0.75} 0,${hexHeight * 0.25}`;
 
@@ -69,10 +76,10 @@ const HexGrid: React.FC<HexGridProps> = ({
   }, [handleHexClick]);
 
   return (
-    <div className="flex justify-center items-center w-full h-full overflow-visible">
+    <div className="flex justify-center xl:justify-end rtl:xl:justify-end ltr:xl:justify-start items-center w-full h-auto overflow-hidden select-none">
       <svg 
         viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`} 
-        className="w-full max-w-[1240px] h-auto hex-svg-container drop-shadow-2xl overflow-visible translate-y-4"
+        className="w-full max-w-none max-h-[82vh] sm:max-h-[86vh] xl:max-h-[90vh] h-auto hex-svg-container drop-shadow-2xl overflow-visible xl:mr-auto xl:ml-0"
       >
         <defs>
           <filter id="scribble-filter" x="-20%" y="-20%" width="140%" height="140%">
