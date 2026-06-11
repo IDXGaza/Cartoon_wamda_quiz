@@ -33,17 +33,17 @@ const HexGrid: React.FC<HexGridProps> = ({
     const handleResize = () => {
       const width = window.innerWidth;
       if (width < 380) {
-        setScale(0.28);
+        setScale(0.35);
       } else if (width < 480) {
-        setScale(0.33);
-      } else if (width < 640) {
         setScale(0.4);
+      } else if (width < 640) {
+        setScale(0.5);
       } else if (width < 1024) {
-        setScale(0.55);
-      } else if (width < 1280) {
-        setScale(0.63);
-      } else {
         setScale(0.7);
+      } else if (width < 1280) {
+        setScale(0.85);
+      } else {
+        setScale(1.0);
       }
     };
     handleResize();
@@ -83,7 +83,7 @@ const HexGrid: React.FC<HexGridProps> = ({
     <div className="flex rtl:justify-end ltr:justify-start justify-end items-center w-full h-auto overflow-hidden select-none">
       <svg 
         viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`} 
-        className="w-full max-w-none max-h-[82vh] sm:max-h-[86vh] xl:max-h-[90vh] h-auto hex-svg-container drop-shadow-2xl overflow-visible rtl:mr-auto rtl:ml-0 ltr:ml-auto ltr:mr-0 xl:mr-auto xl:ml-0"
+        className="w-full max-w-none max-h-[90vh] sm:max-h-[94vh] xl:max-h-[96vh] h-auto hex-svg-container drop-shadow-2xl overflow-visible rtl:mr-auto rtl:ml-0 ltr:ml-auto ltr:mr-0 xl:mr-auto xl:ml-0"
       >
         <defs>
           <filter id="scribble-filter" x="-20%" y="-20%" width="140%" height="140%">

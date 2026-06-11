@@ -1520,7 +1520,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       {/* Scoreboard */}
       <div className={`shrink-0 relative z-10 ${
         config.mode === GameMode.HEX_GRID 
-          ? 'w-[75px] xs:w-[85px] sm:w-[155px] md:w-[195px] lg:w-[235px] xl:w-[285px] mt-0 flex flex-col gap-1.5 sm:gap-3' 
+          ? 'w-[62px] xs:w-[72px] sm:w-[130px] md:w-[160px] lg:w-[200px] xl:w-[245px] mt-0 flex flex-col gap-1.5 sm:gap-3' 
           : 'w-full grid grid-cols-1 sm:grid-cols-2 xl:flex xl:flex-col gap-4 sm:gap-5 ' + (config.mode === GameMode.GRID ? 'xl:w-[350px] xl:mt-8 lg:mt-6 md:mt-4 mt-2' : 'xl:w-[460px] xl:mt-20 lg:mt-16 md:mt-12 mt-8')
       }`}>
         {players.map((p, idx) => (
@@ -1532,7 +1532,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
               config.mode === GameMode.GRID
                 ? 'flex-row items-center gap-3 p-3 sm:p-4 rounded-[1.5rem] md:rounded-[2rem] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)]'
                 : config.mode === GameMode.HEX_GRID
-                  ? 'flex-col items-center gap-0.5 p-1 rounded-lg xs:p-1.5 xs:rounded-xl shadow-[1px_1px_0px_var(--color-ink-black)] sm:flex-col sm:p-2.5 sm:gap-1.5 sm:rounded-2xl sm:shadow-[2px_2px_0px_var(--color-ink-black)] md:flex-col md:p-3 md:gap-2 md:rounded-2xl md:shadow-[3px_3px_0px_var(--color-ink-black)] lg:flex-row lg:p-3.5 lg:gap-3 lg:rounded-3xl lg:shadow-[4px_4px_0px_var(--color-ink-black)] xl:flex-row xl:p-4 xl:gap-4 xl:rounded-3xl xl:shadow-[5px_5px_0px_var(--color-ink-black)]'
+                  ? 'flex-col items-center gap-0.5 p-0.5 rounded-md xs:p-1 xs:rounded-lg shadow-[1px_1px_0px_var(--color-ink-black)] sm:flex-col sm:p-1.5 sm:gap-1 sm:rounded-xl sm:shadow-[1.5px_1.5px_0px_var(--color-ink-black)] md:flex-col md:p-2 md:gap-1.5 md:rounded-xl md:shadow-[2px_2px_0px_var(--color-ink-black)] lg:flex-row lg:p-2.5 lg:gap-2 lg:rounded-2xl lg:shadow-[3px_3px_0px_var(--color-ink-black)] xl:flex-row xl:p-3 xl:gap-3 xl:rounded-2xl xl:shadow-[4px_4px_0px_var(--color-ink-black)]'
                   : 'flex-col sm:flex-row items-center gap-1 sm:gap-6 md:gap-8 p-1.5 xs:p-2.5 sm:p-7 md:p-9 rounded-[1rem] xs:rounded-[1.25rem] sm:rounded-[2.25rem] md:rounded-[3rem] shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[10px_10px_0px_var(--color-ink-black)]'
             } ${
               config.mode === GameMode.HEX_GRID 
@@ -1574,7 +1574,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                 config.mode === GameMode.GRID
                   ? 'w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-[1rem] md:rounded-[1.25rem] text-2xl sm:text-3xl md:text-4xl lg:text-5xl shadow-[3px_3px_0px_var(--color-ink-black)] md:shadow-[5px_5px_0px_var(--color-ink-black)]'
                   : config.mode === GameMode.HEX_GRID
-                    ? 'w-[32px] h-[32px] text-xs rounded-md shadow-[1px_1px_0px_var(--color-ink-black)] xs:w-[42px] xs:h-[42px] xs:text-sm rounded-lg sm:w-[50px] sm:h-[50px] sm:text-lg sm:rounded-xl sm:shadow-[2px_2px_0px_var(--color-ink-black)] md:w-[60px] md:h-[60px] md:text-xl md:rounded-xl md:shadow-[2px_2px_0px_var(--color-ink-black)] lg:w-[68px] lg:h-[68px] lg:text-2xl lg:rounded-2xl lg:shadow-[3px_3px_0px_var(--color-ink-black)] xl:w-[84px] xl:h-[84px] xl:text-3xl xl:rounded-2xl xl:shadow-[3px_3px_0px_var(--color-ink-black)]'
+                    ? 'w-[26px] h-[26px] text-[10px] rounded shadow-[1px_1px_0px_var(--color-ink-black)] xs:w-[34px] xs:h-[34px] xs:text-xs rounded-md sm:w-[42px] sm:h-[42px] sm:text-base sm:rounded-lg sm:shadow-[1.5px_1.5px_0px_var(--color-ink-black)] md:w-[50px] md:h-[50px] md:text-lg md:rounded-lg md:shadow-[2px_2px_0px_var(--color-ink-black)] lg:w-[58px] lg:h-[58px] lg:text-xl lg:rounded-xl lg:shadow-[2.5px_2.5px_0px_var(--color-ink-black)] xl:w-[70px] xl:h-[70px] xl:text-2xl xl:rounded-xl xl:shadow-[3px_3px_0px_var(--color-ink-black)]'
                     : 'w-11 h-11 xs:w-13 h-13 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-[0.5rem] xs:rounded-[0.75rem] sm:rounded-[2rem] md:rounded-[2.5rem] text-lg xs:text-2xl sm:text-5xl md:text-6xl lg:text-7xl shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[5px_5px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)]'
               } ${
                 isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'
@@ -1590,7 +1590,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                     config.mode === GameMode.GRID 
                       ? 'rounded-[1rem] md:rounded-[1.25rem]' 
                       : config.mode === GameMode.HEX_GRID
-                        ? 'rounded-md xs:rounded-lg sm:rounded-xl md:rounded-xl lg:rounded-2xl xl:rounded-2xl'
+                        ? 'rounded xs:rounded-md sm:rounded-lg md:rounded-lg lg:rounded-xl xl:rounded-xl'
                         : 'rounded-[0.5rem] xs:rounded-[0.75rem] sm:rounded-[2rem] md:rounded-[2.5rem]'
                   }`}
                 />

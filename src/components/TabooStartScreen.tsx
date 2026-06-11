@@ -16,7 +16,8 @@ interface Props {
   onStart: () => void;
 }
 
-const TabooStartScreen: React.FC<Props> = ({ config, questions = [], roomId, onStart }) => {
+const TabooStartScreen: React.FC<Props> = ({ config, questions = [], roomId: rawRoomId, onStart }) => {
+  const roomId = rawRoomId.toUpperCase();
   const [remotePlayers, setRemotePlayers] = useState<Player[]>([]);
   const { showToast } = useToast();
 
@@ -27,6 +28,7 @@ const TabooStartScreen: React.FC<Props> = ({ config, questions = [], roomId, onS
   };
 
   const joinUrl = getShareableUrl();
+  const isPreview = window.location.hostname.includes('aistudio.google.com');
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -90,6 +92,12 @@ const TabooStartScreen: React.FC<Props> = ({ config, questions = [], roomId, onS
         <div className="flex flex-col items-center gap-6">
           <QRCodeSVG value={joinUrl} size={200} />
           
+          {isPreview && (
+            <div className="bg-amber-100 p-3 rounded-lg border-2 border-amber-400 text-amber-900 text-xs font-bold text-center">
+              ⚠️ أنت تستخدم رابط العرض (Preview). هذا الرابط لن يعمل مع الآخرين. يرجى استخدام رابط التطبيق المشترك (Deployment URL).
+            </div>
+          )}
+
           <div className="w-full bg-[var(--color-off-white)] p-4 rounded-xl border-2 border-black flex flex-col gap-2 items-center">
              <p className="font-bold text-sm hidden">رمز الغرفة: <span className="text-rose-600 font-extrabold text-lg select-all">{roomId}</span></p>
              <button 

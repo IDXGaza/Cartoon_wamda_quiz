@@ -17,6 +17,7 @@ interface Props {
 
 const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: initialPlayers, onFinish, onClose }) => {
   const isRemote = config.tabooType === 'remote';
+  const remoteRoomId = (config.sessionId || '').toUpperCase();
 
   // Local modes state
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
@@ -44,7 +45,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     if (!isRemote) return;
 
     // Listen to room document
-    const roomRef = doc(db, 'rooms', config.sessionId);
+    const roomRef = doc(db, 'rooms', remoteRoomId);
     const unsubRoom = onSnapshot(roomRef, (snapshot) => {
       if (snapshot.exists()) {
         setRemoteRoom(snapshot.data());
@@ -52,7 +53,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     });
 
     // Listen to players
-    const playersRef = collection(db, 'rooms', config.sessionId, 'players');
+    const playersRef = collection(db, 'rooms', remoteRoomId, 'players');
     const q = query(playersRef, orderBy('joinedAt', 'asc'));
     const unsubPlayers = onSnapshot(q, (snapshot) => {
       setRemotePlayers(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Player)));
@@ -62,7 +63,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
       unsubRoom();
       unsubPlayers();
     };
-  }, [config.sessionId, isRemote]);
+  }, [remoteRoomId, isRemote]);
 
   // Resolving synchronized variables depending on type
   const currentGameState = isRemote ? (remoteRoom?.gameState || 'waiting') : gameState;
@@ -214,7 +215,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     const pool = remoteRoom?.questionsPool || questions;
     const nextQuestion = pool[nextQuestionIndex % pool.length];
 
-    const roomRef = doc(db, 'rooms', config.sessionId);
+    const roomRef = doc(db, 'rooms', remoteRoomId);
     try {
       await updateDoc(roomRef, {
         gameState: 'playing',
@@ -235,7 +236,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
 
   const handleRemoteEndGame = async () => {
     playSound('win');
-    const roomRef = doc(db, 'rooms', config.sessionId);
+    const roomRef = doc(db, 'rooms', remoteRoomId);
     try {
       await updateDoc(roomRef, {
         gameState: 'ended'

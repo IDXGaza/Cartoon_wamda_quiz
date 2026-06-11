@@ -42,7 +42,7 @@ const App: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [reportedQuestion, setReportedQuestion] = useState<Question | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [sessionId] = useState(() => Math.random().toString(36).substr(2, 9));
+  const [sessionId] = useState(() => Math.random().toString(36).substr(2, 9).toUpperCase());
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isFirestoreOffline, setIsFirestoreOffline] = useState(false);
@@ -529,7 +529,7 @@ const App: React.FC = () => {
           </h2>
           
           <p className="text-base sm:text-lg font-bold text-[var(--color-bg-dark)] leading-relaxed">
-            الرجاء استعمال التطبيق في الوضع الافقي لتجرية افضل
+            الرجاء استعمال التطبيق في الوضع الافقي لتجربة أفضل
           </p>
           
           <div className="w-full h-2 bg-[var(--color-ink-black)] rounded-full overflow-hidden relative">
