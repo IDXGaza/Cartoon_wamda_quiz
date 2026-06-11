@@ -72,11 +72,13 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
       
       <g transform={`translate(${hexHalfWidth}, ${hexHalfHeight})`}>
         <text 
-          className="font-display text-4xl md:text-6xl select-none"
+          className="font-display select-none"
           style={{ 
             fill: '#000000', 
             opacity: 0.3,
-            transform: `translate(${4 * scale}px, ${4 * scale}px)`
+            transform: `translate(${4 * scale}px, ${4 * scale}px)`,
+            fontSize: `${72 * scale}px`,
+            fontWeight: '900'
           }} 
           dominantBaseline="middle" 
           textAnchor="middle"
@@ -84,12 +86,14 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
           {question.letter?.replace(/[\u0640]/g, '')}
         </text>
         <text 
-          className="font-display text-4xl md:text-6xl select-none"
+          className="font-display select-none"
           style={{ 
             fill: isPlayer0 || isPlayer1 ? '#FFFFFF' : '#6B46C1',
             stroke: '#FFFFFF',
             strokeWidth: 3 * scale,
-            paintOrder: 'stroke'
+            paintOrder: 'stroke',
+            fontSize: `${72 * scale}px`,
+            fontWeight: '900'
           }} 
           dominantBaseline="middle" 
           textAnchor="middle"

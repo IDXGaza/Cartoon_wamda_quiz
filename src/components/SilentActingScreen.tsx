@@ -41,6 +41,8 @@ const SilentActingScreen: React.FC<SilentActingScreenProps> = ({ config, questio
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-2xl vintage-panel p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] text-center relative overflow-hidden border-4 md:border-8 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)]"
       >
+        {showWordToActor && <ReportButton question={activeQuestion} onReport={onOpenReport} className="absolute top-4 right-4 z-30" />}
+        
         <div className="flex justify-between items-center mb-6 md:mb-10 text-[var(--color-ink-black)] flex-wrap gap-4">
           <h1 className="text-4xl md:text-7xl font-display drop-shadow-[2px_2px_0_var(--color-primary-gold)] md:drop-shadow-[4px_4px_0_var(--color-primary-gold)]">بدون كلام 🤐</h1>
           {activeQuestion.generatedBy && (
@@ -52,7 +54,7 @@ const SilentActingScreen: React.FC<SilentActingScreenProps> = ({ config, questio
         </div>
         
         <div className="relative bg-[var(--color-off-white)] p-6 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] border-4 border-[var(--color-ink-black)] mb-6 md:mb-10 shadow-[inner_4px_4px_0_rgba(0,0,0,0.1)]">
-          {showWordToActor && <ReportButton question={activeQuestion} onReport={onOpenReport} />}
+          
           <p className="text-xl md:text-3xl font-display mb-4 md:mb-6 text-[var(--color-bg-dark)]">الكلمة الحالية:</p>
           {showWordToActor ? (
             <>

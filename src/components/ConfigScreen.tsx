@@ -475,7 +475,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               id: `b-j-${i}-${j}`,
               text: q.text,
               answer: q.answer,
-              category: catName, // Use the category name we targeted
+              category: catName,
               points: (j + 1) * 100,
               type: QuestionType.OPEN,
               difficulty: (q.difficulty?.toUpperCase() as Difficulty) || Difficulty.MEDIUM
@@ -552,26 +552,15 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       manualQuestions: finalManualQuestions,
       hexMode: inputMethod,
       questionSource: inputMethod,
-      hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions as any : undefined,
-      buzzerTimeout: buzzerTimeout,
-      timerDuration: mode === GameMode.TIMED ? timedDuration : (mode === GameMode.TABOO ? tabooTimerDuration : buzzerTimeout),
-      wordTimerDuration: mode === GameMode.TABOO ? tabooWordTimerDuration : undefined,
-      aiModel: settings.aiModel === 'custom' ? (settings.customModel || 'gemini-1.5-flash') : settings.aiModel,
-      tabooType: mode === GameMode.TABOO ? tabooType : undefined
+      hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions : undefined
     });
   };
 
   return (
-    <div className="pt-1 pb-1 md:pb-6 px-1 md:px-4 relative z-10">
-      <div className="vintage-panel rounded-3xl md:rounded-[3rem] p-3 md:p-12 max-w-5xl mx-auto animate-fade-up relative">
-        
-        <div className="text-center mb-8 md:mb-16 relative z-10">
-          <h1 className="text-3xl md:text-7xl font-bold mb-4 text-[var(--color-ink-black)] vintage-text">إعداد المسابقة</h1>
-          
-          {/* Active Features indicators indicator dynamically loaded */}
-          {/* Deleted as requested */}
-        </div>
+    <div className="relative min-h-screen py-4 md:py-12 bg-[var(--color-bg-cream)]">
+      <div className="halftone-bg absolute inset-0 z-0"></div>
 
+      <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 space-y-6 md:space-y-12">
         <form onSubmit={handleSubmit} className="space-y-6 md:space-y-12 relative z-10">
           {/* Game Mode Selection */}
           <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
@@ -579,15 +568,15 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
               <label className="text-xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">نمط اللعب</label>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
               {[
-                { val: GameMode.HEX_GRID, label: 'شبكة الحروف', icon: <CartoonHexagon size={32} className="sm:size-12" />, desc: 'تحدي الحروف', color: 'text-[var(--color-primary-blue)]', ring: 'ring-[var(--color-primary-blue)]/50', activeBg: 'var(--color-primary-blue)', activeText: 'white' },
-                { val: GameMode.GRID, label: 'شبكة النقاط', icon: <CartoonGrid size={32} className="sm:size-12" />, desc: 'فئات ونقاط متدرجة', color: 'text-[var(--color-accent-sky)]', ring: 'ring-[var(--color-accent-sky)]/50', activeBg: 'var(--color-accent-sky)', activeText: 'var(--color-ink-black)' },
-                { val: GameMode.BUZZER, label: 'تحدي السرعة', icon: <CartoonLightning size={32} className="sm:size-12" />, desc: 'أسرع إجابة تفوز', color: 'text-[var(--color-primary-green)]', ring: 'ring-[var(--color-primary-green)]/50', activeBg: 'var(--color-primary-green)', activeText: 'white' },
-                { val: GameMode.TIMED, label: 'سباق الوقت', icon: <CartoonTimer size={32} className="sm:size-12" />, desc: 'أكبر عدد إجابات', color: 'text-[var(--color-primary-gold)]', ring: 'ring-[var(--color-primary-gold)]/50', activeBg: 'var(--color-primary-gold)', activeText: 'var(--color-ink-black)' },
-                { val: GameMode.TRUE_FALSE, label: 'صواب أم خطأ؟', icon: <CartoonAlert size={32} className="sm:size-12" />, desc: 'حقائق مذهلة', color: 'text-[var(--color-primary-red)]', ring: 'ring-[var(--color-primary-red)]/50', activeBg: 'var(--color-primary-red)', activeText: 'white' },
-                { val: GameMode.SILENT_GUESS, label: 'تخمين صامت', icon: <CartoonSilent size={32} className="sm:size-12" />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' },
-                { val: GameMode.TABOO, label: 'قول بس لا تقول', icon: <CartoonSparkles size={32} className="sm:size-12" />, desc: 'تحدي الكلمات الممنوعة', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
+                { val: GameMode.HEX_GRID, label: 'شبكة الحروف', icon: <CartoonHexagon size={24} className="size-6 sm:size-10 md:size-12" />, desc: 'تحدي الحروف', color: 'text-[var(--color-primary-blue)]', ring: 'ring-[var(--color-primary-blue)]/50', activeBg: 'var(--color-primary-blue)', activeText: 'white' },
+                { val: GameMode.GRID, label: 'شبكة النقاط', icon: <CartoonGrid size={24} className="size-6 sm:size-10 md:size-12" />, desc: 'فئات ونقاط متدرجة', color: 'text-[var(--color-accent-sky)]', ring: 'ring-[var(--color-accent-sky)]/50', activeBg: 'var(--color-accent-sky)', activeText: 'var(--color-ink-black)' },
+                { val: GameMode.BUZZER, label: 'تحدي السرعة', icon: <CartoonLightning size={24} className="size-6 sm:size-10 md:size-12" />, desc: 'أسرع إجابة تفوز', color: 'text-[var(--color-primary-green)]', ring: 'ring-[var(--color-primary-green)]/50', activeBg: 'var(--color-primary-green)', activeText: 'white' },
+                { val: GameMode.TIMED, label: 'سباق الوقت', icon: <CartoonTimer size={24} className="size-6 sm:size-10 md:size-12" />, desc: 'أكبر عدد إجابات', color: 'text-[var(--color-primary-gold)]', ring: 'ring-[var(--color-primary-gold)]/50', activeBg: 'var(--color-primary-gold)', activeText: 'var(--color-ink-black)' },
+                { val: GameMode.TRUE_FALSE, label: 'صواب أم خطأ؟', icon: <CartoonAlert size={24} className="size-6 sm:size-10 md:size-12" />, desc: 'حقائق مذهلة', color: 'text-[var(--color-primary-red)]', ring: 'ring-[var(--color-primary-red)]/50', activeBg: 'var(--color-primary-red)', activeText: 'white' },
+                { val: GameMode.SILENT_GUESS, label: 'تخمين صامت', icon: <CartoonSilent size={24} className="size-6 sm:size-10 md:size-12" />, desc: 'تخمين بدون نص', color: 'text-violet-600', ring: 'ring-violet-500/50', activeBg: '#8b5cf6', activeText: 'white' },
+                { val: GameMode.TABOO, label: 'قول بس لا تقول', icon: <CartoonSparkles size={24} className="size-6 sm:size-10 md:size-12" />, desc: 'تحدي الكلمات الممنوعة', color: 'text-rose-600', ring: 'ring-rose-500/50', activeBg: '#e11d48', activeText: 'white' }
               ].map(m => {
                 return (
                   <motion.button
@@ -597,15 +586,15 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                     key={m.val}
                     type="button"
                     onClick={() => {
-                      playSound('click');
-                      setMode(m.val);
+                       playSound('click');
+                       setMode(m.val);
                     }}
-                    className={`vintage-button rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col items-center gap-2 sm:gap-4 text-center transition-all duration-300 ${mode === m.val ? `ring-4 ${m.ring} shadow-[8px_8px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)]'}`}
+                    className={`vintage-button rounded-xl sm:rounded-2xl md:rounded-3xl p-1.5 sm:p-5 md:p-6 flex flex-col items-center gap-0.5 sm:gap-3 text-center transition-all duration-300 ${mode === m.val ? `ring-4 ${m.ring} shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)]` : 'bg-[var(--color-off-white)]'}`}
                     style={mode === m.val ? { backgroundColor: m.activeBg, color: m.activeText } : {}}
                   >
-                    <motion.div layout className={`mb-2 transition-colors ${mode === m.val ? 'text-inherit' : m.color}`}>{m.icon}</motion.div>
-                    <motion.h3 layout className="font-bold text-xl vintage-text">{m.label}</motion.h3>
-                    <motion.p layout className="text-xs opacity-70">{m.desc}</motion.p>
+                    <motion.div layout className={`mb-0.5 transition-colors ${mode === m.val ? 'text-inherit' : m.color}`}>{m.icon}</motion.div>
+                    <motion.h3 layout className="font-bold text-xs sm:text-lg md:text-xl vintage-text leading-tight">{m.label}</motion.h3>
+                    <motion.p layout className="text-[9px] sm:text-xs opacity-70 leading-tight">{m.desc}</motion.p>
                   </motion.button>
                 );
               })}

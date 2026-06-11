@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../firebase';
-import { collection, getDocs, query, orderBy, doc, deleteDoc, setDoc, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, deleteDoc, setDoc, where, limit, startAfter } from 'firebase/firestore';
 import { useToast } from '../contexts/ToastContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { playSound } from '../utils/sound';
 import { saveToVault } from '../services/vaultService';
+import { QUESTION_BANK } from '../data/localBank';
+import { GameMode } from '../types';
 import { 
   CartoonAlert, 
   CartoonBot, 
@@ -34,6 +36,8 @@ interface Question {
   category?: string;
   difficulty?: string;
   points?: number;
+  source?: 'system' | 'cloud';
+  gameMode?: string;
 }
 
 interface Feature {
@@ -84,6 +88,30 @@ export const ReportsViewer: React.FC = () => {
   const [newQCategory, setNewQCategory] = useState('عام');
   const [newQDifficulty, setNewQDifficulty] = useState('MEDIUM');
   const [qSearchQuery, setQSearchQuery] = useState('');
+  const [qSourceFilter, setQSourceFilter] = useState<'all' | 'system' | 'cloud'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const questionsPerPage = 50;
+
+  // Flatten all system-integrated questions nicely
+  const systemQuestions = React.useMemo(() => {
+    const list: Question[] = [];
+    Object.entries(QUESTION_BANK).forEach(([mode, qList]) => {
+      if (Array.isArray(qList)) {
+        qList.forEach((q, idx) => {
+          list.push({
+            id: q.id || `sys_${mode}_${idx}`,
+            text: q.text,
+            answer: q.answer,
+            category: q.category || 'عام',
+            difficulty: (q.difficulty || 'MEDIUM').toUpperCase(),
+            source: 'system',
+            gameMode: mode
+          });
+        });
+      }
+    });
+    return list;
+  }, []);
 
   const correctPasscode = 'reports2026';
 
@@ -118,15 +146,33 @@ export const ReportsViewer: React.FC = () => {
     }
   };
 
+  const [lastVisibleDoc, setLastVisibleDoc] = useState<any>(null);
+  const [hasMoreCloud, setHasMoreCloud] = useState(true);
+
   // Fetch Questions from custom vault of Logged user
-  const fetchVaultQuestions = async () => {
+  const fetchVaultQuestions = async (isLoadMore = false) => {
     if (!auth.currentUser) return;
     setQuestionsLoading(true);
     try {
-      const q = query(
+      let q = query(
         collection(db, 'questions_vault'),
-        where('userId', '==', auth.currentUser.uid)
+        where('userId', '==', auth.currentUser.uid),
+        limit(50)
       );
+
+      if (isLoadMore && lastVisibleDoc) {
+        q = query(
+          collection(db, 'questions_vault'),
+          where('userId', '==', auth.currentUser.uid),
+          startAfter(lastVisibleDoc),
+          limit(50)
+        );
+      } else {
+        // If not load more, reset visible docs map and state
+        setLastVisibleDoc(null);
+        setHasMoreCloud(true);
+      }
+
       const snapshot = await getDocs(q);
       const questionsData = snapshot.docs.map(doc => {
         const d = doc.data();
@@ -135,10 +181,31 @@ export const ReportsViewer: React.FC = () => {
           text: d.text,
           answer: d.answer,
           category: d.category || d.topic_match || 'عام',
-          difficulty: d.difficulty || 'MEDIUM'
+          difficulty: d.difficulty || 'MEDIUM',
+          source: 'cloud'
         } as Question;
       });
-      setVaultQuestions(questionsData);
+
+      if (snapshot.docs.length > 0) {
+        setLastVisibleDoc(snapshot.docs[snapshot.docs.length - 1]);
+      }
+      
+      if (snapshot.docs.length < 50) {
+        setHasMoreCloud(false);
+      } else {
+        setHasMoreCloud(true);
+      }
+
+      if (isLoadMore) {
+        setVaultQuestions(prev => {
+          // Prevent duplicates just in case
+          const existingIds = new Set(prev.map(item => item.id));
+          const uniques = questionsData.filter(item => !existingIds.has(item.id));
+          return [...prev, ...uniques];
+        });
+      } else {
+        setVaultQuestions(questionsData);
+      }
     } catch (err) {
       console.error("Error fetching questions vault:", err);
       showToast("حدث خطأ أثناء تحميل بنك الأسئلة المخصص.", "error");
@@ -234,11 +301,42 @@ export const ReportsViewer: React.FC = () => {
     return matchesFilter && matchesSearch;
   });
 
-  const filteredQuestions = vaultQuestions.filter(q => 
-    q.text.toLowerCase().includes(qSearchQuery.toLowerCase()) ||
-    q.answer.toLowerCase().includes(qSearchQuery.toLowerCase()) ||
-    (q.category && q.category.toLowerCase().includes(qSearchQuery.toLowerCase()))
-  );
+  // Combine questions based on source filter
+  const combinedQuestions = React.useMemo(() => {
+    let list: Question[] = [];
+    if (qSourceFilter === 'all' || qSourceFilter === 'cloud') {
+      list = [...list, ...vaultQuestions];
+    }
+    if (qSourceFilter === 'all' || qSourceFilter === 'system') {
+      list = [...list, ...systemQuestions];
+    }
+    return list;
+  }, [vaultQuestions, systemQuestions, qSourceFilter]);
+
+  // Filter questions by search query
+  const filteredQuestions = React.useMemo(() => {
+    const queryStr = qSearchQuery.trim().toLowerCase();
+    if (!queryStr) return combinedQuestions;
+    return combinedQuestions.filter(q => 
+      (q.text || '').toLowerCase().includes(queryStr) ||
+      (q.answer || '').toLowerCase().includes(queryStr) ||
+      (q.category && q.category.toLowerCase().includes(queryStr))
+    );
+  }, [combinedQuestions, qSearchQuery]);
+
+  // Determine total pages for pagination
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / questionsPerPage));
+
+  // Reset page when filters or queries change to stay in index range
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [qSearchQuery, qSourceFilter]);
+
+  // Slices the current active elements to show based on standard size of 50
+  const paginatedQuestions = React.useMemo(() => {
+    const start = (currentPage - 1) * questionsPerPage;
+    return filteredQuestions.slice(start, start + questionsPerPage);
+  }, [filteredQuestions, currentPage]);
 
   if (!isAuthenticated) {
     return (
@@ -327,7 +425,7 @@ export const ReportsViewer: React.FC = () => {
             onClick={() => { playSound('click'); setActiveTab('questions'); }}
             className={`flex-1 py-4 font-black text-center transition-all ${activeTab === 'questions' ? 'bg-[var(--color-primary-gold)] text-black' : 'bg-white hover:bg-gray-100'}`}
           >
-            🗂️ إدارة بنك الأسئلة ({vaultQuestions.length})
+            🗂️ إدارة بنك الأسئلة ({vaultQuestions.length + systemQuestions.length})
           </button>
         </div>
 
@@ -511,58 +609,149 @@ export const ReportsViewer: React.FC = () => {
               </div>
 
               {/* List and Search */}
-              <div className="bg-yellow-400/15 border-4 border-black rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-yellow-400/15 border-4 border-black rounded-xl p-4 space-y-4">
                 <div className="relative w-full">
                   <input 
                     type="text"
-                    placeholder="ابحث ببنك أسئلتك المخصص (بالكلمات أو التصنيفات)..."
-                    className="w-full p-2.5 pr-10 border-4 border-black rounded-xl font-bold bg-white text-black"
+                    placeholder="ابحث في بنك الأسئلة بالكلمات أو التصنيفات أو الإجابات..."
+                    className="w-full p-3 pr-10 border-4 border-black rounded-xl font-bold bg-white text-black focus:outline-none"
                     value={qSearchQuery}
                     onChange={(e) => setQSearchQuery(e.target.value)}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-md text-black">🔍</span>
                 </div>
+
+                {/* Filters Row */}
+                <div className="flex flex-wrap items-center justify-between gap-4 border-t-2 border-black/10 pt-3">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-xs font-black text-gray-700">مصدر الأسئلة:</span>
+                    <button
+                      onClick={() => { playSound('click'); setQSourceFilter('all'); }}
+                      className={`px-3 py-1.5 border-2 border-black rounded-lg text-xs font-black shadow-[2px_2px_0px_black] transition-all active:translate-y-0.5 ${qSourceFilter === 'all' ? 'bg-[var(--color-primary-gold)] text-black' : 'bg-white text-black hover:bg-gray-50'}`}
+                    >
+                      الكل ({vaultQuestions.length + systemQuestions.length})
+                    </button>
+                    <button
+                      onClick={() => { playSound('click'); setQSourceFilter('system'); }}
+                      className={`px-3 py-1.5 border-2 border-black rounded-lg text-xs font-black shadow-[2px_2px_0px_black] transition-all active:translate-y-0.5 ${qSourceFilter === 'system' ? 'bg-cyan-100 text-black border-cyan-400' : 'bg-white text-black hover:bg-gray-50'}`}
+                    >
+                      أسئلة النظام المدمجة ({systemQuestions.length})
+                    </button>
+                    <button
+                      onClick={() => { playSound('click'); setQSourceFilter('cloud'); }}
+                      className={`px-3 py-1.5 border-2 border-black rounded-lg text-xs font-black shadow-[2px_2px_0px_black] transition-all active:translate-y-0.5 ${qSourceFilter === 'cloud' ? 'bg-emerald-100 text-black border-emerald-400' : 'bg-white text-black hover:bg-gray-50'}`}
+                    >
+                      تخزين سحابي مخصص ({vaultQuestions.length})
+                    </button>
+                  </div>
+                  
+                  <div className="text-xs font-black text-gray-600">
+                    تمت تصفية {filteredQuestions.length} سؤال من أصل {combinedQuestions.length}
+                  </div>
+                </div>
               </div>
 
-              {/* Vault questions lists */}
+              {/* Vault and System questions list */}
               {questionsLoading ? (
                 <div className="text-center py-12 space-y-3 bg-white border-4 border-black rounded-2xl">
                   <div className="animate-spin w-10 h-10 border-4 border-t-transparent border-[var(--color-primary-gold)] rounded-full mx-auto"></div>
-                  <p className="font-bold text-black">جاري مراجعة قائمة بنكك السحابي الخاص...</p>
+                  <p className="font-bold text-black font-arabic">جاري مراجعة قائمة بنك الأسئلة...</p>
                 </div>
               ) : (filteredQuestions.length === 0) ? (
                 <div className="text-center p-12 bg-white border-4 border-dashed border-black rounded-2xl">
                   <span className="text-5xl block mb-2">📥</span>
-                  <p className="text-lg font-black text-gray-500">بنك الأسئلة المخصص المتطابق فارغ حالياً.</p>
-                  <p className="text-sm text-gray-400 mt-1">اكتب سؤالاً بالأعلى لحفظه، أو دمر الفلاتر!</p>
+                  <p className="text-lg font-black text-gray-500">بنك الأسئلة المتطابق فارغ حالياً.</p>
+                  <p className="text-sm text-gray-400 mt-1">امسح الكلمات الدليلة أو غير خيارات التصفية للبحث مجدداً.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredQuestions.map((q) => (
-                    <div key={q.id} className="p-4 bg-white border-4 border-black rounded-2xl shadow-[4px_4px_0px_black] flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
-                      <div>
-                        <div className="flex justify-between items-center gap-2 mb-2">
-                          <span className="px-2 py-0.5 bg-yellow-100 border-2 border-black text-xs font-black rounded-lg text-black">
-                            {q.category}
-                          </span>
-                          <span className="text-xs font-bold text-gray-400 font-mono text-black">
-                            {q.difficulty === 'EASY' ? '🟢 سهل' : q.difficulty === 'HARD' ? '🔴 صعب' : '🟡 متوسط'}
-                          </span>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {paginatedQuestions.map((q) => (
+                      <div key={q.id} className="p-4 bg-white border-4 border-black rounded-2xl shadow-[4px_4px_0px_black] flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+                        <div>
+                          <div className="flex justify-between items-center gap-2 mb-2">
+                            <span className="px-2 py-0.5 bg-yellow-100 border-2 border-black text-xs font-black rounded-lg text-black">
+                              {q.category}
+                            </span>
+                            <span className="text-xs font-bold text-gray-400 font-mono text-black">
+                              {q.difficulty === 'EASY' || q.difficulty === 'BEGINNER' ? '🟢 سهل' : q.difficulty === 'HARD' || q.difficulty === 'EXPERT' ? '🔴 صعب' : '🟡 متوسط'}
+                            </span>
+                          </div>
+                          <p className="text-md font-black text-[var(--color-ink-black)] line-clamp-3 mb-2">{q.text}</p>
+                          <p className="font-bold text-sm text-[var(--color-primary-green)] bg-green-50/50 p-2 rounded-lg border border-green-200">الإجابة: {q.answer}</p>
                         </div>
-                        <p className="text-md font-black text-[var(--color-ink-black)] line-clamp-3 mb-2">{q.text}</p>
-                        <p className="font-bold text-sm text-[var(--color-primary-green)] bg-green-50/50 p-2 rounded-lg border border-green-200">الإجابة: {q.answer}</p>
-                      </div>
 
-                      <div className="border-t-2 border-dashed border-gray-100 pt-3 mt-3 flex justify-end">
-                        <button 
-                          onClick={() => handleDeleteQuestion(q.id)}
-                          className="p-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 border-2 border-black text-xs font-bold rounded-lg transition-transform active:scale-95 flex items-center gap-1"
-                        >
-                          🗑️ حذف السؤال
-                        </button>
+                        <div className="border-t-2 border-dashed border-gray-150 pt-3 mt-3 flex justify-between items-center">
+                          <span className="text-xs font-black text-gray-500">
+                            {q.source === 'system' ? '📦 مدمج بالنظام' : '☁️ سحابي مخصص'}
+                          </span>
+                          {q.source === 'cloud' ? (
+                            <button 
+                              onClick={() => handleDeleteQuestion(q.id)}
+                              className="p-1 px-3 bg-red-100 text-red-700 hover:bg-red-200 border-2 border-black text-xs font-bold rounded-lg transition-transform active:scale-95 flex items-center gap-1"
+                            >
+                              🗑️ حذف السؤال
+                            </button>
+                          ) : (
+                            <span className="text-xs text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200 select-none">
+                              قرائة فقط
+                            </span>
+                          )}
+                        </div>
                       </div>
+                    ))}
+                  </div>
+
+                  {/* Load More Cloud Questions (Infinite Scroll style) */}
+                  {(qSourceFilter === 'all' || qSourceFilter === 'cloud') && hasMoreCloud && (
+                    <div className="flex justify-center my-6">
+                      <button
+                        onClick={() => {
+                          playSound('click');
+                          fetchVaultQuestions(true);
+                        }}
+                        id="load-more-cloud-questions-btn"
+                        className="px-6 py-4 bg-[var(--color-primary-gold)] text-black border-4 border-black rounded-2xl font-black text-md shadow-[6px_6px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 active:translate-y-1 transition-all flex items-center gap-2 animate-bounce-slow"
+                      >
+                        🔄 تحميل المزيد من الأسئلة السحابية (التمرير اللانهائي)
+                      </button>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between gap-4 bg-white border-4 border-black p-4 rounded-xl shadow-[4px_4px_0px_black]">
+                      <button
+                        onClick={() => {
+                          if (currentPage > 1) {
+                            playSound('click');
+                            setCurrentPage(p => p - 1);
+                          }
+                        }}
+                        disabled={currentPage === 1}
+                        className={`px-4 py-2 border-2 border-black rounded-lg font-bold text-sm shadow-[2px_2px_0px_black] transition-all active:translate-y-0.5 ${currentPage === 1 ? 'opacity-40 cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-100 text-black'}`}
+                      >
+                        السابق ⬅️
+                      </button>
+
+                      <span className="font-black text-sm text-black">
+                        الصفحة {currentPage} من {totalPages}
+                      </span>
+
+                      <button
+                        onClick={() => {
+                          if (currentPage < totalPages) {
+                            playSound('click');
+                            setCurrentPage(p => p + 1);
+                          }
+                        }}
+                        disabled={currentPage === totalPages}
+                        className={`px-4 py-2 border-2 border-black rounded-lg font-bold text-sm shadow-[2px_2px_0px_black] transition-all active:translate-y-0.5 ${currentPage === totalPages ? 'opacity-40 cursor-not-allowed bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-100 text-black'}`}
+                      >
+                        ➡️ التالي
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

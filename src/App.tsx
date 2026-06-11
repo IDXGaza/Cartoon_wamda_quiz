@@ -502,6 +502,46 @@ const App: React.FC = () => {
           onClose={() => setReportedQuestion(null)} 
         />
       )}
+
+      {/* تنبيه الوضع الرأسي الممتد على كامل الشاشة */}
+      <div id="portrait-orientation-warning" className="fixed inset-0 z-[99999] bg-[var(--color-bg-cream)] portrait-warning-overlay flex-col items-center justify-center p-6 text-center select-none overflow-y-auto">
+        <div className="halftone-bg absolute inset-0 z-0 pointer-events-none"></div>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, type: 'spring' }}
+          className="vintage-panel p-8 sm:p-12 rounded-[2rem] border-4 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)] max-w-md w-full relative z-10 flex flex-col items-center space-y-6"
+        >
+          <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[var(--color-primary-gold)] rounded-[2rem] flex items-center justify-center border-4 border-[var(--color-ink-black)] shadow-[6px_6px_0px_var(--color-ink-black)]">
+            <motion.div
+              animate={{ rotate: [0, -90, -90, 0] }}
+              transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut", repeatDelay: 0.5 }}
+            >
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-[var(--color-ink-black)]" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="3" ry="3" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+            </motion.div>
+          </div>
+          
+          <h2 className="text-2xl sm:text-3xl font-black text-[var(--color-ink-black)] vintage-text leading-snug">
+            تنبيه الاتجاه
+          </h2>
+          
+          <p className="text-base sm:text-lg font-bold text-[var(--color-bg-dark)] leading-relaxed">
+            الرجاء استعمال التطبيق في الوضع الافقي لتجرية افضل
+          </p>
+          
+          <div className="w-full h-2 bg-[var(--color-ink-black)] rounded-full overflow-hidden relative">
+            <motion.div 
+              className="absolute top-0 right-0 h-full bg-[var(--color-primary-red)]"
+              animate={{ width: ["0%", "100%", "0%"] }}
+              transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+              style={{ direction: 'rtl' }}
+            />
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };

@@ -416,3 +416,14 @@ input.bg-transparent {
 
 /* bg-black/20 kill */
 [class*="bg-black\/"] { background-color: rgba(245, 230, 200, 0.4) !important; }
+
+/* Portrait Orientation Fullscreen Alert */
+.portrait-warning-overlay {
+  display: none !important;
+}
+
+@media (orientation: portrait) {
+  .portrait-warning-overlay {
+    display: flex !important;
+  }
+}

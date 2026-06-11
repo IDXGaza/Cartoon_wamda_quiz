@@ -322,6 +322,8 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
       {activeQuestion && (
         <div className="w-full max-w-4xl px-4 animate-fade-in relative z-10">
           <div className="vintage-panel rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 text-center relative overflow-hidden border-4 md:border-8 border-[var(--color-ink-black)] shadow-[8px_8px_0px_var(--color-ink-black)]">
+            <ReportButton question={activeQuestion} onReport={onOpenReport} className="absolute top-4 right-4 z-30" />
+            
             <div className="absolute top-0 left-0 right-0 h-2 md:h-3 bg-[var(--color-ink-black)]/10 overflow-hidden">
               <div 
                 className={`h-full transition-all duration-1000 ${timeLeft <= 10 ? 'bg-[var(--color-primary-red)]' : 'bg-[var(--color-primary-green)]'}`}
@@ -330,7 +332,7 @@ const TimedChallengeScreen: React.FC<Props> = ({ config, questions: initialQuest
             </div>
 
             <div className="relative space-y-6 md:space-y-8 mt-4 md:mt-6 bg-[var(--color-off-white)]/50 p-4 sm:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border-4 border-[var(--color-ink-black)] shadow-[inner_4px_4px_0_rgba(0,0,0,0.1)]">
-              <ReportButton question={activeQuestion} onReport={onOpenReport} />
+              
               
               <div className="flex flex-wrap justify-center gap-3 md:gap-4">
                 <p className="px-4 md:px-6 py-1 md:py-2 bg-[var(--color-primary-blue)] text-[var(--color-off-white)] border-2 md:border-4 border-[var(--color-ink-black)] rounded-lg md:rounded-xl font-display text-[10px] md:text-sm shadow-[3px_3px_0_var(--color-ink-black)] md:shadow-[4px_4px_0_var(--color-ink-black)]">
