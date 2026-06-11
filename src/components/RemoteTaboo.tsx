@@ -148,11 +148,11 @@ const RemoteTaboo: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       if (err.code === 'permission-denied') {
-        setError('فشل الانضمام: تأكد من رمز الغرفة أو قد تكون الجلسة قد انتهت.');
+        setError('فشل الانضمام: تأكد من رمز الغرفة، و تأكد من أن المضيف قد بدأ الغرفة بالفعل.');
       } else if (err.message?.includes('offline') || err.code === 'unavailable') {
         setError('فشل الاتصال: يرجى التأكد من اتصالك بالإنترنت. (Firestore Offline)');
       } else {
-        setError('فشل الانضمام للغرفة. تأكد من صحة الرمز.');
+        setError('فشل الانضمام للغرفة. تأكد من صحة الرمز (قد لا تكون الغرفة جاهزة بعد).');
       }
     }
   };
