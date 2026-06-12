@@ -176,23 +176,6 @@ const SettingsModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Timed Mode Duration */}
-          <div className="space-y-4">
-            <label className="text-xl font-display text-[var(--color-bg-dark)] bg-[var(--color-primary-gold)] px-4 py-1 rounded-xl border-2 border-[var(--color-ink-black)] inline-block shadow-[2px_2px_0px_var(--color-ink-black)]">مدة "تحدي الوقت" (ثانية)</label>
-            <div className="relative">
-              <input 
-                type="number" 
-                min="30" 
-                max="300" 
-                step="10"
-                value={settings.timedDuration}
-                onChange={(e) => updateSettings({ timedDuration: parseInt(e.target.value) || 120 })}
-                className="w-full bg-[var(--color-bg-cream)] border-4 border-[var(--color-ink-black)] rounded-2xl p-5 font-display text-3xl shadow-[4px_4px_0px_var(--color-ink-black)] focus:outline-none"
-              />
-              <CartoonRocket size={32} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-primary-red)]" />
-            </div>
-          </div>
-
           {/* Reset App State */}
           <div className="space-y-4 mt-6">
             <button 

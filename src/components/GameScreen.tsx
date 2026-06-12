@@ -6,7 +6,7 @@ import BuzzerScreen from './BuzzerScreen';
 import TimedChallengeScreen from './TimedChallengeScreen';
 import SilentActingScreen from './SilentActingScreen';
 import TrueFalseScreen from './TrueFalseScreen';
-const HexGrid = lazy(() => import('./HexGrid'));
+import HexGrid from './HexGrid';
 import { QUESTION_BANK } from '../data/localBank';
 import { getMainCategory } from '../data/categoryStructure';
 import { filterPlayedQuestions, addPlayedQuestionHashes, getPlayedQuestionHashes, getQuestionHash } from '../utils/playedQuestions';
@@ -30,7 +30,9 @@ import {
   CartoonGhost,
   CartoonBot,
   CartoonEye,
-  CartoonSearch
+  CartoonSearch,
+  CartoonLightning,
+  CartoonSilent
 } from './CartoonIcons';
 import { motion, AnimatePresence } from 'motion/react';
 import { ReportButton } from './ReportButton';
@@ -60,6 +62,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   const { showToast } = useToast();
 
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const allStealsDepleted = players.every(p => p.powers[PowerType.STEAL] === 0);
   const [activeQuestion, setActiveQuestion] = useState<Question | null>(null);
   const [answeredMap, setAnsweredMap] = useState<Record<string, string>>({}); 
   const [revealed, setRevealed] = useState(false);
@@ -89,6 +92,9 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
   const [activePower, setActivePower] = useState<{type: PowerType, playerId: string} | null>(null);
   const [powerInUse, setPowerInUse] = useState<PowerType | null>(null);
 
+  // Silenced player state (كتم الخصم)
+  const [silencedPlayerId, setSilencedPlayerId] = useState<string | null>(null);
+
   useEffect(() => {
     if (activeQuestion) {
       document.body.style.overflow = 'hidden';
@@ -103,10 +109,17 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         //Already passed once, time ran out on 2nd team too
         handleAnswer(null, false);
     } else {
-        setIsStealTurn(true);
-        setCurrentPlayerIndex(prev => (prev + 1) % players.length);
-        setTimerDuration(10);
-        setTimeLeft(10);
+        const opponentId = players[(currentPlayerIndex + 1) % players.length]?.id;
+        if (silencedPlayerId === opponentId) {
+          showToast("الخصم مكتوم حالياً! لا يمكنه سرقة السؤال. 🤐", "info");
+          // If the opponent is muted, the question ends immediately without letting them answer
+          handleAnswer(null, false);
+        } else {
+          setIsStealTurn(true);
+          setCurrentPlayerIndex(prev => (prev + 1) % players.length);
+          setTimerDuration(10);
+          setTimeLeft(10);
+        }
     }
   };
 
@@ -326,7 +339,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       if (player) {
         let targetCellId = activeQuestion.id;
         console.log("DEBUG: handleAnswer, targetCellId:", targetCellId, "activeQuestion:", activeQuestion);
-        if (targetCellId.startsWith('steal:')) {
+        if (targetCellId.startsWith('steal:') || targetCellId.startsWith('mystery:') || targetCellId.startsWith('shield_mystery:')) {
           const parts = targetCellId.split(':');
           if (parts.length > 1) {
             targetCellId = parts[1]; // The middle part is the HEX_ID (e.g. 0-0)
@@ -335,6 +348,11 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
         updatedAnsweredMap[targetCellId] = player.color;
         console.log("DEBUG: handleAnswer, updatedAnsweredMap:", updatedAnsweredMap);
         setAnsweredMap(updatedAnsweredMap);
+        
+        // If it was a shield mystery, apply a shield instantly
+        if (activeQuestion.id.startsWith('shield_mystery:')) {
+          setShieldedCells(prev => ({ ...prev, [targetCellId]: true }));
+        }
         
         // Add points to the player
         const pts = activeQuestion.points || 100;
@@ -390,7 +408,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
           // so next click triggers fetchQuestion, only if not using saved sets where questions are fixed.
           if (config.questionSource !== 'saved') {
             setGrid(prevGrid => prevGrid.map(row => row.map(q => {
-              if (q.id === activeQuestion.id) {
+              if (q.id === activeQuestion.id || activeQuestion.id.includes(':' + q.id + ':')) {
                 return { ...q, text: '', answer: '', category: '' };
               }
               return q;
@@ -492,6 +510,8 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       setTimeLeft(config.timerDuration || 20);
       setIsStealTurn(false);
       setRevealed(false);
+    } else {
+      setSilencedPlayerId(null);
     }
   }, [activeQuestion, config.timerDuration]);
 
@@ -861,19 +881,40 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       return;
     }
 
-    // If using SHIELD power
+    // If using SHIELD power (or Transformed Silence)
     if (activePower?.type === PowerType.SHIELD && player) {
-      if (currentColor !== player.color) {
-        playSound('wrong');
-        showToast("يمكنك حماية خلاياك فقط!", "error");
+      if (allStealsDepleted) {
+        if (currentColor) {
+          playSound('wrong');
+          showToast("قدرة الإسكات تستخدم على الخلايا الفارغة فقط لمنع الخصم من سرقة السؤال! 🤐", "error");
+          return;
+        }
+        
+        playSound('power');
+        const opponent = players.find(p => p.id !== player.id);
+        if (opponent) {
+          setSilencedPlayerId(opponent.id);
+          showToast(`🤐 تم تفعيل الإسكات! فريق (${opponent.name}) لن يتمكن من سرقة أو حل هذا السؤال إذا تعثرتم فيه!`, "success");
+        }
+        
+        // Consume power
+        setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, powers: { ...p.powers, [PowerType.SHIELD]: p.powers[PowerType.SHIELD] - 1 } } : p));
+        setActivePower(null);
+        // Fall through to load the question normally for cell q
+      } else {
+        // Normal shield behavior
+        if (currentColor !== player.color) {
+          playSound('wrong');
+          showToast("يمكنك حماية خلاياك فقط!", "error");
+          return;
+        }
+        playSound('power');
+        setShieldedCells(prev => ({ ...prev, [q.id]: true }));
+        // Consume power
+        setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, powers: { ...p.powers, [PowerType.SHIELD]: p.powers[PowerType.SHIELD] - 1 } } : p));
+        setActivePower(null);
         return;
       }
-      playSound('power');
-      setShieldedCells(prev => ({ ...prev, [q.id]: true }));
-      // Consume power
-      setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, powers: { ...p.powers, [PowerType.SHIELD]: p.powers[PowerType.SHIELD] - 1 } } : p));
-      setActivePower(null);
-      return;
     }
 
     // If using STEAL power
@@ -1206,16 +1247,17 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-start justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto py-8 sm:py-12 lg:py-16"
+            className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/80 backdrop-blur-md"
           >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className={`w-full max-w-[95vw] md:max-w-3xl lg:max-w-5xl xl:max-w-6xl rounded-2xl md:rounded-[2.5rem] p-2.5 xs:p-4 sm:p-6 md:p-10 vintage-panel relative overflow-visible my-auto text-center border-[3px] sm:border-4 md:border-8 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] ${
-                powerInUse === PowerType.STEAL ? 'ring-4 md:ring-8 ring-[var(--color-primary-red)]' : ''
-              }`}
-            >
+            <div className="flex flex-col min-h-full p-2 py-16 sm:p-4 sm:py-20 md:p-6 md:py-24">
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className={`my-auto mx-auto w-full max-w-[95vw] md:max-w-3xl lg:max-w-5xl xl:max-w-6xl rounded-2xl md:rounded-[2.5rem] p-2.5 xs:p-4 sm:p-6 md:p-10 vintage-panel relative overflow-visible text-center border-[3px] sm:border-4 md:border-8 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] sm:shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[12px_12px_0px_var(--color-ink-black)] ${
+                  powerInUse === PowerType.STEAL ? 'ring-4 md:ring-8 ring-[var(--color-primary-red)]' : ''
+                }`}
+              >
               {powerInUse === PowerType.STEAL && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[var(--color-primary-red)] text-white px-8 py-3 rounded-2xl font-black text-xl shadow-[6px_6px_0px_var(--color-ink-black)] z-50 animate-wobble border-4 border-[var(--color-ink-black)]">
                   محاولة سرقة!
@@ -1223,7 +1265,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
               )}
               
               {!isLoadingQuestion && (
-                <div className="absolute top-0 left-0 right-0 h-4 bg-[var(--color-ink-black)]/10 overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-4 md:h-6 bg-[var(--color-ink-black)]/10 overflow-hidden rounded-t-[13px] sm:rounded-t-[12px] md:rounded-t-[32px]">
                   <motion.div 
                     initial={{ width: "100%" }}
                     animate={{ width: `${(timeLeft / TIMER_DURATION) * 100}%` }}
@@ -1389,16 +1431,24 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                               <div className="w-full space-y-3 sm:space-y-4">
                                 {(config.mode === GameMode.GRID || config.mode === GameMode.HEX_GRID) ? (
                                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                                    {players.map((p) => (
-                                      <button 
-                                        key={p.id}
-                                        onClick={() => handleAnswer(p.id, true)}
-                                        className={`flex-1 py-1.5 xs:py-2 sm:py-4 rounded-lg xs:rounded-xl sm:rounded-2xl font-black text-xs xs:text-sm sm:text-xl border-2 sm:border-4 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[5px_5px_0px_var(--color-ink-black)] active:translate-y-[2px] active:shadow-[1px_1px_0px_var(--color-ink-black)] transition-all duration-75 select-none touch-manipulation cursor-pointer ${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`}
-                                        style={{ backgroundColor: p.color }}
-                                      >
-                                        {p.name} صح
-                                      </button>
-                                    ))}
+                                    {players.map((p) => {
+                                      const isMuted = p.id === silencedPlayerId;
+                                      return (
+                                        <button 
+                                          key={p.id}
+                                          disabled={isMuted}
+                                          onClick={() => !isMuted && handleAnswer(p.id, true)}
+                                          className={`flex-1 py-1.5 xs:py-2 sm:py-4 rounded-lg xs:rounded-xl sm:rounded-2xl font-black text-xs xs:text-sm sm:text-xl border-2 sm:border-4 border-[var(--color-ink-black)] active:translate-y-[2px] transition-all duration-75 select-none touch-manipulation cursor-pointer ${
+                                            isMuted 
+                                              ? 'bg-slate-300 text-slate-500 border-slate-400 cursor-not-allowed opacity-50 shadow-none'
+                                              : `${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'} shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[5px_5px_0px_var(--color-ink-black)] active:shadow-[1px_1px_0px_var(--color-ink-black)]`
+                                          }`}
+                                          style={isMuted ? {} : { backgroundColor: p.color }}
+                                        >
+                                          {p.name} {isMuted ? "🤐 (مكتوم)" : "صح"}
+                                        </button>
+                                      );
+                                    })}
                                     <button 
                                       onClick={() => handleAnswer(null, false)}
                                       className="flex-1 py-1.5 xs:py-2 sm:py-4 bg-[var(--color-bg-cream)] text-[var(--color-ink-black)] rounded-lg xs:rounded-xl sm:rounded-2xl font-black text-xs xs:text-sm sm:text-xl border-2 sm:border-4 border-[var(--color-ink-black)] shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[5px_5px_0px_var(--color-ink-black)] active:translate-y-[2px] active:shadow-[1px_1px_0px_var(--color-ink-black)] transition-all duration-75 select-none touch-manipulation cursor-pointer"
@@ -1408,23 +1458,36 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                                   </div>
                                 ) : (
                                   <div className="grid grid-cols-2 gap-1 xs:gap-2 sm:gap-4 max-h-[30vh] overflow-y-auto p-1 xs:p-2 sm:p-4 custom-scrollbar">
-                                    {players.map((p) => (
+                                    {players.map((p) => {
+                                      const isMuted = p.id === silencedPlayerId;
+                                      return (
                                         <div key={p.id} className="flex flex-col gap-1 xs:gap-2 p-1.5 xs:p-2 sm:p-4 bg-[var(--color-off-white)] rounded-lg xs:rounded-xl sm:rounded-2xl border border-[var(--color-ink-black)] sm:border-2 md:border-4 shadow-[1.5px_1.5px_0px_var(--color-ink-black)] sm:shadow-[4px_4px_0px_var(--color-ink-black)]">
                                           <button 
-                                            onClick={() => handleAnswer(p.id, true)}
-                                            className={`w-full py-1.5 xs:py-2 sm:py-3 rounded-md xs:rounded-lg font-black text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg transition-all border border-[var(--color-ink-black)] sm:border-2 shadow-[1.5px_1.5px_0px_var(--color-ink-black)] sm:shadow-[3px_3px_0px_var(--color-ink-black)] active:translate-y-1 active:shadow-none ${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'}`}
-                                            style={{ backgroundColor: p.color }}
+                                            disabled={isMuted}
+                                            onClick={() => !isMuted && handleAnswer(p.id, true)}
+                                            className={`w-full py-1.5 xs:py-2 sm:py-3 rounded-md xs:rounded-lg font-black text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg transition-all border border-[var(--color-ink-black)] sm:border-2 active:translate-y-1 ${
+                                              isMuted 
+                                                ? 'bg-slate-300 text-slate-500 border-slate-400 cursor-not-allowed opacity-50 shadow-none'
+                                                : `${isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'} shadow-[1.5px_1.5px_0px_var(--color-ink-black)] sm:shadow-[3px_3px_0px_var(--color-ink-black)] active:shadow-none`
+                                            }`}
+                                            style={isMuted ? {} : { backgroundColor: p.color }}
                                           >
-                                            صح
+                                            {isMuted ? "مكتوم 🤐" : "صح"}
                                           </button>
                                           <button 
-                                            onClick={() => handleAnswer(p.id, false)}
-                                            className="w-full py-1 xs:py-1.5 sm:py-2 bg-[var(--color-bg-cream)] text-[var(--color-bg-dark)] rounded-md xs:rounded-lg font-bold text-[9px] xs:text-[10px] sm:text-xs md:text-sm border border-[var(--color-ink-black)] sm:border-2 hover:bg-[var(--color-primary-red)] hover:text-white transition-colors"
+                                            disabled={isMuted}
+                                            onClick={() => !isMuted && handleAnswer(p.id, false)}
+                                            className={`w-full py-1 xs:py-1.5 sm:py-2 rounded-md xs:rounded-lg font-bold text-[9px] xs:text-[10px] sm:text-xs md:text-sm border border-[var(--color-ink-black)] sm:border-2 transition-colors ${
+                                              isMuted 
+                                                ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed opacity-50 shadow-none'
+                                                : 'bg-[var(--color-bg-cream)] text-[var(--color-bg-dark)] hover:bg-[var(--color-primary-red)] hover:text-white'
+                                            }`}
                                           >
                                             خطأ
                                           </button>
                                         </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 )}
                               </div>
@@ -1446,11 +1509,14 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                 </div>
               )}
             </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
     );
   };
+
+
 
   const renderWinnerModal = () => {
     if (!winner) return null;
@@ -1501,7 +1567,6 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
     return <SilentActingScreen config={config} questions={questions} players={players} onFinish={onFinish} onOpenReport={onOpenReport} />;
   }
 
-
   if (config.mode === GameMode.TRUE_FALSE) {
     return <TrueFalseScreen config={config} questions={questions} players={players} onFinish={onFinish} onOpenReport={onOpenReport} />;
   }
@@ -1520,7 +1585,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
       {/* Scoreboard */}
       <div className={`shrink-0 relative z-10 ${
         config.mode === GameMode.HEX_GRID 
-          ? 'w-[62px] xs:w-[72px] sm:w-[130px] md:w-[160px] lg:w-[200px] xl:w-[245px] mt-0 flex flex-col gap-1.5 sm:gap-3' 
+          ? 'w-[85px] xs:w-[110px] sm:w-[170px] md:w-[200px] lg:w-[250px] xl:w-[290px] mt-0 flex flex-col gap-2 sm:gap-4 justify-center' 
           : 'w-full grid grid-cols-1 sm:grid-cols-2 xl:flex xl:flex-col gap-4 sm:gap-5 ' + (config.mode === GameMode.GRID ? 'xl:w-[350px] xl:mt-8 lg:mt-6 md:mt-4 mt-2' : 'xl:w-[460px] xl:mt-20 lg:mt-16 md:mt-12 mt-8')
       }`}>
         {players.map((p, idx) => (
@@ -1532,7 +1597,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
               config.mode === GameMode.GRID
                 ? 'flex-row items-center gap-3 p-3 sm:p-4 rounded-[1.5rem] md:rounded-[2rem] shadow-[4px_4px_0px_var(--color-ink-black)] md:shadow-[6px_6px_0px_var(--color-ink-black)]'
                 : config.mode === GameMode.HEX_GRID
-                  ? 'flex-col items-center gap-0.5 p-0.5 rounded-md xs:p-1 xs:rounded-lg shadow-[1px_1px_0px_var(--color-ink-black)] sm:flex-col sm:p-1.5 sm:gap-1 sm:rounded-xl sm:shadow-[1.5px_1.5px_0px_var(--color-ink-black)] md:flex-col md:p-2 md:gap-1.5 md:rounded-xl md:shadow-[2px_2px_0px_var(--color-ink-black)] lg:flex-row lg:p-2.5 lg:gap-2 lg:rounded-2xl lg:shadow-[3px_3px_0px_var(--color-ink-black)] xl:flex-row xl:p-3 xl:gap-3 xl:rounded-2xl xl:shadow-[4px_4px_0px_var(--color-ink-black)]'
+                  ? 'flex-col items-center gap-1.5 p-1.5 rounded-lg xs:p-2.5 xs:rounded-xl shadow-[1.5px_1.5px_0px_var(--color-ink-black)] sm:flex-col sm:p-4 sm:gap-3 sm:rounded-3xl sm:shadow-[3px_3px_0px_var(--color-ink-black)] md:flex-col md:p-5 md:gap-4 md:rounded-[2rem] md:shadow-[4px_4px_0px_var(--color-ink-black)] lg:flex-col lg:p-6 lg:gap-4 lg:rounded-[2rem] lg:shadow-[5px_5px_0px_var(--color-ink-black)] xl:flex-col xl:p-6 xl:gap-5 xl:rounded-[2.25rem] xl:shadow-[6px_6px_0px_var(--color-ink-black)]'
                   : 'flex-col sm:flex-row items-center gap-1 sm:gap-6 md:gap-8 p-1.5 xs:p-2.5 sm:p-7 md:p-9 rounded-[1rem] xs:rounded-[1.25rem] sm:rounded-[2.25rem] md:rounded-[3rem] shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[6px_6px_0px_var(--color-ink-black)] md:shadow-[10px_10px_0px_var(--color-ink-black)]'
             } ${
               config.mode === GameMode.HEX_GRID 
@@ -1549,12 +1614,20 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] px-1 sm:px-3 py-0.5 sm:py-1 rounded-[4px] sm:rounded-xl font-black text-[8px] sm:text-xs border sm:border-2 border-[var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)] z-20 flex items-center gap-0.5 sm:gap-1 animate-bounce"
+                  className="absolute top-0.5 right-0.5 sm:top-2 sm:right-2 bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] px-1 sm:px-3 py-0.5 sm:py-1 rounded-[4px] sm:rounded-xl font-black text-[8px] sm:text-xs border sm:border-2 border-[var(--color-ink-black)] shadow-[1px_1px_0px_var(--color-ink-black)] z-20 flex items-center gap-0.5 sm:gap-1 animate-bounce"
                 >
                   {activePower.type === PowerType.FREEZE && <CartoonSnowflake className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />}
-                  {activePower.type === PowerType.SHIELD && <CartoonShield className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />}
+                  {activePower.type === PowerType.SHIELD && (
+                    allStealsDepleted 
+                      ? <CartoonSilent className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-rose-500" />
+                      : <CartoonShield className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
+                  )}
                   {activePower.type === PowerType.STEAL && <CartoonGhost className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />}
-                  <span className="hidden xs:inline">مفعلة</span>
+                  <span className="hidden xs:inline-block">
+                    {activePower.type === PowerType.FREEZE && "تجميد"}
+                    {activePower.type === PowerType.SHIELD && (allStealsDepleted ? "إسكات الخصم" : "درع")}
+                    {activePower.type === PowerType.STEAL && "سرقة"}
+                  </span>
                 </motion.div>
               )
             ) : (
@@ -1574,7 +1647,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                 config.mode === GameMode.GRID
                   ? 'w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-[1rem] md:rounded-[1.25rem] text-2xl sm:text-3xl md:text-4xl lg:text-5xl shadow-[3px_3px_0px_var(--color-ink-black)] md:shadow-[5px_5px_0px_var(--color-ink-black)]'
                   : config.mode === GameMode.HEX_GRID
-                    ? 'w-[26px] h-[26px] text-[10px] rounded shadow-[1px_1px_0px_var(--color-ink-black)] xs:w-[34px] xs:h-[34px] xs:text-xs rounded-md sm:w-[42px] sm:h-[42px] sm:text-base sm:rounded-lg sm:shadow-[1.5px_1.5px_0px_var(--color-ink-black)] md:w-[50px] md:h-[50px] md:text-lg md:rounded-lg md:shadow-[2px_2px_0px_var(--color-ink-black)] lg:w-[58px] lg:h-[58px] lg:text-xl lg:rounded-xl lg:shadow-[2.5px_2.5px_0px_var(--color-ink-black)] xl:w-[70px] xl:h-[70px] xl:text-2xl xl:rounded-xl xl:shadow-[3px_3px_0px_var(--color-ink-black)]'
+                    ? 'w-[32px] h-[32px] text-xs rounded shadow-[1.5px_1.5px_0px_var(--color-ink-black)] xs:w-[44px] xs:h-[44px] xs:text-sm rounded-lg sm:w-[58px] sm:h-[58px] sm:text-xl sm:rounded-xl sm:shadow-[2px_2px_0px_var(--color-ink-black)] md:w-[70px] md:h-[70px] md:text-2xl md:rounded-2xl md:shadow-[2.5px_2.5px_0px_var(--color-ink-black)] lg:w-[85px] lg:h-[85px] lg:text-3xl lg:rounded-3xl lg:shadow-[3px_3px_0px_var(--color-ink-black)] xl:w-[100px] xl:h-[100px] xl:text-4xl xl:rounded-3xl xl:shadow-[4px_4px_0px_var(--color-ink-black)]'
                     : 'w-11 h-11 xs:w-13 h-13 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-[0.5rem] xs:rounded-[0.75rem] sm:rounded-[2rem] md:rounded-[2.5rem] text-lg xs:text-2xl sm:text-5xl md:text-6xl lg:text-7xl shadow-[2px_2px_0px_var(--color-ink-black)] sm:shadow-[5px_5px_0px_var(--color-ink-black)] md:shadow-[8px_8px_0px_var(--color-ink-black)]'
               } ${
                 isColorDark(p.color) ? 'text-[var(--color-off-white)]' : 'text-[var(--color-ink-black)]'
@@ -1582,7 +1655,7 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
               style={{backgroundColor: p.color}}
             >
               {p.score}
-              {currentPlayerIndex === idx && activePower && (
+              {activePower?.playerId === p.id && (
                 <motion.div 
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                   transition={{ repeat: Infinity, duration: 2 }}
@@ -1612,53 +1685,101 @@ const GameScreen: React.FC<Props> = ({ config, questions, players: initialPlayer
                   </span>
                 )}
                 {currentPlayerIndex === idx && (
-                  <span className="bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] border border-[var(--color-ink-black)] text-xxs sm:text-xs font-black px-1.5 py-0.5 sm:px-2 rounded-full animate-wobble shrink-0">دورك!</span>
+                  <span className="bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] border border-[var(--color-ink-black)] text-[8px] xs:text-[10px] sm:text-xs md:text-sm font-black px-1.5 py-0.5 sm:px-2 rounded-full animate-wobble shrink-0">دورك!</span>
+                )}
+                {silencedPlayerId === p.id && (
+                  <span className="bg-rose-600 text-white border border-rose-800 text-[8px] xs:text-[10px] sm:text-xs font-black px-1.5 py-0.5 rounded-full animate-pulse shrink-0 flex items-center gap-1">🤐 مكتوم!</span>
                 )}
               </div>
               <span className={`font-black text-[var(--color-ink-black)] truncate vintage-text leading-tight mt-0.5 sm:mt-1 ${
                 config.mode === GameMode.GRID
-                  ? 'text-lg sm:text-xl md:text-2xl'
+                  ? 'text-lg sm:text-xl md:text-2xl font-black'
                   : config.mode === GameMode.HEX_GRID
-                    ? 'text-xxs xs:text-[11px] sm:text-sm md:text-base lg:text-lg xl:text-xl font-bold'
-                    : 'text-xxs xs:text-sm sm:text-2xl md:text-4xl'
+                    ? 'text-[10px] xs:text-xs sm:text-base md:text-lg lg:text-xl xl:text-2xl font-black'
+                    : 'text-xxs xs:text-sm sm:text-2xl md:text-4xl font-black'
               }`}>{p.name}</span>
               
               {/* Powers Display */}
               {config.mode === GameMode.HEX_GRID && (
-                <div className="flex flex-row gap-1 sm:gap-2 mt-1 sm:mt-4 justify-center w-full">
-                  {Object.entries(p.powers).map(([type, count]) => (
-                    <button 
-                      key={type} 
-                      disabled={(config.mode !== GameMode.HEX_GRID && currentPlayerIndex !== idx) || (count as number) <= 0}
-                      onClick={() => {
-                        const typeEnum = type as PowerType;
-                        if (activePower?.type === typeEnum && activePower?.playerId === p.id) {
-                          setActivePower(null);
-                          showToast("تم إلغاء تفعيل القدرة", "info");
-                          playSound('click');
-                        } else {
-                          setActivePower({ type: typeEnum, playerId: p.id });
-                          const powerName = typeEnum === PowerType.FREEZE ? 'التجميد' : typeEnum === PowerType.SHIELD ? 'الدرع' : 'السرقة';
-                          showToast(`تم تفعيل قدرة: ${powerName}`, "success");
-                          playSound('power');
-                        }
-                      }}
-                      className={`flex items-center justify-center gap-0.5 p-0.5 xs:p-1 sm:px-2 sm:py-1 md:px-2 md:py-1.5 rounded-md border border-[var(--color-ink-black)] sm:border-2 text-[8.5px] xs:text-[9.5px] sm:text-[10.5px] md:text-xs lg:text-sm font-black transition-all shadow-[1px_1px_0px_var(--color-ink-black)] sm:shadow-[2px_2px_0px_var(--color-ink-black)] active:translate-y-[1px] active:shadow-none ${
-                        (count as number) > 0 
-                          ? (activePower?.type === (type as PowerType) && activePower?.playerId === p.id
-                              ? 'bg-[var(--color-primary-gold)] text-[var(--color-ink-black)] scale-105 ring-1 ring-white/50' 
-                              : 'bg-white text-[var(--color-ink-black)] hover:bg-[var(--color-primary-gold)] hover:-translate-y-0.5') 
-                          : 'bg-slate-100 text-slate-400 cursor-not-allowed grayscale border-slate-300'
-                      }`}
-                    >
-                      <div className="p-px sm:p-0.5 bg-white/20 rounded">
-                        {type === PowerType.FREEZE && <CartoonSnowflake className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4" />}
-                        {type === PowerType.SHIELD && <CartoonShield className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4" />}
-                        {type === PowerType.STEAL && <CartoonGhost className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4" />}
-                      </div>
-                      <span className="text-[8.5px] xs:text-[9.5px] sm:text-[10.5px] md:text-xs font-black leading-none">{count}</span>
-                    </button>
-                  ))}
+                <div className="flex flex-row gap-1 sm:gap-2 mt-1 sm:mt-4 justify-center w-full px-0.5 sm:px-1">
+                  {Object.entries(p.powers).map(([type, count]) => {
+                    const typeEnum = type as PowerType;
+                    const isSelected = activePower?.type === typeEnum && activePower?.playerId === p.id;
+                    const hasCount = (count as number) > 0;
+                    const isActiveTurnPlayer = currentPlayerIndex === idx;
+
+                    let btnStyle = "";
+                    let iconComponent = null;
+                    let label = "";
+
+                    if (typeEnum === PowerType.FREEZE) {
+                      label = "تجميد";
+                      iconComponent = <CartoonSnowflake className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5.5 sm:h-5.5" />;
+                      btnStyle = hasCount
+                        ? isSelected
+                          ? 'bg-gradient-to-br from-cyan-400 via-sky-400 to-blue-500 text-white scale-105 border-[var(--color-ink-black)] shadow-[0_2px_0_rgba(15,23,42,1)] sm:shadow-[0_4px_0_rgba(15,23,42,1)] ring-1 sm:ring-2 ring-cyan-200'
+                          : 'bg-gradient-to-br from-cyan-50 via-sky-100 to-sky-200 text-blue-900 border-[var(--color-ink-black)] hover:bg-gradient-to-br hover:from-cyan-200 hover:to-sky-300 shadow-[1px_1px_0px_var(--color-ink-black)] sm:shadow-[2px_2px_0px_var(--color-ink-black)] hover:-translate-y-0.5'
+                        : 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed grayscale shadow-none opacity-50';
+                    } else if (typeEnum === PowerType.SHIELD) {
+                      if (allStealsDepleted) {
+                        label = "إسكات";
+                        iconComponent = <CartoonSilent className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5.5 sm:h-5.5 text-rose-500 animate-[bounce_1.5s_infinite]" />;
+                        btnStyle = hasCount
+                          ? isSelected
+                            ? 'bg-gradient-to-br from-rose-500 via-pink-400 to-rose-700 text-white font-black scale-105 border-[var(--color-ink-black)] shadow-[0_2px_0_rgba(15,23,42,1)] sm:shadow-[0_4px_0_rgba(15,23,42,1)] ring-1 sm:ring-2 ring-rose-400'
+                            : 'bg-gradient-to-br from-rose-50 via-pink-100 to-rose-200 text-rose-950 border-[var(--color-ink-black)] hover:bg-gradient-to-br hover:from-rose-100 hover:to-pink-300 shadow-[1px_1px_0px_var(--color-ink-black)] sm:shadow-[2px_2px_0px_var(--color-ink-black)] hover:-translate-y-0.5 animate-[pulse_2s_infinite]'
+                          : 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed grayscale shadow-none opacity-50';
+                      } else {
+                        label = "درع";
+                        iconComponent = <CartoonShield className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5.5 sm:h-5.5" />;
+                        btnStyle = hasCount
+                          ? isSelected
+                            ? 'bg-gradient-to-br from-emerald-400 via-teal-400 to-emerald-600 text-white scale-105 border-[var(--color-ink-black)] shadow-[0_2px_0_rgba(15,23,42,1)] sm:shadow-[0_4px_0_rgba(15,23,42,1)] ring-1 sm:ring-2 ring-emerald-200'
+                            : 'bg-gradient-to-br from-emerald-50 via-teal-100 to-teal-200 text-teal-900 border-[var(--color-ink-black)] hover:bg-gradient-to-br hover:from-emerald-200 hover:to-teal-300 shadow-[1px_1px_0px_var(--color-ink-black)] sm:shadow-[2px_2px_0px_var(--color-ink-black)] hover:-translate-y-0.5'
+                          : 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed grayscale shadow-none opacity-50';
+                      }
+                    } else if (typeEnum === PowerType.STEAL) {
+                      label = "سرقة";
+                      iconComponent = <CartoonGhost className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5.5 sm:h-5.5" />;
+                      btnStyle = hasCount
+                        ? isSelected
+                          ? 'bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-700 text-white scale-105 border-[var(--color-ink-black)] shadow-[0_2px_0_rgba(15,23,42,1)] sm:shadow-[0_4px_0_rgba(15,23,42,1)] ring-1 sm:ring-2 ring-indigo-300'
+                          : 'bg-gradient-to-br from-purple-50 via-indigo-100 to-purple-200 text-purple-900 border-[var(--color-ink-black)] hover:bg-gradient-to-br hover:from-purple-200 hover:to-indigo-300 shadow-[1px_1px_0px_var(--color-ink-black)] sm:shadow-[2px_2px_0px_var(--color-ink-black)] hover:-translate-y-0.5'
+                        : 'bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed grayscale shadow-none opacity-50';
+                    }
+
+                    return (
+                      <button 
+                        key={type} 
+                        disabled={!hasCount}
+                        onClick={() => {
+                          if (activePower?.type === typeEnum && activePower?.playerId === p.id) {
+                            setActivePower(null);
+                            showToast("تم إلغاء تفعيل القدرة", "info");
+                            playSound('click');
+                          } else {
+                            setActivePower({ type: typeEnum, playerId: p.id });
+                            const powerNameDisplayName = typeEnum === PowerType.FREEZE 
+                              ? 'التجميد' 
+                              : typeEnum === PowerType.SHIELD 
+                                ? (allStealsDepleted ? 'إسكات الخصم (🤐 يمنع سرقة/إجابة الخصم لهذا السؤال)' : 'الدرع') 
+                                : 'السرقة';
+                            showToast(`تم تفعيل قدرة: ${powerNameDisplayName}`, "success");
+                            playSound('power');
+                          }
+                        }}
+                        className={`flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 p-1 xs:p-1.5 sm:px-2.5 sm:py-2.5 rounded-lg sm:rounded-xl border border-[var(--color-ink-black)] sm:border-2 text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-black transition-all active:translate-y-[1px] active:shadow-none flex-1 min-w-0 ${btnStyle}`}
+                      >
+                        <div className="flex items-center justify-center bg-white/25 rounded p-0.5 filter drop-shadow-[0.5px_0.5px_0px_rgba(0,0,0,0.3)]">
+                          {iconComponent}
+                        </div>
+                        <div className="flex flex-col items-center sm:items-start leading-none shrink-0">
+                          <span className="text-[8px] xs:text-[9px] sm:text-[11px] md:text-xs font-black select-none">{label}</span>
+                          <span className="text-[7px] xs:text-[7.5px] sm:text-[9px] opacity-80 mt-0.5 font-mono">العدد: {count}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>

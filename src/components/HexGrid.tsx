@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useLayoutEffect } from 'react';
 import { motion } from 'motion/react';
 import { playSound } from '../utils/sound';
 import { Question, Player } from '../types';
@@ -27,9 +27,9 @@ const HexGrid: React.FC<HexGridProps> = ({
   stolenCells,
   handleHexClick,
 }) => {
-  const [scale, setScale] = React.useState(0.6);
+  const [scale, setScale] = useState(0.6);
 
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
       if (width < 380) {

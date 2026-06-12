@@ -552,7 +552,9 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
       manualQuestions: finalManualQuestions,
       hexMode: inputMethod,
       questionSource: inputMethod,
-      hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions : undefined
+      hexManualQuestions: mode === GameMode.HEX_GRID && inputMethod === 'manual' ? manualQuestions : undefined,
+      tabooType,
+      timerDuration: mode === GameMode.TABOO ? tabooTimerDuration : (mode === GameMode.BUZZER ? buzzerTimeout : undefined)
     });
   };
 

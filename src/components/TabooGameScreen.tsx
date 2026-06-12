@@ -351,18 +351,52 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
             {isRemote ? (
               // Remote Host Screen - Doesn't show correct word / taboo words to prevent cheating on public display
               <div className="vintage-panel rounded-[2.5rem] p-6 sm:p-14 border-4 border-black shadow-[8px_8px_0px_black] bg-[var(--color-bg-cream)] text-center relative overflow-hidden flex flex-col items-center gap-6">
+                
+                {/* Timer & Turn Points displayed on Main Host Screen */}
+                <div className="flex gap-4 w-full justify-center mb-4">
+                  <div className="bg-red-50 border-4 border-black px-6 py-4 rounded-3xl text-center shadow-[4px_4px_0px_black]">
+                    <p className="text-sm font-bold text-red-800 mb-1">الوقت المتبقي</p>
+                    <p className={`text-5xl font-black ${remoteRoom?.timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-gray-800'}`}>
+                      {remoteRoom?.timeLeft || 0} ث
+                    </p>
+                  </div>
+                  <div className="bg-green-50 border-4 border-black px-6 py-4 rounded-3xl text-center shadow-[4px_4px_0px_black]">
+                    <p className="text-sm font-bold text-green-800 mb-1">النقاط هذا الدور</p>
+                    <p className="text-5xl font-black text-green-600">
+                      +{remoteRoom?.turnScore || 0}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="w-24 h-24 bg-rose-100 rounded-full border-4 border-black flex items-center justify-center text-rose-600 animate-pulse">
                   <Star fill="currentColor" size={48} />
                 </div>
                 
-                <h2 className="text-3xl sm:text-5xl font-black text-[var(--color-ink-black)]">تخّمن مع زميلك! 🤔🔊</h2>
+                <h2 className="text-3xl sm:text-5xl font-black text-[var(--color-ink-black)]">تخّمن مع زملائك! 🤔🔊</h2>
                 <p className="text-gray-600 font-bold max-w-md">
-                  اللاعب <span className="text-rose-600 font-extrabold text-xl">{currentActivePlayer?.name}</span> يصف الكلمات الآن لزملائه! تم إخفاء الكلمات الممنوعة لمنع الغش!
+                  اللاعب <span className="text-rose-600 font-extrabold text-xl">{currentActivePlayer?.name}</span> يصف الكلمات الآن! تم إخفاء الكلمات الممنوعة لمنع الغش!
                 </p>
 
-                <div className="text-xs text-gray-400 bg-white border px-4 py-2 rounded-xl mt-4">
+                <div className="text-xs text-gray-400 bg-white border px-4 py-2 rounded-xl mt-2 mb-2">
                   ⚠️ يتم توجيه الأزرار والوقت من جوال الواصف مباشرة
                 </div>
+
+                {/* Main screen display of players scores */}
+                <div className="w-full mt-4 bg-white/50 p-4 rounded-3xl border-4 border-black">
+                  <p className="font-bold text-sm text-gray-500 mb-3">نتائج المتسابقين الحالية</p>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {remotePlayers.map((p, idx) => (
+                      <div key={p.id} className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border-2 border-black shadow-[2px_2px_0px_black]">
+                        <div className="w-4 h-4 rounded-full border border-black" style={{ backgroundColor: p.color }} />
+                        <span className="font-bold">{p.name}</span>
+                        <span className="bg-yellow-100 text-yellow-800 font-black px-2 py-0.5 rounded-md text-xs border border-yellow-300">
+                          {p.score || 0} ن
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             ) : (
               // Local Host Screen - Shows word & taboo words on same device

@@ -23,12 +23,17 @@ const TabooStartScreen: React.FC<Props> = ({ config, questions = [], roomId: raw
 
   const getShareableUrl = () => {
     const origin = window.location.origin;
+    const pathname = '/';
     const search = `?mode=taboo&roomId=${roomId}`;
-    return origin + '/' + search;
+    
+    if (origin.includes('ais-dev-')) {
+      return origin.replace('ais-dev-', 'ais-pre-') + pathname + search;
+    }
+    return origin + pathname + search;
   };
 
   const joinUrl = getShareableUrl();
-  const isPreview = window.location.hostname.includes('aistudio.google.com');
+  const isPreview = window.location.hostname.includes('aistudio.google.com') || window.location.origin.includes('ais-dev-');
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -59,8 +64,8 @@ const TabooStartScreen: React.FC<Props> = ({ config, questions = [], roomId: raw
   }, [roomId, questions]);
 
   const handleStartGame = async () => {
-    if (remotePlayers.length < 2) {
-      showToast("يجب انضمام لاعبين اثنين على الأقل لبدء اللعبة عن بعد", "warning");
+    if (remotePlayers.length < 1) {
+      showToast("يجب انضمام لاعب واحد على الأقل لبدء اللعبة عن بعد", "warning");
       return;
     }
     playSound('start');
@@ -133,6 +138,14 @@ const TabooStartScreen: React.FC<Props> = ({ config, questions = [], roomId: raw
           </button>
         </div>
       </div>
+      
+      {/* Help tooltip for why start is disabled */}
+      {remotePlayers.length < 1 && (
+        <div className="bg-blue-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-[2px_2px_0px_var(--color-ink-black)] flex items-center gap-2 mt-4">
+          <span className="w-5 h-5 rounded-full bg-blue-300 text-blue-900 flex items-center justify-center text-xs">i</span>
+          يجب انضمام لاعب واحد على الأقل (الواصف) لبدء اللعبة عن بعد
+        </div>
+      )}
     </div>
   );
 };

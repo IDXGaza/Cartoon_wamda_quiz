@@ -108,6 +108,23 @@ export const CartoonLightning: React.FC<IconProps> = ({ size = 32, className = '
   </svg>
 );
 
+export const CartoonMysteryBox: React.FC<IconProps> = ({ size = 32, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    {/* Box Body */}
+    <rect x="8" y="14" width="32" height="28" rx="4" fill="#F59E0B" stroke="#0D0D0D" strokeWidth="3.5" />
+    {/* Box Lid */}
+    <rect x="5" y="8" width="38" height="8" rx="2" fill="#D97706" stroke="#0D0D0D" strokeWidth="3.5" />
+    {/* Big decorative Question Mark on the chest */}
+    <path d="M24 18C26.5 18 28.5 19.5 28.5 22C28.5 24 26.5 25 25 26.5C24 27.5 24 29 24 29" stroke="#FFF" strokeWidth="3.5" strokeLinecap="round" />
+    <circle cx="24" cy="34" r="2" fill="#FFF" stroke="#0D0D0D" strokeWidth="1" />
+    {/* Corner metal plates */}
+    <path d="M8 36V42H14" stroke="#0D0D0D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M40 36V42H34" stroke="#0D0D0D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    {/* Small cartoon sparkles */}
+    <path d="M4 18L6 20M42 18L40 20M24 3V5" stroke="#F5C518" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+
 export const CartoonTimer: React.FC<IconProps> = ({ size = 32, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     <circle cx="24" cy="26" r="16" fill="#FFF8E7" stroke="#0D0D0D" strokeWidth="3"/>
@@ -158,15 +175,24 @@ export const CartoonTrash: React.FC<IconProps> = ({ size = 32, className = '' })
 
 export const CartoonShield: React.FC<IconProps> = ({ size = 32, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <path d="M24 4L40 10V24C40 34 32 42 24 44C16 42 8 34 8 24V10L24 4Z" fill="#1E6FD9" stroke="#0D0D0D" strokeWidth="3" strokeLinejoin="round"/>
-    <path d="M24 12V36M14 24H34" stroke="#FFF8E7" strokeWidth="3" strokeLinecap="round"/>
+    {/* Outer Shield Plate */}
+    <path d="M24 4L42 9V22C42 33.6 34.3 41.5 24 44C13.7 41.5 6 33.6 6 22V9L24 4Z" fill="#F5C518" stroke="#0D0D0D" strokeWidth="4" strokeLinejoin="round"/>
+    {/* Inner Shield Plate */}
+    <path d="M24 8L38 12.1V22C38 31.4 31.8 37.8 24 40C16.2 37.8 10 31.4 10 22V12.1L24 8Z" fill="#1E6FD9" stroke="#0D0D0D" strokeWidth="3" strokeLinejoin="round"/>
+    {/* Cross emblem / Shine */}
+    <path d="M24 12V36M14 24H34" stroke="#FFF8E7" strokeWidth="4.5" strokeLinecap="round"/>
+    <path d="M24 12V36M14 24H34" stroke="#0D0D0D" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
 
 export const CartoonSnowflake: React.FC<IconProps> = ({ size = 32, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <path d="M24 4V44M4 24H44M10 10L38 38M10 38L38 10" stroke="#5BC8F5" strokeWidth="4" strokeLinecap="round"/>
-    <circle cx="24" cy="24" r="4" fill="#FFF8E7" stroke="#0D0D0D" strokeWidth="2"/>
+    <circle cx="24" cy="24" r="5" fill="#E0F2FE" stroke="#0D0D0D" strokeWidth="3.5"/>
+    <path d="M24 4V44M4 24H44M10 10L38 38M10 38L38 10" stroke="#0D0D0D" strokeWidth="4.5" strokeLinecap="round"/>
+    <path d="M24 6V42M6 24H42M11 11L37 37M11 37L37 11" stroke="#38BDF8" strokeWidth="2.5" strokeLinecap="round"/>
+    {/* Custom inner ice diamond ring or sparkles */}
+    <path d="M20 10L24 14L28 10M20 38L24 34L28 38M10 20L14 24L10 28M38 20L34 24L38 28" stroke="#0D0D0D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M20 10L24 14L28 10M20 38L24 34L28 38M10 20L14 24L10 28M38 20L34 24L38 28" stroke="#E0F2FE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -200,9 +226,16 @@ export const CartoonSkip: React.FC<IconProps> = ({ size = 32, className = '' }) 
 
 export const CartoonGhost: React.FC<IconProps> = ({ size = 32, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <path d="M10 40V20C10 12.268 16.268 6 24 6C31.732 6 38 12.268 38 20V40L31 34L24 40L17 34L10 40Z" fill="#FFF8E7" stroke="#0D0D0D" strokeWidth="3" strokeLinejoin="round"/>
-    <circle cx="18" cy="18" r="3" fill="#0D0D0D"/>
-    <circle cx="30" cy="18" r="3" fill="#0D0D0D"/>
+    {/* Ghost body with purple gradient look */}
+    <path d="M10 40V19C10 11 16.5 5 24 5C31.5 5 38 11 38 19V40L32 34L26 40L20 34L14 40L10 40Z" fill="#C084FC" stroke="#0D0D0D" strokeWidth="4" strokeLinejoin="round"/>
+    {/* Spooky cute white sheet shine */}
+    <path d="M14 16C14 14 17 10 21 9" stroke="#E9D5FF" strokeWidth="2.5" strokeLinecap="round" />
+    {/* Glowing cartoon eyes */}
+    <circle cx="18" cy="18" r="5" fill="#FFE066" stroke="#0D0D0D" strokeWidth="3"/>
+    <circle cx="30" cy="18" r="5" fill="#FFE066" stroke="#0D0D0D" strokeWidth="3"/>
+    <circle cx="18" cy="18" r="1.5" fill="#0D0D0D"/>
+    <circle cx="30" cy="18" r="1.5" fill="#0D0D0D"/>
+    <path d="M21 26C21 26 22 29 24 29C26 29 27 26 27 26" stroke="#0D0D0D" strokeWidth="3.5" strokeLinecap="round"/>
   </svg>
 );
 

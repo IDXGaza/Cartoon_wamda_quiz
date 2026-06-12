@@ -61,17 +61,48 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
     >
       <polygon 
         points={points} 
-        className={`hex-polygon transition-all duration-300 ${frozen > 0 ? 'stroke-blue-400' : ''} ${shielded ? 'stroke-emerald-400' : ''}`} 
+        className="hex-polygon transition-all duration-300" 
         style={{
           ...polygonStyle,
-          strokeWidth: (frozen > 0 || shielded) ? 15 * scale : 5 * scale,
-          fill: frozen > 0 ? `${polygonStyle.fill}88` : polygonStyle.fill,
-          filter: (frozen > 0 || shielded) ? `drop-shadow(0 0 ${15 * scale}px currentColor)` : 'none'
+          strokeWidth: 5 * scale,
+          fill: color || '#FFFFFF',
         }} 
       />
+
+      {/* Clean & Satisfying Glowing Outline for Shielded Cells */}
+      {shielded && (
+        <polygon 
+          points={points} 
+          fill="none"
+          stroke="#10B981"
+          strokeWidth={8 * scale}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="pointer-events-none animate-[pulse_2s_infinite]"
+          style={{
+            filter: `drop-shadow(0 0 ${6 * scale}px rgba(16, 185, 129, 0.8))`
+          }}
+        />
+      )}
+
+      {/* Clean & Satisfying Glowing Outline for Frozen Cells */}
+      {frozen > 0 && (
+        <polygon 
+          points={points} 
+          fill="none"
+          stroke="#0EA5E9"
+          strokeWidth={8 * scale}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="pointer-events-none animate-[pulse_1.5s_infinite]"
+          style={{
+            filter: `drop-shadow(0 0 ${6 * scale}px rgba(14, 165, 233, 0.8))`
+          }}
+        />
+      )}
       
       <g transform={`translate(${hexHalfWidth}, ${hexHalfHeight})`}>
-        <text 
+         <text 
           className="font-display select-none"
           style={{ 
             fill: '#000000', 
@@ -102,19 +133,28 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
         </text>
       </g>
       
-      {frozen > 0 && (
-        <motion.g animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} style={{ transformOrigin: `${hexHalfWidth}px ${hexHalfHeight}px` }}>
-          <g transform={`translate(${hexHalfWidth - 35 * scale}, ${hexHalfHeight - 35 * scale})`}>
-            <CartoonSnowflake className="text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.9)]" size={70 * scale} />
-          </g>
-        </motion.g>
-      )}
+      {/* Corner Badges for active powers that do not block the letter */}
       {shielded && (
-        <motion.g animate={{ y: [0, -10 * scale, 0], scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ transformOrigin: `${hexHalfWidth}px ${hexHalfHeight}px` }}>
-          <g transform={`translate(${hexHalfWidth - 35 * scale}, ${hexHalfHeight - 35 * scale})`}>
-            <CartoonShield className="text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.9)]" size={70 * scale} />
+        <g transform={`translate(${8 * scale}, ${15 * scale})`} className="pointer-events-none">
+          <circle cx={14 * scale} cy={14 * scale} r={14 * scale} fill="#ECFDF5" stroke="#0D0D0D" strokeWidth={2.5 * scale} className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+          <g transform={`translate(${5 * scale}, ${5 * scale})`}>
+            <CartoonShield size={18 * scale} className="text-emerald-500" />
           </g>
-        </motion.g>
+        </g>
+      )}
+
+      {frozen > 0 && (
+        <g transform={`translate(${130 * scale - (14 * 2 + 8) * scale}, ${15 * scale})`} className="pointer-events-none">
+          <circle cx={14 * scale} cy={14 * scale} r={14 * scale} fill="#E0F2FE" stroke="#0D0D0D" strokeWidth={2.5 * scale} className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+          <motion.g 
+            transform={`translate(${4 * scale}, ${4 * scale})`}
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
+            style={{ transformOrigin: `${10 * scale}px ${10 * scale}px` }}
+          >
+            <CartoonSnowflake size={20 * scale} className="text-blue-500" />
+          </motion.g>
+        </g>
       )}
     </motion.g>
   );
