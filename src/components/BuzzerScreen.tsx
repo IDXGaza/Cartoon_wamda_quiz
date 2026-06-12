@@ -64,15 +64,11 @@ const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenRepo
 
   const currentQuestion = questions[currentQuestionIndex];
   
-  // Helper to get a shareable URL (replaces ais-dev with ais-pre if needed)
+  // Helper to get a shareable URL
   const getShareableUrl = () => {
     const origin = window.location.origin;
     const pathname = '/';
     const search = `?mode=remote&roomId=${roomId}`;
-    
-    if (origin.includes('ais-dev-')) {
-      return origin.replace('ais-dev-', 'ais-pre-') + pathname + search;
-    }
     return origin + pathname + search;
   };
 

@@ -295,9 +295,14 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
               دور اللاعب الحالي: {currentActivePlayer?.name} 🎤
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-black mb-4 text-[var(--color-ink-black)]">سَلّم الجوال للمشرح!</h1>
+            <h1 className="text-3xl sm:text-5xl font-black mb-4 text-[var(--color-ink-black)]">
+              {isRemote ? 'استعدوا للوصف!' : 'سَلّم الجوال للمشرح!'}
+            </h1>
             <p className="text-sm sm:text-base opacity-75 mb-8 max-w-md mx-auto">
-              يجب على اللاعب <strong className="font-black text-rose-600">{currentActivePlayer?.name}</strong> حمل الجوال ووصف الكلمات لزملائه دون النطق بأي كلمة ممنوعة في القائمة!
+              {isRemote 
+                ? <span className="block mb-2">اللاعب <strong className="font-black text-rose-600">{currentActivePlayer?.name}</strong> يستعد للوصف من جهازه...</span> 
+                : <span>يجب على اللاعب <strong className="font-black text-rose-600">{currentActivePlayer?.name}</strong> حمل الجوال ووصف الكلمات لزملائه دون النطق بأي كلمة ممنوعة في القائمة!</span>
+              }
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center mb-8">
@@ -314,12 +319,18 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
               ))}
             </div>
 
-            <button 
-              onClick={handleStartTurn}
-              className="w-full sm:w-auto bg-[var(--color-primary-green)] text-white font-bold py-4 px-10 rounded-2xl text-xl sm:text-2xl border-4 border-black shadow-[6px_6px_0px_black] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_black] transition-all"
-            >
-              جاهز، ابدأ دوري! 🚀
-            </button>
+            {!isRemote ? (
+              <button 
+                onClick={handleStartTurn}
+                className="w-full sm:w-auto bg-[var(--color-primary-green)] text-white font-bold py-4 px-10 rounded-2xl text-xl sm:text-2xl border-4 border-black shadow-[6px_6px_0px_black] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_black] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_black] transition-all"
+              >
+                جاهز، ابدأ دوري! 🚀
+              </button>
+            ) : (
+              <div className="w-full sm:w-auto bg-gray-100 text-gray-500 font-bold py-4 px-10 rounded-2xl text-lg sm:text-xl border-4 border-black shadow-[4px_4px_0px_black] animate-pulse cursor-wait">
+                بانتظار أن يضغط {currentActivePlayer?.name} على زر البدء...
+              </div>
+            )}
           </motion.div>
         )}
 

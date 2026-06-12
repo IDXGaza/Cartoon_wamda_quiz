@@ -306,6 +306,55 @@ const RemoteTaboo: React.FC = () => {
             </motion.div>
           )}
 
+          {roomState.gameState === 'intro' && (
+            <motion.div 
+              key="intro"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center space-y-6 my-auto bg-white p-6 rounded-[2rem] border-4 border-black shadow-[8px_8px_0px_black]"
+            >
+              <div className="inline-block bg-rose-100 text-rose-700 font-bold px-4 py-2 rounded-2xl border-2 border-rose-400 mb-2">
+                دور اللاعب الحالي: {activeDescriber?.name} 🎤
+              </div>
+
+              {isDescriber ? (
+                <>
+                  <h2 className="text-3xl font-black text-[var(--color-ink-black)]">أنت المشرح!</h2>
+                  <p className="font-bold opacity-80 text-sm">
+                    استعد لوصف الكلمات لزملائك دون النطق بالكلمات الممنوعة.
+                  </p>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await updateDoc(doc(db, 'rooms', roomId), {
+                          gameState: 'playing',
+                          timeLeft: roomState.timer || 60,
+                          turnScore: 0,
+                          turnCorrect: 0,
+                          turnWrong: 0,
+                          turnHistory: []
+                        });
+                      } catch (err) {
+                        console.error('Failed to start turn', err);
+                      }
+                    }}
+                    className="w-full bg-[var(--color-primary-green)] text-white font-bold py-4 rounded-2xl border-4 border-black shadow-[4px_4px_0px_black] text-xl active:translate-y-1 active:shadow-[0_0_0_black]"
+                  >
+                    جاهز، ابدأ دوري! 🚀
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-black text-[var(--color-ink-black)]">استعدوا!</h2>
+                  <p className="font-bold opacity-80 text-sm">
+                    اللاعب <span className="text-rose-600">{activeDescriber?.name}</span> يستعد لبدء الجولة...
+                  </p>
+                </>
+              )}
+            </motion.div>
+          )}
+
           {roomState.gameState === 'playing' && (
             <motion.div 
               key="playing"
