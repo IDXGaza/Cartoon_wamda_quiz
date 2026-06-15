@@ -112,7 +112,7 @@ export const SPORTS_QUESTIONS: BankQuestion[] = [
   { id: 'sp_109', category: 'الرياضة', text: 'ما هو اللقب الذي يطلق على نادي شالكه الألماني؟', answer: 'عمال المناجم', difficulty: 'hard', points: 400 },
   { id: 'sp_110', category: 'الرياضة', text: 'من هو السائق الذي فاز بأول بطولة فورمولا 1 عام 1950؟', answer: 'جوزيبي فارينا', difficulty: 'hard', points: 400 },
   { id: 'sp_111', category: 'الرياضة', text: 'كم يبلغ عرض المرمى الرسمي لكرة القدم؟', answer: '7.32 متر', difficulty: 'hard', points: 400 },
-  { id: 'sp_112', category: 'الرياضة', text: 'ما هي ال];�سم الجائزة التي تمنح لأفضل لاعب شاب في أوروبا؟', answer: 'الفتى الذهبي', difficulty: 'medium', points: 300 },
+  { id: 'sp_112', category: 'الرياضة', text: 'ما هي ال];�سم الجائزة التي تمنح لأفضل لاعب شاب في أوروبا؟', answer: 'الفتى الذهبي', difficulty: 'medium', points: 300 },
   { id: 'fb_300_16_dup1', category: 'كرة القدم', text: 'ما هو المنتخب الأكثر فوزاً بكأس أمم أفريقيا في التاريخ؟', answer: 'مصر', difficulty: 'medium', points: 300 },
   { id: 'fb_300_17_dup1', category: 'كرة القدم', text: 'ما هو لقب نادي مانشستر يونايتد؟', answer: 'الشياطين الحمر', difficulty: 'medium', points: 300 },
   { id: 'fb_300_18_dup1', category: 'كرة القدم', text: 'ما هو اسم الملعب الحالي لنادي أتلتيكو مدريد؟', answer: 'واندا متروبوليتانو', difficulty: 'medium', points: 300 },
