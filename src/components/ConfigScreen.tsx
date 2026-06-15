@@ -7,7 +7,7 @@ import { filterPlayedQuestions, addPlayedQuestionHashes } from '../utils/playedQ
 import { useToast } from '../contexts/ToastContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { playSound } from '../utils/sound';
-import { CartoonHexagon, CartoonGrid, CartoonLightning, CartoonTimer, CartoonSilent, CartoonPencil, CartoonPlus, CartoonTrash, CartoonRefresh, CartoonStar, CartoonGear, CartoonBook, CartoonAlert, CartoonRocket, CartoonX, CartoonSparkles } from './CartoonIcons';
+import { CartoonHexagon, CartoonGrid, CartoonLightning, CartoonTimer, CartoonSilent, CartoonPencil, CartoonPlus, CartoonTrash, CartoonRefresh, CartoonStar, CartoonGear, CartoonBook, CartoonAlert, CartoonRocket, CartoonX, CartoonSparkles, CartoonRabbit, CartoonTurtle } from './CartoonIcons';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
@@ -74,11 +74,30 @@ const CATEGORY_CLASSIFICATIONS = getDynamicCategoryClassifications();
 
 import { getUserCustomCategories, UserCategory } from '../services/categoryService';
 import { generateQuestions } from '../services/geminiService';
-// ... (imports)
+
+function usePersistentState<T>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] {
+  const [state, setState] = React.useState<T>(() => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : initialValue;
+    } catch (e) {
+      return initialValue;
+    }
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch (e) {}
+  }, [key, state]);
+
+  return [state, setState];
+}
+
 const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   const { settings } = useSettings();
   const { showToast } = useToast();
-  const [topic, setTopic] = useState('ثقافة عامة');
+  const [topic, setTopic] = usePersistentState('config_topic', 'ثقافة عامة');
   const [isOnline] = useState(navigator.onLine);
   const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
   
@@ -87,32 +106,61 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   }, []);
 // ...
 // Then inside CATEGORY_CLASSIFICATIONS logic, add userCategories
-  const [mode, setMode] = useState<GameMode>(GameMode.HEX_GRID);
-  const [questionType, setQuestionType] = useState<QuestionType>(QuestionType.OPEN);
-  const [numQuestionsState, setNumQuestionsState] = useState<number>(10);
-
-  React.useEffect(() => {
-    if (mode === GameMode.TABOO) {
-      setNumQuestionsState(30);
-    } else if (mode === GameMode.BUZZER || mode === GameMode.TIMED) {
-      setNumQuestionsState(15);
-    }
-  }, [mode]);
-  const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.MEDIUM);
-  const [activeClassification, setActiveClassification] = useState<string>("العلوم والطبيعة");
-  const [timedDuration, setTimedDuration] = useState<number>(settings.timedDuration);
-  const [categories, setCategories] = useState<string[]>(['', '', '', '', '']);
-  const [playersConfig, setPlayersConfig] = useState<{name: string, color: string}[]>([
+  const [mode, setMode] = usePersistentState<GameMode>('config_mode', GameMode.HEX_GRID);
+  const [questionType, setQuestionType] = usePersistentState<QuestionType>('config_qtype', QuestionType.OPEN);
+  const [numQuestionsState, setNumQuestionsState] = usePersistentState<number>('config_numQuestions', 10);
+  const prevModeRef = React.useRef<GameMode>(mode);
+  const [difficulty, setDifficulty] = usePersistentState<Difficulty>('config_diff', Difficulty.MEDIUM);
+  const [activeClassification, setActiveClassification] = usePersistentState<string>('config_class', "العلوم والطبيعة");
+  const [timedDuration, setTimedDuration] = usePersistentState<number>('config_duration', settings.timedDuration);
+  const [categories, setCategories] = usePersistentState<string[]>('config_cats', ['', '', '', '', '']);
+  const [playersConfig, setPlayersConfig] = usePersistentState<{name: string, color: string}[]>('config_players', [
     { name: 'الفريق الأحمر', color: '#ef4444' },
     { name: 'الفريق الأخضر', color: '#22c55e' }
   ]);
 
-  const [buzzerTimeout, setBuzzerTimeout] = useState<number>(20);
+  const [buzzerTimeout, setBuzzerTimeout] = usePersistentState<number>('config_buzzer_timeout', 20);
   const [isRestrictedMode, setIsRestrictedMode] = useState<boolean>(true);
-  const [inputMethod, setInputMethod] = useState<'manual' | 'bank'>('bank');
-  const [tabooType, setTabooType] = useState<'local' | 'remote'>('local');
-  const [tabooTimerDuration, setTabooTimerDuration] = useState<number>(60);
-  const [tabooWordTimerDuration, setTabooWordTimerDuration] = useState<number>(0); // 0 means no limit
+  const [inputMethod, setInputMethod] = usePersistentState<'manual' | 'bank'>('config_input', 'bank');
+  const [tabooType, setTabooType] = usePersistentState<'local' | 'remote'>('config_taboo', 'local');
+  const [tabooTimerDuration, setTabooTimerDuration] = usePersistentState<number>('config_taboo_time', 60);
+  const [tabooWordTimerDuration, setTabooWordTimerDuration] = usePersistentState<number>('config_taboo_word_time', 0); // 0 means no limit
+
+  React.useEffect(() => {
+    if (prevModeRef.current !== mode) {
+      // Reset number of questions based on mode
+      if (mode === GameMode.TABOO) {
+        setNumQuestionsState(30);
+      } else if (mode === GameMode.BUZZER || mode === GameMode.TIMED) {
+        setNumQuestionsState(15);
+      } else {
+        setNumQuestionsState(10);
+      }
+
+      // Reset players to default (2 players) when changing modes
+      setPlayersConfig([
+        { name: 'الفريق الأحمر', color: '#ef4444' },
+        { name: 'الفريق الأخضر', color: '#22c55e' }
+      ]);
+
+      // Reset specific mode settings
+      if (mode === GameMode.BUZZER) {
+        setBuzzerTimeout(20);
+      } else if (mode === GameMode.TIMED) {
+        setTimedDuration(settings.timedDuration);
+      } else if (mode === GameMode.TABOO) {
+        setTabooTimerDuration(60);
+        setTabooWordTimerDuration(0);
+      }
+
+      // Reset input method for modes that usually prefer one
+      if (mode === GameMode.HEX_GRID || mode === GameMode.GRID) {
+        setInputMethod('bank');
+      }
+
+      prevModeRef.current = mode;
+    }
+  }, [mode, settings.timedDuration, setNumQuestionsState, setPlayersConfig, setBuzzerTimeout, setTimedDuration, setTabooTimerDuration, setTabooWordTimerDuration, setInputMethod]);
 
   // ... (activeFeats state removed)
 
@@ -123,13 +171,14 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
   // Categories should start empty without autofilling as requested by the user
   const [hasInitializedCategories] = useState(true);
   
-  const [manualQuestions, setManualQuestions] = useState<Record<string, {
+  const [manualQuestions, setManualQuestions] = usePersistentState<Record<string, {
     question: string, 
     answer: string, 
     category?: string, 
     points?: number, 
-    explanation?: string
-  }>>({});
+    explanation?: string,
+    tabooWords?: string[]
+  }>>('config_manual_qs', {});
   const [isGeneratingSamples, setIsGeneratingSamples] = useState(false);
   const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 
@@ -163,10 +212,36 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
 
   const clearManualQuestions = React.useCallback(() => {
     playSound('click');
-    if (window.confirm("هل أنت متأكد من مسح جميع الأسئلة اليدوية؟")) {
-      setManualQuestions({});
+    setManualQuestions({});
+    showToast("تم مسح جميع الأسئلة اليدوية", "success");
+  }, [setManualQuestions, showToast]);
+
+  const handleDeleteManualQuestion = (index: number) => {
+    playSound('click');
+    const keyPrefix = mode === GameMode.GRID ? 'j-' : 'b-';
+    const newManual = { ...manualQuestions };
+    
+    if (mode === GameMode.HEX_GRID) {
+      // For HEX_GRID, we just clear the specific letter instead of shifting
+      const lettersAcross = LETTERS.flat();
+      const letter = lettersAcross[index];
+      delete newManual[letter];
+    } else if (mode === GameMode.GRID) {
+       // Grid deletion is tricky due to 5x5 structure. 
+       // Usually users don't delete single cells in Jeopardy, but if they do, we just clear it.
+       const catIdx = Math.floor(index / 5);
+       const pIdx = index % 5;
+       delete newManual[`j-${catIdx}-${pIdx}`];
+    } else {
+      // Shift subsequent questions up
+      for (let i = index; i < numQuestionsState - 1; i++) {
+        newManual[`b-${i}`] = newManual[`b-${i+1}`] || { question: '', answer: '' };
+      }
+      delete newManual[`b-${numQuestionsState - 1}`];
+      setNumQuestionsState(prev => Math.max(1, prev - 1));
     }
-  }, [setManualQuestions]);
+    setManualQuestions(newManual);
+  };
 
   const MODELS = [
     { name: "Tencent Hy3 (Free)", value: "tencent/hy3-preview:free" },
@@ -418,6 +493,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             explanation: q?.explanation,
             type: QuestionType.OPEN,
             difficulty,
+            tabooWords: q?.tabooWords
           });
         }
       }
@@ -532,7 +608,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
             points: 100,
             type: QuestionType.OPEN,
             difficulty: (q.difficulty?.toUpperCase() as Difficulty) || Difficulty.MEDIUM,
-            tabooWords: q.tabooWords
+            tabooWords: (q as any).tabooWords
           });
         }
         
@@ -604,11 +680,15 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
           </motion.div>
 
           {/* Topic Selection */}
+          {mode !== GameMode.HEX_GRID && (
           <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500"></div>
             <div className="flex items-center gap-3 md:gap-4 mb-6">
               <label className="text-xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">
-                {mode === GameMode.GRID ? 'اختيار الفئات الجاهزة' : 'موضوع المسابقة الرئيسي'}
+                {[GameMode.BUZZER, GameMode.TIMED, GameMode.TABOO].includes(mode) || (inputMethod === 'bank' && mode !== GameMode.GRID)
+                  ? 'إعدادات اللعب' 
+                  : mode === GameMode.GRID ? 'اختيار الفئات الجاهزة' 
+                  : 'موضوع المسابقة الرئيسي'}
               </label>
             </div>
             
@@ -744,7 +824,37 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 </div>
               )
             ) : mode === GameMode.TABOO ? (
-              <div className="space-y-4 md:space-y-8 animate-fade-in w-full">
+              <div className="space-y-4 md:space-y-10 animate-fade-in w-full">
+                {/* Taboo Type selection moved here */}
+                <div className="flex flex-col gap-4">
+                  <label className="text-xl font-bold text-[var(--color-ink-black)] text-center">طريقة اللعب</label>
+                  <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto w-full">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playSound('click');
+                        setTabooType('local');
+                      }}
+                      className={`vintage-button rounded-2xl p-4 flex flex-col items-center gap-2 text-center transition-all ${tabooType === 'local' ? 'bg-rose-600 text-white shadow-[4px_4px_0px_var(--color-ink-black)] ring-2 ring-rose-500/50' : 'bg-[var(--color-off-white)]'}`}
+                    >
+                      <span className="font-bold text-lg md:text-xl vintage-text">محلي 📱</span>
+                      <span className="text-[10px] opacity-85">على جهاز واحد متناوب</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playSound('click');
+                        setTabooType('remote');
+                      }}
+                      className={`vintage-button rounded-2xl p-4 flex flex-col items-center gap-2 text-center transition-all ${tabooType === 'remote' ? 'bg-blue-600 text-white shadow-[4px_4px_0px_var(--color-ink-black)] ring-2 ring-blue-500/50' : 'bg-[var(--color-off-white)]'}`}
+                    >
+                      <span className="font-bold text-lg md:text-xl vintage-text">عن بعد 🌐</span>
+                      <span className="text-[10px] opacity-85">باستخدام الرابط والغرفة</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="flex flex-col md:flex-row gap-6 justify-center">
                   <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
                     <label className="text-xl font-bold text-[var(--color-ink-black)]">وقت الجولة (ثواني)</label>
@@ -795,17 +905,51 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 
                 <div className="flex justify-center mt-6 col-span-full">
                   {mode === GameMode.BUZZER && (
-                    <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
-                      <label className="text-xl font-bold text-[var(--color-ink-black)]">عدد الأسئلة</label>
-                      <input 
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={numQuestionsState}
-                        onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 10)}
-                        className="vintage-input p-4 w-40 text-center text-2xl font-bold"
-                        required
-                      />
+                    <div className="flex flex-col gap-6 w-full">
+                      <div className="flex flex-col items-center gap-2 p-5 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                        <label className="text-xl font-bold text-[var(--color-ink-black)]">عدد الأسئلة</label>
+                        <input 
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={numQuestionsState}
+                          onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 10)}
+                          className="vintage-input p-4 w-40 text-center text-2xl font-bold"
+                          required
+                        />
+                      </div>
+                      
+                      {/* Buzzer Timeout Slider moved here */}
+                      <div className="bg-[var(--color-off-white)] p-6 rounded-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] space-y-6">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-xl text-[var(--color-ink-black)]">سرعة البازر (المهلة)</span>
+                          <span className="bg-[var(--color-primary-gold)] px-6 py-2 rounded-xl border-4 border-black font-black text-2xl shadow-[3px_3px_0px_black]">{buzzerTimeout}ث</span>
+                        </div>
+                        <div className="px-2 py-1">
+                          <input 
+                            type="range" 
+                            min="5" 
+                            max="60" 
+                            step="5"
+                            value={buzzerTimeout}
+                            onChange={(e) => {
+                               playSound('click');
+                               setBuzzerTimeout(parseInt(e.target.value));
+                            }}
+                            className="vintage-slider cursor-pointer w-full"
+                          />
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-black opacity-80 text-[var(--color-ink-black)]">
+                          <div className="flex items-center gap-2">
+                             <CartoonRabbit size={32} />
+                             <span>ثواني معدودة</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                             <span>وقت كافٍ</span>
+                             <CartoonTurtle size={32} />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                   {mode === GameMode.TIMED && (
@@ -825,34 +969,25 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               </div>
             ) : inputMethod === 'bank' ? (
               <div className="space-y-6 animate-fade-in w-full">
-                {mode !== GameMode.HEX_GRID && (
-                  <div className="flex flex-col items-center gap-2 mb-6 p-4 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
-                    <label className="text-xl font-bold text-[var(--color-ink-black)]">عدد الأسئلة</label>
-                    <input 
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={numQuestionsState}
-                      onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 10)}
-                      className="vintage-input p-4 w-32 text-center text-2xl font-bold"
-                      required
-                    />
-                  </div>
-                )}
-                {mode === GameMode.HEX_GRID ? (
-                  <div className="hidden">
-                    <p className="text-2xl font-display text-[var(--color-ink-black)]">موضوع مسابقة الشبكة:</p>
-                    <p className="text-4xl font-display text-[var(--color-primary-gold)] mt-2">معلومات عامة</p>
-                  </div>
-                ) : (
-                  <div className="hidden">
-                    <p className="text-2xl font-display text-blue-900">
-                      {mode === GameMode.TRUE_FALSE 
-                        ? "سيتم جلب معلومات مذهلة ومضللة لهذا الوضع." 
-                        : "سيتم جلب أشياء قابلة للتمثيل (أمثال، أفلام، مهن) لهذا الوضع."}
-                    </p>
-                  </div>
-                )}
+                <div className="flex flex-col items-center gap-2 mb-6 p-4 bg-white/10 rounded-2xl border-2 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)]">
+                  <label className="text-xl font-bold text-[var(--color-ink-black)]">عدد الأسئلة</label>
+                  <input 
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={numQuestionsState}
+                    onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 10)}
+                    className="vintage-input p-4 w-32 text-center text-2xl font-bold"
+                    required
+                  />
+                </div>
+                <div className="hidden">
+                  <p className="text-2xl font-display text-blue-900">
+                    {mode === GameMode.TRUE_FALSE 
+                      ? "سيتم جلب معلومات مذهلة ومضللة لهذا الوضع." 
+                      : "سيتم جلب أشياء قابلة للتمثيل (أمثال، أفلام، مهن) لهذا الوضع."}
+                  </p>
+                </div>
               </div>
             ) : (
               <>
@@ -876,20 +1011,18 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                       </button>
                     </div>
                   </div>
-                  {mode !== GameMode.HEX_GRID && (
-                    <div className="relative w-full md:w-48">
-                      <div className="absolute -top-4 right-6 bg-[var(--color-primary-gold)] border-2 border-[var(--color-ink-black)] text-[var(--color-ink-black)] px-4 py-1 text-xs font-bold rounded-full z-10">عدد الأسئلة</div>
-                      <input 
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={numQuestionsState}
-                        onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 10)}
-                        className="vintage-input w-full h-full p-4 md:p-10 text-2xl md:text-5xl font-bold text-center"
-                        required
-                      />
-                    </div>
-                  )}
+                  <div className="relative w-full md:w-48">
+                    <div className="absolute -top-4 right-6 bg-[var(--color-primary-gold)] border-2 border-[var(--color-ink-black)] text-[var(--color-ink-black)] px-4 py-1 text-xs font-bold rounded-full z-10">عدد الأسئلة</div>
+                    <input 
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={numQuestionsState}
+                      onChange={(e) => setNumQuestionsState(parseInt(e.target.value) || 10)}
+                      className="vintage-input w-full h-full p-4 md:p-10 text-2xl md:text-5xl font-bold text-center"
+                      required
+                    />
+                  </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-3 mt-6 animate-fade-in">
@@ -910,7 +1043,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               </>
             )}
           </motion.div>
-
+          )}
 
           {/* Input Method Selection */}
           <motion.div layout initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-4 md:space-y-8 vintage-panel p-3 sm:p-8 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group">
@@ -1011,7 +1144,15 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                     const isValid = q.answer.trim() === '' || ans.startsWith(letter) || q.answer.trimStart().startsWith(letter);
                     const isMissing = !q.question.trim() || !q.answer.trim();
                     return (
-                      <div key={letter} className={`flex flex-col md:flex-row gap-4 items-start p-4 md:p-5 rounded-2xl border transition-all ${(!isValid || isMissing) ? 'bg-rose-500/10 border-rose-600 border-2 shadow-[0_0_15px_rgba(225,29,72,0.2)]' : 'bg-white/5 border-white/10'}`}>
+                      <div key={letter} className={`flex flex-col md:flex-row gap-4 items-start p-4 md:p-5 rounded-2xl border transition-all relative group ${(!isValid || isMissing) ? 'bg-rose-500/10 border-rose-600 border-2 shadow-[0_0_15px_rgba(225,29,72,0.2)]' : 'bg-white/5 border-white/10'}`}>
+                        <button 
+                          type="button" 
+                          onClick={() => handleDeleteManualQuestion(LETTERS.flat().indexOf(letter))}
+                          className="absolute -top-2 -right-2 w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-lg pointer-events-auto z-20 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                          title="مسح السؤال"
+                        >
+                          <CartoonX size={14} />
+                        </button>
                         <div className={`w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-xl flex items-center justify-center text-xl md:text-3xl font-bold border transition-colors ${(!isValid || isMissing) ? 'bg-rose-500/20 text-rose-400 border-rose-500' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}`}>
                           {letter}
                         </div>
@@ -1044,7 +1185,15 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                         const q = manualQuestions[key] || { question: '', answer: '' };
                         const isMissing = !q.question.trim() || !q.answer.trim();
                         return (
-                          <div key={p} className={`flex flex-col md:flex-row gap-4 items-start md:items-center p-4 rounded-xl border transition-all ${isMissing ? 'bg-rose-500/10 border-rose-600/50 border-2' : 'bg-black/20 border-white/5'}`}>
+                          <div key={p} className={`flex flex-col md:flex-row gap-4 items-start md:items-center p-4 rounded-xl border transition-all relative group ${isMissing ? 'bg-rose-500/10 border-rose-600/50 border-2' : 'bg-black/20 border-white/5'}`}>
+                            <button 
+                              type="button" 
+                              onClick={() => handleDeleteManualQuestion(catIdx * 5 + pIdx)}
+                              className="absolute -top-2 -right-2 w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-lg pointer-events-auto z-20 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                              title="مسح السؤال"
+                            >
+                              <CartoonX size={14} />
+                            </button>
                             <div className={`w-auto md:w-20 text-right md:text-center font-bold text-lg py-2 px-3 rounded-lg border transition-colors ${isMissing ? 'bg-rose-500/20 text-rose-400 border-rose-600' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'}`}>{p}</div>
                             <div className="flex-1 space-y-2 w-full">
                               <input 
@@ -1066,44 +1215,97 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
                 ) : (
                   Array.from({ length: numQuestionsState }).map((_, i) => {
                     const key = `b-${i}`;
-                    const q = manualQuestions[key] || { question: '', answer: '', explanation: '' };
+                    const q = manualQuestions[key] || { question: '', answer: '', explanation: '', tabooWords: ['', '', '', '', ''] };
                     return (
-                      <div key={i} className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-white/5 p-4 md:p-5 rounded-2xl border border-white/10">
+                      <div key={i} className="flex flex-col md:flex-row gap-4 items-start bg-white/5 p-4 md:p-5 rounded-2xl border border-white/10 relative group">
+                        <button 
+                          type="button" 
+                          onClick={() => handleDeleteManualQuestion(i)}
+                          className="absolute -top-3 -right-3 w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-lg pointer-events-auto z-20 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                        >
+                          <CartoonX size={16} />
+                        </button>
                         <div className="w-12 h-12 shrink-0 bg-cyan-500/20 text-cyan-400 rounded-xl flex items-center justify-center font-bold text-2xl border border-cyan-500/30">{i + 1}</div>
                         <div className="flex-1 space-y-3 w-full">
-                          <input 
-                            type="text" placeholder="السؤال..." value={q.question}
-                            onChange={e => handleManualChange(key, 'question', e.target.value)}
-                            className="vintage-input w-full p-3 md:p-4 text-sm"
-                          />
-                          {mode === GameMode.TRUE_FALSE ? (
-                            <div className="flex gap-4">
-                              <button
-                                type="button"
-                                onClick={() => handleManualChange(key, 'answer', 'صواب')}
-                                className={`flex-1 py-3 rounded-xl border-2 font-bold transition-all ${q.answer === 'صواب' ? 'bg-green-500/20 border-green-500 text-green-400' : 'bg-white/5 border-white/10 text-slate-400'}`}
-                              >
-                                صواب
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleManualChange(key, 'answer', 'خطأ')}
-                                className={`flex-1 py-3 rounded-xl border-2 font-bold transition-all ${q.answer === 'خطأ' ? 'bg-red-500/20 border-red-500 text-red-400' : 'bg-white/5 border-white/10 text-slate-400'}`}
-                              >
-                                خطأ
-                              </button>
+                          {mode === GameMode.TABOO ? (
+                            <div className="space-y-4">
+                              <div className="space-y-1">
+                                <label className="text-xs text-rose-400 font-bold">الكلمة الرئيسية (التي تظهر في البطاقة):</label>
+                                <input 
+                                  type="text" placeholder="الكلمة المراد شرحها..." value={q.answer}
+                                  onChange={e => handleManualChange(key, 'answer', e.target.value)}
+                                  className="vintage-input w-full p-3 md:p-4 text-lg font-bold border-rose-500/50"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-slate-400 font-bold">الكلمات الممنوعة (5 كلمات):</label>
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                                  {Array.from({ length: 5 }).map((_, idx) => (
+                                    <input 
+                                      key={idx}
+                                      type="text" 
+                                      placeholder={`كلمة ${idx + 1}`} 
+                                      value={q.tabooWords?.[idx] || ''}
+                                      onChange={e => {
+                                        const newTaboo = [...(q.tabooWords || ['', '', '', '', ''])];
+                                        newTaboo[idx] = e.target.value;
+                                        handleManualChange(key, 'tabooWords', newTaboo);
+                                      }}
+                                      className="vintage-input w-full p-2 text-xs text-center border-white/20"
+                                    />
+                                  ))}
+                                </div>
+                              </div>
                             </div>
                           ) : (
-                            <input 
-                              type="text" placeholder="الإجابة..." value={q.answer}
-                              onChange={e => handleManualChange(key, 'answer', e.target.value)}
-                              className="vintage-input w-full p-3 md:p-4 text-sm"
-                            />
+                            <>
+                              <input 
+                                type="text" placeholder="السؤال..." value={q.question}
+                                onChange={e => handleManualChange(key, 'question', e.target.value)}
+                                className="vintage-input w-full p-3 md:p-4 text-sm"
+                              />
+                              {mode === GameMode.TRUE_FALSE ? (
+                                <div className="flex gap-4">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleManualChange(key, 'answer', 'صواب')}
+                                    className={`flex-1 py-3 rounded-xl border-2 font-bold transition-all ${q.answer === 'صواب' ? 'bg-green-500/20 border-green-500 text-green-400' : 'bg-white/5 border-white/10 text-slate-400'}`}
+                                  >
+                                    صواب
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleManualChange(key, 'answer', 'خطأ')}
+                                    className={`flex-1 py-3 rounded-xl border-2 font-bold transition-all ${q.answer === 'خطأ' ? 'bg-red-500/20 border-red-500 text-red-400' : 'bg-white/5 border-white/10 text-slate-400'}`}
+                                  >
+                                    خطأ
+                                  </button>
+                                </div>
+                              ) : (
+                                <input 
+                                  type="text" placeholder="الإجابة..." value={q.answer}
+                                  onChange={e => handleManualChange(key, 'answer', e.target.value)}
+                                  className="vintage-input w-full p-3 md:p-4 text-sm"
+                                />
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
                     );
                   })
+                )}
+                {inputMethod === 'manual' && mode !== GameMode.HEX_GRID && mode !== GameMode.GRID && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                       playSound('click');
+                       setNumQuestionsState(prev => Math.min(200, prev + 1));
+                    }}
+                    className="w-full p-4 border-2 border-dashed border-white/20 rounded-2xl text-white/50 hover:text-white hover:border-white/40 transition-all flex items-center justify-center gap-2 font-bold"
+                  >
+                    <CartoonPlus size={20} /> إضافة سؤال يدوي جديد
+                  </button>
                 )}
               </div>
             </motion.div>
@@ -1164,91 +1366,7 @@ const ConfigScreen: React.FC<Props> = ({ onStart }) => {
               )}
             </div>
           </motion.div>
-
-            <AnimatePresence>
-            {mode === GameMode.BUZZER && (
-              <motion.div 
-                layout 
-                initial={{ opacity: 0, scale: 0.95 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4 }}
-                className="space-y-4 md:space-y-6 vintage-panel p-3 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl"
-              >
-                <div className="absolute top-0 right-0 w-2 h-full bg-[var(--color-primary-gold)]"></div>
-                <div className="flex items-center gap-3 md:gap-4 mb-4">
-                  <label className="text-xl md:text-4xl font-bold text-[var(--color-ink-black)] vintage-text">سرعة الإجابة</label>
-                </div>
-                
-                <div className="bg-[var(--color-off-white)] p-4 md:p-6 rounded-2xl border-4 border-[var(--color-ink-black)] shadow-[4px_4px_0px_var(--color-ink-black)] space-y-6">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-lg md:text-xl text-[var(--color-ink-black)]">المهلة الزمنية</span>
-                    <span className="bg-[var(--color-primary-gold)] px-4 py-1.5 md:px-6 md:py-2 rounded-xl border-4 border-black font-black text-xl md:text-2xl shadow-[3px_3px_0px_black]">{buzzerTimeout}ث</span>
-                  </div>
-                  <div className="px-1 md:px-2 py-1">
-                    <input 
-                      type="range" 
-                      min="5" 
-                      max="60" 
-                      step="5"
-                      value={buzzerTimeout}
-                      onChange={(e) => {
-                         playSound('click');
-                         setBuzzerTimeout(parseInt(e.target.value));
-                      }}
-                      className="vintage-slider cursor-pointer w-full"
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs font-black opacity-65 text-[var(--color-ink-black)]">
-                    <span>ثواني معدودة ⚡</span>
-                    <span>وقت كافٍ 🐢</span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-            {mode === GameMode.TABOO && (
-              <motion.div 
-                layout 
-                initial={{ opacity: 0, scale: 0.95 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4 }}
-                className="space-y-4 md:space-y-6 vintage-panel p-3 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group w-full max-w-2xl"
-              >
-                <div className="absolute top-0 right-0 w-2 h-full bg-rose-500"></div>
-                <div className="flex items-center gap-3 md:gap-4 mb-4">
-                  <label className="text-xl md:text-3xl font-bold text-[var(--color-ink-black)] vintage-text">طريقة لعب "قول بس لا تقول"</label>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      playSound('click');
-                      setTabooType('local');
-                    }}
-                    className={`vintage-button rounded-2xl p-4 flex flex-col items-center gap-2 text-center transition-all ${tabooType === 'local' ? 'bg-rose-600 text-white shadow-[4px_4px_0px_var(--color-ink-black)] ring-2 ring-rose-500/50' : 'bg-[var(--color-off-white)]'}`}
-                  >
-                    <span className="font-bold text-lg md:text-xl vintage-text">محلي 📱</span>
-                    <span className="text-[10px] opacity-85">على جهاز واحد متناوب</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      playSound('click');
-                      setTabooType('remote');
-                    }}
-                    className={`vintage-button rounded-2xl p-4 flex flex-col items-center gap-2 text-center transition-all ${tabooType === 'remote' ? 'bg-blue-600 text-white shadow-[4px_4px_0px_var(--color-ink-black)] ring-2 ring-blue-500/50' : 'bg-[var(--color-off-white)]'}`}
-                  >
-                    <span className="font-bold text-lg md:text-xl vintage-text">عن بعد 🌐</span>
-                    <span className="text-[10px] opacity-85">باستخدام الرابط والغرفة</span>
-                  </button>
-                </div>
-              </motion.div>
-            )}
-            </AnimatePresence>
-          </div>
+        </div>
 
           <motion.button layout type="submit" className="vintage-button w-full py-5 md:py-10 rounded-[1.5rem] md:rounded-[2.5rem] text-2xl md:text-5xl font-bold mt-6 md:mt-12 relative overflow-hidden group">
             <span className="relative z-10 flex items-center justify-center gap-6">

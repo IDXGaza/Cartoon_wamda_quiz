@@ -871,7 +871,7 @@ export const QUESTION_BANK: Record<GameMode, BankQuestion[]> = {
     { id: 'h_h8', category: 'حيوانات', text: 'حيوان زاحف بطيء يحمل درعاً فوق ظهره؟', answer: 'سلحفاة', answer_alt: 'حلزون', tabooWords: ['زاحف', 'بطيء', 'درع', 'ظهر'], letter: 'ح', difficulty: 'easy' },
     { id: 'h_h9', category: 'تقنية', text: 'آلة لمعالجة البيانات والبرمجة؟', answer: 'حاسوب', tabooWords: ['آلة', 'بيانات', 'برمجة', 'كمبيوتر'], letter: 'ح', difficulty: 'easy' },
     { id: 'h_h10', category: 'جغرافيا', text: 'مدينة سورية قديمة تعتبر من أقدم المدن المأهولة؟', answer: 'حلب', tabooWords: ['مدينة', 'سورية', 'قديم', 'سكان'], letter: 'ح', difficulty: 'medium' },
-    { id: 'h_new_h1', category: 'علوم', text: 'مادة حريرية يفرزها العنكبوت لصيد الفريسة؟', answer: 'حرير', tabooWords: ['مادة', 'عنكبوت', 'فريس', 'خيوط'], letter: 'ح', difficulty: 'medium' },
+    { id: 'h_new_h1', category: 'علوم', text: 'مادة تنتجها دودة القز لتكوين شرنقة حول نفسها؟', answer: 'حرير', tabooWords: ['دودة', 'قز', 'شرنقة', 'مادة'], letter: 'ح', difficulty: 'medium' },
     { id: 'h_new_h2', category: 'حيوانات', text: 'حيوان يمتلك صدقة صلبة ويتحرك ببطء شديد؟', answer: 'حلزون', tabooWords: ['حيوان', 'بطيء', 'درع', 'قوقعة'], letter: 'ح', difficulty: 'easy' },
     { id: 'h_new_h3', category: 'علوم', text: 'منطقة محاطة بسياج تزرع فيها المحاصيل؟', answer: 'حقل', tabooWords: ['منطقة', 'زراعة', 'محاصيل', 'أرض'], letter: 'ح', difficulty: 'easy' },
     { id: 'h_new_h4', category: 'جسم الإنسان', text: 'تجويف يقع خلف الفم والأنف؟', answer: 'حنك', tabooWords: ['فم', 'أنف', 'تحت', 'داخل'], letter: 'ح', difficulty: 'hard' },

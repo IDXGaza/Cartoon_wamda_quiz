@@ -279,6 +279,37 @@ export const CartoonMusic: React.FC<IconProps> = ({ size = 32, className = '' })
   </svg>
 );
 
+export const CartoonRabbit: React.FC<IconProps> = ({ size = 32, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    {/* Body */}
+    <path d="M24 44C34 44 42 36 42 26C42 16 34 8 24 8C14 8 6 16 6 26C6 36 14 44 24 44Z" fill="#E5E7EB" stroke="#0D0D0D" strokeWidth="3.5" />
+    {/* Ears */}
+    <path d="M16 10C16 10 12 2 15 2C18 2 21 10 21 10" fill="#F9A8D4" stroke="#0D0D0D" strokeWidth="3" strokeLinejoin="round" />
+    <path d="M32 10C32 10 36 2 33 2C30 2 27 10 27 10" fill="#F9A8D4" stroke="#0D0D0D" strokeWidth="3" strokeLinejoin="round" />
+    {/* Face */}
+    <circle cx="18" cy="24" r="2.5" fill="#0D0D0D" />
+    <circle cx="30" cy="24" r="2.5" fill="#0D0D0D" />
+    <path d="M22 30C22 30 23 32 24 32C25 32 26 30 26 30" stroke="#0D0D0D" strokeWidth="2.5" strokeLinecap="round" />
+    {/* Nose */}
+    <circle cx="24" cy="27" r="1.5" fill="#F472B6" />
+  </svg>
+);
+
+export const CartoonTurtle: React.FC<IconProps> = ({ size = 32, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    {/* Legs */}
+    <rect x="10" y="32" width="6" height="8" rx="2" fill="#10B981" stroke="#0D0D0D" strokeWidth="2.5" />
+    <rect x="32" y="32" width="6" height="8" rx="2" fill="#10B981" stroke="#0D0D0D" strokeWidth="2.5" />
+    {/* Shell */}
+    <circle cx="24" cy="26" r="16" fill="#78350F" stroke="#0D0D0D" strokeWidth="3.5" />
+    <path d="M14 20C14 20 24 12 34 20" stroke="#D97706" strokeWidth="2" strokeLinecap="round" />
+    <path d="M14 32C14 32 24 40 34 32" stroke="#D97706" strokeWidth="2" strokeLinecap="round" />
+    {/* Head */}
+    <path d="M34 22C34 22 44 22 44 28C44 34 38 34 34 34" fill="#10B981" stroke="#0D0D0D" strokeWidth="3" strokeLinejoin="round" />
+    <circle cx="40" cy="26" r="1.5" fill="#0D0D0D" />
+  </svg>
+);
+
 export const CartoonZap: React.FC<IconProps> = ({ size = 32, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     <path d="M30 4L10 26H22L18 44L38 22H26L30 4Z" fill="#F5C518" stroke="#0D0D0D" strokeWidth="3" strokeLinejoin="round"/>

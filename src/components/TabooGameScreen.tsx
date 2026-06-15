@@ -261,24 +261,26 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
     <div className="w-full max-w-4xl mx-auto px-2 py-4">
       {/* Top Header Stats */}
       {currentGameState !== 'ended' && (
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-amber-50 rounded-2xl border-4 border-black p-3 shadow-[4px_4px_0px_black]">
+        <div className="flex items-center justify-between gap-3 mb-6 bg-white/50 rounded-2xl border-4 border-black p-3 shadow-[4px_4px_0px_black]">
           <div className="flex items-center gap-2">
-            <span className="bg-red-500 text-white w-3 h-3 rounded-full animate-ping" />
-            <h3 className="font-bold text-sm sm:text-base text-[var(--color-ink-black)]">
-              الدور لـ: <span className="underline font-black decoration-rose-500">{currentActivePlayer?.name}</span>
-            </h3>
+            {isRemote && remoteRoomId && (
+              <div className="font-bold text-sm bg-white py-1 px-3 rounded-xl border-2 border-black flex items-center gap-2">
+                <span className="opacity-70">رمز الغرفة:</span>
+                <span className="text-blue-600 font-black tracking-widest">{remoteRoomId}</span>
+              </div>
+            )}
+            {!isRemote && (
+              <div className="font-bold text-sm bg-white py-1 px-3 rounded-xl border-2 border-black">
+                لعب محلي
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 font-bold text-xs bg-white py-1 px-3 rounded-xl border border-black">
-              ⭐ {currentActivePlayer?.score || 0} نقطة بالترتيب
-            </div>
-            <button 
-              onClick={isRemote ? handleRemoteEndGame : handleEndGame} 
-              className="text-xs bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold py-1 px-3 rounded-xl border-2 border-rose-800 transition-colors"
-            >
-              إنهاء اللعبة
-            </button>
-          </div>
+          <button 
+            onClick={isRemote ? handleRemoteEndGame : handleEndGame} 
+            className="text-xs bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold py-2 px-4 rounded-xl border-2 border-rose-800 transition-colors"
+          >
+            إنهاء اللعبة
+          </button>
         </div>
       )}
 
@@ -291,11 +293,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
             exit={{ opacity: 0, scale: 0.95 }}
             className="vintage-panel p-6 sm:p-12 rounded-[2rem] sm:rounded-[3rem] text-center border-4 border-black shadow-[8px_8px_0px_black] bg-white max-w-2xl mx-auto"
           >
-            <div className="inline-block bg-rose-100 text-rose-700 font-bold px-4 py-2 rounded-2xl border-2 border-rose-400 mb-6">
-              دور اللاعب الحالي: {currentActivePlayer?.name} 🎤
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl font-black mb-4 text-[var(--color-ink-black)]">
+            <h1 className="text-3xl sm:text-5xl font-black mb-4 text-[var(--color-ink-black)] mt-4">
               {isRemote ? 'استعدوا للوصف!' : 'سَلّم الجوال للمشرح!'}
             </h1>
             <p className="text-sm sm:text-base opacity-75 mb-8 max-w-md mx-auto">
@@ -363,35 +361,10 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
               // Remote Host Screen - Doesn't show correct word / taboo words to prevent cheating on public display
               <div className="vintage-panel rounded-[2.5rem] p-6 sm:p-14 border-4 border-black shadow-[8px_8px_0px_black] bg-[var(--color-bg-cream)] text-center relative overflow-hidden flex flex-col items-center gap-6">
                 
-                {/* Timer & Turn Points displayed on Main Host Screen */}
-                <div className="flex gap-4 w-full justify-center mb-4">
-                  <div className="bg-red-50 border-4 border-black px-6 py-4 rounded-3xl text-center shadow-[4px_4px_0px_black]">
-                    <p className="text-sm font-bold text-red-800 mb-1">الوقت المتبقي</p>
-                    <p className={`text-5xl font-black ${remoteRoom?.timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-gray-800'}`}>
-                      {remoteRoom?.timeLeft || 0} ث
-                    </p>
-                  </div>
-                  <div className="bg-green-50 border-4 border-black px-6 py-4 rounded-3xl text-center shadow-[4px_4px_0px_black]">
-                    <p className="text-sm font-bold text-green-800 mb-1">النقاط هذا الدور</p>
-                    <p className="text-5xl font-black text-green-600">
-                      +{remoteRoom?.turnScore || 0}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="w-24 h-24 bg-rose-100 rounded-full border-4 border-black flex items-center justify-center text-rose-600 animate-pulse">
+                <div className="w-24 h-24 bg-rose-100 rounded-full border-4 border-black flex items-center justify-center text-rose-600 animate-pulse mt-4">
                   <Star fill="currentColor" size={48} />
                 </div>
                 
-                <h2 className="text-3xl sm:text-5xl font-black text-[var(--color-ink-black)]">تخّمن مع زملائك! 🤔🔊</h2>
-                <p className="text-gray-600 font-bold max-w-md">
-                  اللاعب <span className="text-rose-600 font-extrabold text-xl">{currentActivePlayer?.name}</span> يصف الكلمات الآن! تم إخفاء الكلمات الممنوعة لمنع الغش!
-                </p>
-
-                <div className="text-xs text-gray-400 bg-white border px-4 py-2 rounded-xl mt-2 mb-2">
-                  ⚠️ يتم توجيه الأزرار والوقت من جوال الواصف مباشرة
-                </div>
-
                 {/* Main screen display of players scores */}
                 <div className="w-full mt-4 bg-white/50 p-4 rounded-3xl border-4 border-black">
                   <p className="font-bold text-sm text-gray-500 mb-3">نتائج المتسابقين الحالية</p>
@@ -418,7 +391,7 @@ const TabooGameScreen: React.FC<Props> = ({ config, questions = [], players: ini
                   <div className="flex items-center justify-center gap-2 mb-4">
                     {revealed ? (
                       <h2 className="text-4xl sm:text-6xl font-black text-[var(--color-ink-black)] tracking-tight px-4 py-2 bg-yellow-100 rounded-3xl border-2 border-dashed border-yellow-400 select-none">
-                        {currentActiveQuestion?.answer}
+                        {currentActiveQuestion?.answer || 'انتهت الكلمات!'}
                       </h2>
                     ) : (
                       <h2 className="text-4xl sm:text-6xl font-black text-gray-300 tracking-tight px-8 py-2 bg-gray-100 rounded-3xl border-2 border-dashed border-gray-300 select-none blur-md">

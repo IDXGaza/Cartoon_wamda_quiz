@@ -31,7 +31,7 @@ interface Props {
 }
 
 const BuzzerScreen: React.FC<Props> = ({ config, questions, onFinish, onOpenReport }) => {
-  const [roomId] = useState(() => Math.random().toString(36).substring(2, 8).toUpperCase());
+  const [roomId] = useState(() => config.sessionId || Math.random().toString(36).substring(2, 8).toUpperCase());
   const [roomState, setRoomState] = useState<any>(null);
   const [remotePlayers, setRemotePlayers] = useState<Player[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);

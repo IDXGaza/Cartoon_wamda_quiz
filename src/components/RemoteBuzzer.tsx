@@ -32,7 +32,32 @@ const RemoteBuzzer: React.FC = () => {
       }
     });
 
-    return () => unsub();
+    // Cleanup on unmount or tab close
+    const cleanup = async () => {
+      try {
+        if (auth.currentUser) {
+          const ref = doc(db, 'rooms', roomId, 'players', auth.currentUser.uid);
+          await deleteDoc(ref);
+        }
+      } catch (e) {
+        console.error("Cleanup failed", e);
+      }
+    };
+
+    const handleUnload = () => {
+      if (auth.currentUser) {
+        const ref = doc(db, 'rooms', roomId, 'players', auth.currentUser.uid);
+        deleteDoc(ref).catch(() => {});
+      }
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      unsub();
+      window.removeEventListener('beforeunload', handleUnload);
+      cleanup();
+    };
   }, [isJoined, roomId]);
 
   useEffect(() => {

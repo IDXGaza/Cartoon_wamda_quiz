@@ -144,15 +144,24 @@ const HexCell: React.FC<HexCellProps> = React.memo(({
       )}
 
       {frozen > 0 && (
-        <g transform={`translate(${130 * scale - (14 * 2 + 8) * scale}, ${15 * scale})`} className="pointer-events-none">
-          <circle cx={14 * scale} cy={14 * scale} r={14 * scale} fill="#E0F2FE" stroke="#0D0D0D" strokeWidth={2.5 * scale} className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" />
+        <g 
+          transform={`translate(${130 * scale - (14 * 2 + 8) * scale + 14 * scale}, ${15 * scale + 14 * scale})`} 
+          className="pointer-events-none"
+        >
+          <circle 
+            r={14 * scale} 
+            fill="#E0F2FE" 
+            stroke="#0D0D0D" 
+            strokeWidth={2.5 * scale} 
+            className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]" 
+          />
           <motion.g 
-            transform={`translate(${4 * scale}, ${4 * scale})`}
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
-            style={{ transformOrigin: `${10 * scale}px ${10 * scale}px` }}
           >
-            <CartoonSnowflake size={20 * scale} className="text-blue-500" />
+            <g transform={`translate(${-10 * scale}, ${-10 * scale})`}>
+              <CartoonSnowflake size={20 * scale} className="text-blue-500" />
+            </g>
           </motion.g>
         </g>
       )}

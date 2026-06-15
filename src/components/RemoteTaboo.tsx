@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, onSnapshot, collection, query, orderBy, setDoc, updateDoc, runTransaction } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, orderBy, setDoc, updateDoc, runTransaction, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { Question, Player } from '../types';
 import { playSound } from '../utils/sound';
@@ -63,7 +63,33 @@ const RemoteTaboo: React.FC = () => {
       }
     });
 
-    return () => unsub();
+    // Cleanup on unmount or tab close
+    const cleanup = async () => {
+      try {
+        if (auth.currentUser) {
+          const ref = doc(db, 'rooms', roomId, 'players', auth.currentUser.uid);
+          await deleteDoc(ref);
+        }
+      } catch (e) {
+        console.error("Cleanup failed", e);
+      }
+    };
+
+    const handleUnload = () => {
+      if (auth.currentUser) {
+        // We can't await here reliably, but we can try
+        const ref = doc(db, 'rooms', roomId, 'players', auth.currentUser.uid);
+        deleteDoc(ref).catch(() => {});
+      }
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      unsub();
+      window.removeEventListener('beforeunload', handleUnload);
+      cleanup();
+    };
   }, [isJoined, roomId]);
 
   useEffect(() => {
@@ -314,10 +340,6 @@ const RemoteTaboo: React.FC = () => {
               exit={{ opacity: 0 }}
               className="text-center space-y-6 my-auto bg-white p-6 rounded-[2rem] border-4 border-black shadow-[8px_8px_0px_black]"
             >
-              <div className="inline-block bg-rose-100 text-rose-700 font-bold px-4 py-2 rounded-2xl border-2 border-rose-400 mb-2">
-                دور اللاعب الحالي: {activeDescriber?.name} 🎤
-              </div>
-
               {isDescriber ? (
                 <>
                   <h2 className="text-3xl font-black text-[var(--color-ink-black)]">أنت المشرح!</h2>
@@ -395,7 +417,7 @@ const RemoteTaboo: React.FC = () => {
                       <span className="text-[10px] opacity-60 uppercase font-black block mb-1">الكلمة الحالية</span>
                       {revealed ? (
                         <h2 className="text-3xl sm:text-4xl font-black text-rose-700 bg-white border-2 border-dashed border-rose-300 py-3 rounded-2xl">
-                          {currentQuestion?.answer}
+                          {currentQuestion?.answer || 'جاري التحميل...'}
                         </h2>
                       ) : (
                         <h2 className="text-3xl sm:text-4xl font-black text-gray-300 bg-gray-200 border-2 border-dashed border-gray-300 py-3 rounded-2xl blur-sm select-none">
@@ -434,17 +456,17 @@ const RemoteTaboo: React.FC = () => {
                     </button>
 
                     <button 
-                      onClick={() => handleNextWord('pass')}
-                      className="bg-gray-400 hover:bg-gray-500 text-white p-4 rounded-xl border-2 border-black font-black flex items-center justify-center gap-2 shadow-[2px_2px_0px_black] active:translate-y-0.5 active:shadow-[1px_1px_0px_black]"
+                      onClick={() => handleNextWord('correct')}
+                      className="bg-[var(--color-primary-green)] hover:bg-green-600 text-white p-4 rounded-xl border-2 border-black font-black flex items-center justify-center gap-2 shadow-[2px_2px_0px_black] active:translate-y-0.5 active:shadow-[1px_1px_0px_black]"
                     >
-                      <span>تخطي</span>
+                      <Check size={18} /> <span>صحّت الإجابة! (+١)</span>
                     </button>
 
                     <button 
-                      onClick={() => handleNextWord('correct')}
-                      className="col-span-2 bg-[var(--color-primary-green)] hover:bg-green-600 text-white p-4 rounded-xl border-2 border-black font-black text-xl flex items-center justify-center gap-2 shadow-[2px_2px_0px_black] active:translate-y-0.5 active:shadow-[1px_1px_0px_black]"
+                      onClick={() => handleNextWord('pass')}
+                      className="col-span-2 bg-gray-400 hover:bg-gray-500 text-white p-4 rounded-xl border-2 border-black font-black text-xl flex items-center justify-center gap-2 shadow-[2px_2px_0px_black] active:translate-y-0.5 active:shadow-[1px_1px_0px_black]"
                     >
-                      <Check size={24} /> <span>صحّت الإجابة! (+١)</span>
+                      <span>تخطي</span>
                     </button>
                   </div>
                 </div>

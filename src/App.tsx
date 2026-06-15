@@ -33,6 +33,7 @@ import { playSound } from './utils/sound';
 import { toggleFullScreen } from './utils/fullscreen';
 import { auth, db } from './firebase';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { doc, deleteDoc, collection, getDocs, writeBatch } from 'firebase/firestore';
 
 const App: React.FC = () => {
   const [currentPath] = useState(window.location.pathname);
@@ -101,6 +102,22 @@ const App: React.FC = () => {
       });
     };
   }, []);
+
+  useEffect(() => {
+    const handleUnload = () => {
+      const isRemoteHost = (
+        ((gameState === 'taboo-playing' || gameState === 'taboo-start') && config?.tabooType === 'remote') || 
+        (gameState === 'playing' && config?.mode === GameMode.BUZZER)
+      );
+      
+      if (isRemoteHost && sessionId) {
+        const roomRef = doc(db, 'rooms', sessionId);
+        deleteDoc(roomRef).catch(() => {});
+      }
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    return () => window.removeEventListener('beforeunload', handleUnload);
+  }, [gameState, config, sessionId]);
 
   const testConnection = async () => {
     try {
@@ -273,7 +290,33 @@ const App: React.FC = () => {
     setGameState('summary');
   };
 
+  const cleanupRemoteRoom = async (id: string) => {
+    try {
+      const roomRef = doc(db, 'rooms', id);
+      const playersRef = collection(db, 'rooms', id, 'players');
+      const playersSnap = await getDocs(playersRef);
+      
+      const batch = writeBatch(db);
+      playersSnap.forEach(pDoc => {
+        batch.delete(pDoc.ref);
+      });
+      batch.delete(roomRef);
+      await batch.commit();
+      console.log(`Room ${id} and its players cleaned up.`);
+    } catch (err) {
+      console.error("Failed to cleanup remote room:", err);
+    }
+  };
+
   const handleReset = () => {
+    const isRemoteHost = (
+      ((gameState === 'taboo-playing' || gameState === 'taboo-start') && config?.tabooType === 'remote') || 
+      (gameState === 'playing' && config?.mode === GameMode.BUZZER)
+    );
+
+    if (isRemoteHost && sessionId) {
+      cleanupRemoteRoom(sessionId);
+    }
     setGameState('config');
     setQuestions([]);
     setErrorMessage('');
@@ -325,8 +368,8 @@ const App: React.FC = () => {
                 handleReset();
               }}
             >
-              <div className="w-10 h-10 md:w-14 md:h-14 bg-[var(--color-primary-gold)] rounded-xl flex items-center justify-center text-[var(--color-ink-black)] border-2 md:border-4 border-[var(--color-ink-black)] group-hover:rotate-12 transition-transform shadow-[2px_2px_0px_var(--color-ink-black)] md:shadow-[4px_4px_0px_var(--color-ink-black)] flex-shrink-0">
-                <CartoonRocket size={24} className="w-6 h-6 md:w-8 md:h-8" />
+              <div className="w-10 h-10 md:w-16 md:h-16 flex items-center justify-center group-hover:rotate-12 transition-transform flex-shrink-0 overflow-hidden">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAc4AAAH4CAYAAADDxQ0AAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAACAASURBVHic7L1rkGTned/3e9/3XLp7rruzN+yeA2ABLAiS4E1Uwm4KskjTVCxFJadKacUVOXIcKU5ix64oKX1IUqlEHxJXUnbF5UpUkS9JylZZclakRQYERUDgIuKSsxRBEiCI6y721r23mZ1Lz3Sf7nPO+75PPpye2YUkigCBXVz2/La2eqenZ/Z0T8/5n+f2f6Cmpqampqbmh/J//7P/TRZmQ9Fv94HU1NTU1NS8Gzh79uwvfvWrf/h2H0ZNTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NTU1NzTufF079bvuFU7/bfruPo6bmjVJ31dbU1Nx2zj37ufbepaXO+mCtc+KL/6AWz5p3FcHbfQA1NTV3IFJ0Vq9d7A43V9mzOA9w6u0+pJqa10sdcdbU1NxWZPOp7r333d3ZuN5LJqO15KMffbiTXXm0+3YfV03N66WOOGtqam4bkn2jizZd2breHm5dSX0xZrR1lT0H70e2v4aa+8njb/cx1tT8MOqIs6am5rYg2ak21rTRRXt9vZ8qPyIOSlaunk8JyjYqakt2sq531rzjqYWzpqbmNuFTjE2RSXrl0mmMGtGICq5eOgMuS1E2BUnf7qOsqflh1MJZU1NzezAOIgXDdTauX0LJhMhYsu3rjDeuVJ/Hvd1HWVPzQ6mFs6am5vbgCvAFvQtnyCfbhMajlcUYx4Vzp6HME3yZvN2HWVPzw6iFs6am5raQb20kjDaS/rkXMDIkNhO036YVeC6dfwUmgwQ9n8jgRF3nrHlHUwtnTU3NLUcGT7Tj5t5k9eKLST64zFycE8qAwG8xGxWoYpNXn/9WSrHR8b7ovN3HW1Pz51ELZ01NzS1nNLjegUnnhWe/mbYaCmUzjCoIdYlyI+aaiv65F5msX0707EJHtp+q5zpr3rHUc5w1NTW3DMlOtsej651ma7bz7FNfSLRMcPmQRjPElzlBoCl9ifiMKIz53rPfSH98dhG9eKQn2Ymean26dhSqecdRR5w1NTW3BBk80Yaw01xY6J75zon2lf4LaTMW4lDjXYkxBqUEoyzNhhBHBZPhNZ59+qmUbK0zXl95V6Rsi7WT7Wzla93B1XoG9U5Bvd0HUHP7keyJNm5nXi4CE/RU65H6yr7mLUMGj7XzbNiNQ9Ppn3+28+IzJ1laCPHFgMhYlCvQ2uLLCa25WcaFppAI0YsMJoa7j/5Y794HP34qz8bLM/N7ltXSz74j35/52pPdIGi1J6VPJxO3TOCWlw7VUfJ7nTpVewdRDB5rF6PtDsSJyDBVyg==" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col flex-shrink-0">
                 <h1 className="text-xl md:text-3xl font-bold text-[var(--color-ink-black)] leading-none vintage-text">ومضة</h1>
